@@ -6,6 +6,42 @@ const review = {
   reviewedAt: '2026-07-11',
 };
 
+// Tarea 2 공유 선택지 은행: 6개 빈칸에 공통으로 제시되는 8개 문장 조각(2개는 어디에도 맞지 않는 오답)
+const cineGapOptions = [
+  {
+    key: 'a',
+    text: 'Una revisión técnica detectó fallos en la instalación eléctrica y accesos poco adecuados para personas con movilidad reducida.',
+  },
+  {
+    key: 'b',
+    text: 'Por esa razón, la cooperativa decidió traspasar el edificio a una gran cadena de multicines.',
+  },
+  {
+    key: 'c',
+    text: 'Sin embargo, un grupo de espectadores habituales se reunió esa misma tarde para buscar la manera de evitarlo.',
+  },
+  {
+    key: 'd',
+    text: 'De hecho, asociaciones de otras ciudades ya han visitado la sala para preguntar cómo se organizó todo el proceso.',
+  },
+  {
+    key: 'e',
+    text: 'En pocos meses, más de ochocientos vecinos aportaron pequeñas cantidades a cambio de ventajas simbólicas.',
+  },
+  {
+    key: 'f',
+    text: 'Además, la mayoría de los socios exigía programar únicamente los estrenos más comerciales.',
+  },
+  {
+    key: 'g',
+    text: 'En su opinión, la sala debe funcionar también como un punto de encuentro entre generaciones.',
+  },
+  {
+    key: 'h',
+    text: 'Esa oferta atrae tanto a los aficionados veteranos como a familias que buscan planes asequibles.',
+  },
+];
+
 export const practiceItems = [
   // Lectura · Tarea 1 — Una biblioteca donde no se prestan libros
   {
@@ -215,6 +251,86 @@ export const practiceItems = [
     ...review,
   },
 
+  // Lectura · Tarea 2 — El cine que salvaron los vecinos (문장 삽입형, 선택지 A–H 공유)
+  {
+    id: 'r-cine-01',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 1 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'c',
+    explanationKo:
+      '앞은 폐관 발표에 아무도 놀라지 않았다는 체념의 분위기이고, 바로 뒤에서 "aquella reunión improvisada"(그 즉석 모임)가 협동조합의 기원이었다고 말합니다. 빈칸에서 먼저 모임이 언급되어야 하므로, 단골 관객들이 그날 오후에 모였다는 c가 정답입니다. Sin embargo가 체념과 행동 사이의 대조도 만들어 줍니다.',
+    tags: ['문장삽입', '결속성', '지시어'],
+    ...review,
+  },
+  {
+    id: 'r-cine-02',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 2 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'e',
+    explanationKo:
+      '뒤 문장의 "Con esa base"(그 기반 위에서)가 가리킬 구체적 성과가 빈칸에 있어야 합니다. 800명이 넘는 주민이 소액을 출자했다는 e가 협동조합 은행이 나머지를 융자해 준 근거가 됩니다.',
+    tags: ['문장삽입', '지시어', '재정'],
+    ...review,
+  },
+  {
+    id: 'r-cine-03',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 3 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'h',
+    explanationKo:
+      '앞은 새 프로그램 편성(테마 상영, 원어 상영, 학교 대상 오전 상영)이고, 뒤의 "ese equilibrio entre públicos"(그 관객층 간 균형)가 핵심 단서입니다. 노장년 애호가와 가족 관객을 모두 끌어들인다는 h가 "균형"의 내용을 채워 줍니다. 상업 개봉작만 요구했다는 f는 편성 방향과 정면으로 모순됩니다.',
+    tags: ['문장삽입', '결속성', '문화'],
+    ...review,
+  },
+  {
+    id: 'r-cine-04',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 4 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'a',
+    explanationKo:
+      '앞에서 미룰 수 없는 보수 공사가 필요했다고 했고, 뒤에서는 공사를 단계별로 진행했다고 이어집니다. 어떤 결함이 발견되었는지 구체화하는 문장이 필요하므로 전기 설비 결함과 접근성 문제를 언급한 a가 정답입니다.',
+    tags: ['문장삽입', '세부정보'],
+    ...review,
+  },
+  {
+    id: 'r-cine-05',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 5 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'g',
+    explanationKo:
+      '앞의 "no es únicamente cultural"(문화 사업만은 아니다)과 뒤의 "Por eso"(그래서) 사이에는 사회적 역할에 대한 주장이 들어가야 합니다. 극장이 세대 간 만남의 장이 되어야 한다는 g가 지역 예술가 전시와 할인 요금 정책의 이유를 제공합니다.',
+    tags: ['문장삽입', '주장', '공동체'],
+    ...review,
+  },
+  {
+    id: 'r-cine-06',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t2-cine-barrio',
+    prompt: 'Hueco [ 6 ]: ¿qué fragmento completa el texto?',
+    options: cineGapOptions,
+    correctAnswer: 'd',
+    explanationKo:
+      '앞은 이 모델이 동네 밖에서 관심을 끌기 시작했다는 내용이고, 뒤의 "responden siempre lo mismo"(늘 같은 대답을 한다)는 누군가의 질문을 전제합니다. 다른 도시의 단체들이 찾아와 과정을 물었다는 d가 두 문장을 자연스럽게 잇습니다. 건물을 대형 체인에 넘겼다는 b는 글 전체와 모순되어 어느 빈칸에도 맞지 않습니다.',
+    tags: ['문장삽입', '추론'],
+    ...review,
+  },
+
   // Lectura · Tarea 3 — Cuatro maneras de cambiar de profesión
   {
     id: 'r-career-01',
@@ -286,6 +402,80 @@ export const practiceItems = [
     explanationKo:
       'Tomás는 도구 비용은 계산했지만 청구서·공급업체·SNS에 들어가는 시간을 예상하지 못했습니다. 본업 외의 간접 업무를 과소평가한 사람은 Tomás입니다.',
     tags: ['정보매칭', '창업'],
+    ...review,
+  },
+
+  // Lectura · Tarea 3 — Cuatro maneras de aprender un idioma
+  {
+    id: 'r-idiomas-01',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t3-aprender-idiomas',
+    prompt: '¿Quién comprobó que vivir en el extranjero no bastaba por sí solo para progresar?',
+    options: [
+      { key: 'a', text: 'David' },
+      { key: 'b', text: 'Noelia' },
+      { key: 'c', text: 'Raquel' },
+      { key: 'd', text: 'Iván' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      'David는 더블린에 살면 영어가 저절로 늘 것이라 믿었지만 같은 실수를 반복했고, 결국 야간 수업에 등록했습니다. "la inmersión, sin estudio, se queda a medias"(공부 없는 몰입은 절반에 그친다)가 결정적 단서입니다.',
+    tags: ['정보매칭', '언어학습'],
+    ...review,
+  },
+  {
+    id: 'r-idiomas-02',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t3-aprender-idiomas',
+    prompt: '¿Quién puso normas para que sus conversaciones fueran productivas?',
+    options: [
+      { key: 'a', text: 'David' },
+      { key: 'b', text: 'Noelia' },
+      { key: 'c', text: 'Raquel' },
+      { key: 'd', text: 'Iván' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      'Noelia는 언어 교환 초기의 혼란스러운 대화에 규칙(언어별 30분, 공유 교정 목록)을 도입했고, "sin esas reglas, habríamos abandonado"라고 말합니다. 규칙 덕분에 대화가 유지되었다는 사람은 Noelia입니다.',
+    tags: ['정보매칭', '학습전략'],
+    ...review,
+  },
+  {
+    id: 'r-idiomas-03',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t3-aprender-idiomas',
+    prompt: '¿Quién buscó enseñanza con correcciones tras estancarse estudiando por su cuenta?',
+    options: [
+      { key: 'a', text: 'David' },
+      { key: 'b', text: 'Noelia' },
+      { key: 'c', text: 'Raquel' },
+      { key: 'd', text: 'Iván' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      'Raquel은 앱으로 독학하다 발전 없이 같은 연습만 반복하는 정체기를 겪었고, 정규 어학원에 등록해 교사의 교정으로 스스로 몰랐던 나쁜 습관을 고쳤습니다. 독학의 한계 → 교정이 있는 수업이라는 흐름이 단서입니다.',
+    tags: ['정보매칭', '피드백'],
+    ...review,
+  },
+  {
+    id: 'r-idiomas-04',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t3-aprender-idiomas',
+    prompt: '¿Quién reforzó una destreza que había descuidado durante años?',
+    options: [
+      { key: 'a', text: 'David' },
+      { key: 'b', text: 'Noelia' },
+      { key: 'c', text: 'Raquel' },
+      { key: 'd', text: 'Iván' },
+    ],
+    correctAnswer: 'd',
+    explanationKo:
+      'Iván은 드라마·팟캐스트·포럼으로 어휘는 풍부해졌지만 한 번도 연습하지 않은 쓰기가 약점이었고, 온라인 글쓰기 워크숍에 등록해 보완했습니다. 방치했던 기능 하나를 특정 활동으로 보강한 사례입니다.',
+    tags: ['정보매칭', '쓰기'],
     ...review,
   },
 
@@ -373,6 +563,93 @@ export const practiceItems = [
     explanationKo:
       '아무리 어린 식물을 고정해도 일부는 바람을 견디지 못했다는 양보 관계입니다. por mucho que + 접속법은 노력의 정도와 무관하게 결과가 달라지지 않음을 나타냅니다.',
     tags: ['문법', '접속법', '양보'],
+    ...review,
+  },
+
+  // Lectura · Tarea 4 — Un club de lectura dentro del hospital
+  {
+    id: 'r-hospital-01',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t4-club-lectura',
+    prompt: 'La coordinadora defendió el proyecto ___ la lectura compartida había dado buenos resultados.',
+    options: [
+      { key: 'a', text: 'puesto que' },
+      { key: 'b', text: 'a fin de que' },
+      { key: 'c', text: 'a no ser que' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '이미 확인된 사실(다른 센터에서의 성과)을 근거로 제시하므로 이유를 나타내는 puesto que가 필요하며, 뒤에 직설법 había dado가 오는 것과도 일치합니다. a fin de que(목적)와 a no ser que(예외 조건)는 접속법을 요구해 문장과 맞지 않습니다.',
+    tags: ['문법', '연결어', '이유'],
+    ...review,
+  },
+  {
+    id: 'r-hospital-02',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t4-club-lectura',
+    prompt: 'Los participantes pueden incorporarse en cualquier momento, ___ el personal sanitario recomiende lo contrario.',
+    options: [
+      { key: 'a', text: 'puesto que' },
+      { key: 'b', text: 'a no ser que' },
+      { key: 'c', text: 'de modo que' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '언제든 참여할 수 있지만 의료진이 반대할 경우는 예외라는 뜻입니다. "~하지 않는 한"의 예외 조건을 나타내는 a no ser que가 정답이며, 아직 실현되지 않은 가정이므로 접속법 recomiende와 결합합니다.',
+    tags: ['문법', '접속법', '예외조건'],
+    ...review,
+  },
+  {
+    id: 'r-hospital-03',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t4-club-lectura',
+    prompt: 'Las sesiones se celebran por la tarde, ___ las mañanas se reservan para las pruebas médicas.',
+    options: [
+      { key: 'a', text: 'para que' },
+      { key: 'b', text: 'a medida que' },
+      { key: 'c', text: 'mientras que' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      '오후(모임)와 오전(검사)이라는 두 시간대의 용도를 맞세우는 대조 관계입니다. mientras que는 "~인 반면"으로 대조를 나타냅니다. para que는 목적, a medida que는 점진적 변화를 나타내 어색합니다.',
+    tags: ['문법', '연결어', '대조'],
+    ...review,
+  },
+  {
+    id: 'r-hospital-04',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t4-club-lectura',
+    prompt: 'Pueden leer en voz alta ___ respeten el ritmo de cada paciente.',
+    options: [
+      { key: 'a', text: 'con tal de que' },
+      { key: 'b', text: 'en cuanto' },
+      { key: 'c', text: 'dado que' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '환자의 속도를 존중한다는 조건을 지키면 낭독이 허용된다는 뜻이므로 "~하기만 하면"의 con tal de que가 정답이며 접속법 respeten과 결합합니다. en cuanto는 "~하자마자", dado que는 이유로 조건의 의미가 없습니다.',
+    tags: ['문법', '접속법', '조건'],
+    ...review,
+  },
+  {
+    id: 'r-hospital-05',
+    skill: 'reading',
+    kind: 'mcq',
+    textId: 'reading-t4-club-lectura',
+    prompt: '___ algunos participantes no terminan los libros, los organizadores consideran que el club cumple su función.',
+    options: [
+      { key: 'a', text: 'A medida que' },
+      { key: 'b', text: 'Aun cuando' },
+      { key: 'c', text: 'Con tal de que' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '책을 다 읽지 못하는 참가자가 있어도 클럽이 제 역할을 한다는 양보 관계입니다. Aun cuando는 "비록 ~일지라도"를 뜻합니다. A medida que(점진), Con tal de que(조건)는 앞뒤 논리와 맞지 않습니다.',
+    tags: ['문법', '연결어', '양보'],
     ...review,
   },
 

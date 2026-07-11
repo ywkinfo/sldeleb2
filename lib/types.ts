@@ -30,7 +30,7 @@ export interface OfficialResource {
 
 export interface ReadingText extends ContentReviewMetadata {
   id: string;
-  task: "tarea1" | "tarea3" | "tarea4";
+  task: "tarea1" | "tarea2" | "tarea3" | "tarea4";
   title: string;
   passage: string;
   sourceNote: string;

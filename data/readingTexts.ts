@@ -43,6 +43,24 @@ El alcalde considera que el resultado es positivo precisamente porque no es espe
     ...review,
   },
   {
+    id: 'reading-t2-cine-barrio',
+    task: 'tarea2',
+    title: 'El cine que salvaron los vecinos',
+    passage: `Cuando la empresa propietaria anunció el cierre del cine Avenida, casi nadie se sorprendió. La sala llevaba años medio vacía y sus dueños repetían que las plataformas digitales habían cambiado para siempre los hábitos del público. [ 1 ] Aquella reunión improvisada fue el origen de la cooperativa que hoy gestiona la única pantalla del barrio.
+
+El primer obstáculo fue económico, porque la compra del local superaba con mucho los ahorros del grupo. Los impulsores lanzaron entonces una campaña de participaciones populares. [ 2 ] Con esa base, una entidad de crédito cooperativo aceptó financiar el resto de la operación.
+
+La programación también cambió. En lugar de competir con los grandes estrenos, la nueva gestión apostó por ciclos temáticos, películas en versión original y sesiones matinales para institutos. [ 3 ] Gracias a ese equilibrio entre públicos, la sala abre ahora seis días a la semana.
+
+No todo ha sido sencillo. El edificio, construido en los años cincuenta, necesitaba reformas que no podían aplazarse. [ 4 ] Las obras se hicieron por fases para que la sala nunca estuviera cerrada más de unas semanas seguidas.
+
+Los socios insisten en que el proyecto no es únicamente cultural. [ 5 ] Por eso el vestíbulo acoge exposiciones de artistas locales y las entradas mantienen precios reducidos para estudiantes y jubilados.
+
+El modelo empieza a despertar interés fuera del barrio. [ 6 ] Los fundadores responden siempre lo mismo: no se trata de copiar la fórmula, sino de escuchar primero lo que cada comunidad necesita.`,
+    sourceNote,
+    ...review,
+  },
+  {
     id: 'reading-t3-cambio-profesional',
     task: 'tarea3',
     title: 'Cuatro maneras de cambiar de profesión',
@@ -57,6 +75,20 @@ D. TOMÁS — Siempre había reparado bicicletas para mis amigos y decidí abrir
     ...review,
   },
   {
+    id: 'reading-t3-aprender-idiomas',
+    task: 'tarea3',
+    title: 'Cuatro maneras de aprender un idioma',
+    passage: `A. DAVID — Me mudé a Dublín convencido de que el inglés se me pegaría solo por vivir allí. Al principio trabajaba con otros españoles y apenas avanzaba: entendía cada vez más, pero repetía los mismos errores. Acabé matriculándome en un curso nocturno y combinándolo con el trabajo. La estancia me dio soltura, aunque aprendí que la inmersión, sin estudio, se queda a medias.
+
+B. NOELIA — Nunca he vivido en un país de habla alemana. Encontré una aplicación de intercambio y quedo por videollamada dos veces por semana con una estudiante de Colonia. Las primeras conversaciones eran caóticas: saltábamos de un idioma a otro sin ningún orden. Ahora dedicamos media hora exacta a cada lengua y anotamos las correcciones en una lista compartida. Sin esas reglas, habríamos abandonado hace tiempo.
+
+C. RAQUEL — Durante dos años estudié japonés por mi cuenta con aplicaciones. Era cómodo y barato, pero llegó un momento en que repetía ejercicios sin mejorar y nadie me explicaba por qué una frase sonaba extraña. Me apunté a una escuela oficial y, aunque avanzo más despacio de lo que prometían las aplicaciones, las correcciones de la profesora me han quitado vicios que ni siquiera notaba.
+
+D. IVÁN — Aprendí francés casi sin darme cuenta: series sin doblar, pódcast de baloncesto y un foro de cocina donde pasaba horas. Mi vocabulario sorprende a los profesores, pero escribir me costaba muchísimo porque nunca lo había practicado. Este curso me apunté a un taller de escritura en línea y redactar textos breves cada semana me obligó a ordenar por fin la gramática que ya conocía de oído.`,
+    sourceNote,
+    ...review,
+  },
+  {
     id: 'reading-t4-huerto-azotea',
     task: 'tarea4',
     title: 'El huerto que creció sobre el mercado',
@@ -65,6 +97,18 @@ D. TOMÁS — Siempre había reparado bicicletas para mis amigos y decidí abrir
 Los productos no se venden como si fueran mercancía del mercado, sino que se utilizan en talleres de cocina o se entregan a un comedor vecinal. Para que la iniciativa no dependa únicamente del entusiasmo de unas pocas personas, dos institutos participan durante el curso y documentan el crecimiento de las plantas. Los estudiantes comparan distintas técnicas y publican sus conclusiones, de modo que el huerto también funciona como laboratorio.
 
 El mayor problema no ha sido la falta de agua, como se temía, sino el viento. Por mucho que se sujetaran las plantas jóvenes, algunas no resistían las ráfagas. Finalmente se colocaron barreras ligeras que dejan pasar el aire sin crear zonas de sombra. Si la próxima cosecha mantiene los resultados actuales, el Ayuntamiento estudiará adaptar otras cubiertas públicas.`,
+    sourceNote,
+    ...review,
+  },
+  {
+    id: 'reading-t4-club-lectura',
+    task: 'tarea4',
+    title: 'Un club de lectura dentro del hospital',
+    passage: `Cuando la biblioteca municipal propuso crear un club de lectura en el hospital comarcal, algunos médicos dudaron de que los pacientes tuvieran ánimo para leer. La coordinadora defendió el proyecto puesto que la lectura compartida había dado buenos resultados en otros centros. Se acordó empezar con un grupo pequeño, de modo que fuera posible adaptar las sesiones a cada planta.
+
+Las normas son flexibles. Los participantes pueden incorporarse en cualquier momento, a no ser que el personal sanitario recomiende lo contrario. Los libros se eligen por votación y las sesiones se celebran por la tarde, mientras que las mañanas se reservan para las pruebas médicas. A medida que el club fue creciendo, se sumaron familiares y hasta algunos enfermeros fuera de su turno.
+
+Los voluntarios reciben una formación breve antes de participar. Pueden leer en voz alta con tal de que respeten el ritmo de cada paciente y eviten comentar diagnósticos. Aun cuando algunos participantes no terminan los libros, los organizadores consideran que el club cumple su función: durante una hora, la conversación gira en torno a una historia y no a la enfermedad.`,
     sourceNote,
     ...review,
   },
