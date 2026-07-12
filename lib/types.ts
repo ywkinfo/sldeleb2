@@ -144,11 +144,13 @@ export type OpenAttempt =
   | (BaseAttempt & {
       kind: "open";
       completed: false;
+      draft?: string;
       selfScore?: never;
     })
   | (BaseAttempt & {
       kind: "open";
       completed: true;
+      draft?: string;
       selfScore: 1 | 2 | 3;
     });
 

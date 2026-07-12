@@ -155,4 +155,28 @@ export const practiceSets = [
     itemIds: ['s-survey-workplace'],
     ...review,
   },
+  {
+    id: 'set-listening-t1',
+    title: '듣기 Tarea 1 · 기차역 안내방송',
+    estimatedMin: 5,
+    skill: 'listening',
+    itemIds: ['l-t1-estacion-01'],
+    ...review,
+  },
+  {
+    id: 'set-listening-t2',
+    title: '듣기 Tarea 2 · 언어 학습 경험담 (역할 매칭)',
+    estimatedMin: 8,
+    skill: 'listening',
+    itemIds: ['l-t2-idiomas-01', 'l-t2-idiomas-02', 'l-t2-idiomas-03'],
+    ...review,
+  },
+  {
+    id: 'set-listening-t4',
+    title: '듣기 Tarea 4 · 젊은 예술가 인터뷰',
+    estimatedMin: 8,
+    skill: 'listening',
+    itemIds: ['l-t4-artista-01', 'l-t4-artista-02'],
+    ...review,
+  },
 ] satisfies PracticeSet[];

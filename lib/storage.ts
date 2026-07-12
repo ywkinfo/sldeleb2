@@ -59,6 +59,10 @@ export function isAttemptState(value: unknown): value is AttemptState {
     return false;
   }
 
+  if (attempt.draft !== undefined && typeof attempt.draft !== "string") {
+    return false;
+  }
+
   if (!attempt.completed) return attempt.selfScore === undefined;
   return attempt.selfScore === 1 || attempt.selfScore === 2 || attempt.selfScore === 3;
 }
@@ -88,6 +92,30 @@ export function parseProgressSnapshot(raw: string): ProgressSnapshot | null {
   } catch {
     return null;
   }
+}
+
+export function mergeSnapshots(current: ProgressSnapshot, incoming: ProgressSnapshot): ProgressSnapshot {
+  const mergedAttempts = { ...current.attempts };
+  for (const [itemId, attempt] of Object.entries(incoming.attempts)) {
+    const existing = mergedAttempts[itemId];
+    if (!existing || attempt.lastAttemptedAt >= existing.lastAttemptedAt) {
+      mergedAttempts[itemId] = attempt;
+    }
+  }
+  return { schemaVersion: PROGRESS_SCHEMA_VERSION, attempts: mergedAttempts };
+}
+
+export function exportProgress(store: AttemptStore): string {
+  return JSON.stringify(store.load().snapshot);
+}
+
+export function importProgress(store: AttemptStore, jsonStr: string): boolean {
+  const incoming = parseProgressSnapshot(jsonStr);
+  if (!incoming) return false;
+  const current = store.load().snapshot;
+  const merged = mergeSnapshots(current, incoming);
+  store.save(merged);
+  return true;
 }
 
 class MemoryStorage implements StorageLike {

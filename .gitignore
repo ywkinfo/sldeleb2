@@ -42,3 +42,7 @@ next-env.d.ts
 /outputs/
 /work/
 /.omx/
+.venv/
+.serve_temp/
+test-results/
+playwright-report/

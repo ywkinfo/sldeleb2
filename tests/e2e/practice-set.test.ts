@@ -4,7 +4,7 @@ test.describe('Practice Set Flow', () => {
   test('should navigate from practice index to a set and answer a question', async ({ page, baseURL }) => {
     const startUrl = baseURL?.endsWith('/') ? baseURL : `${baseURL}/`;
     const isLocal = baseURL?.includes('localhost');
-    const path = isLocal ? '/sldeleb2/practice' : '/practice';
+    const path = isLocal ? '/sldeleb2/practice/' : '/practice/';
     const targetUrl = new URL(path, startUrl).href;
 
     await page.goto(targetUrl);

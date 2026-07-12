@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://ywkinfo.github.io/sldeleb2/sitemap.xml
+Sitemap: http://localhost:3005/sitemap.xml

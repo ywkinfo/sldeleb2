@@ -12,11 +12,13 @@ export function useAttempts() {
   const initial: ProgressSnapshot = { schemaVersion: 1, attempts: {} };
   const [snapshot, setSnapshot] = useState<ProgressSnapshot>(initial);
   const [persistent, setPersistent] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const loaded = store.load();
     setSnapshot(loaded.snapshot);
     setPersistent(loaded.persistent);
+    setHydrated(true);
     return store.subscribe((next) => {
       setSnapshot(next.snapshot);
       setPersistent(next.persistent);
@@ -32,5 +34,5 @@ export function useAttempts() {
     setPersistent(result.persistent);
   };
 
-  return { attempts: snapshot.attempts, persistent, update, remove };
+  return { attempts: snapshot.attempts, persistent, hydrated, update, remove };
 }

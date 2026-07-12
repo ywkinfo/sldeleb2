@@ -904,6 +904,117 @@ export const practiceItems = [
     tags: ['의견문', '교육', '대안'],
     ...review,
   },
+
+  // Audición · Tarea 1 — Aviso en la estación de tren
+  {
+    id: 'l-t1-estacion-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-anuncio-estacion',
+    prompt: 'Según el aviso, ¿qué deben hacer los pasajeros del tren a Sevilla?',
+    options: [
+      { key: 'a', text: 'Esperar veinte minutos en la vía número seis.' },
+      { key: 'b', text: 'Cambiar de vía debido a una avería.' },
+      { key: 'c', text: 'Solicitar un nuevo billete en la taquilla.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '안내방송에서는 "deben dirigirse a la vía número cuatro en lugar de la vía número seis"라고 하여 6번 대신 4번 승강장으로 가라고 지시하고 있습니다. 플랫폼을 바꿔야 하므로 b가 정답입니다.',
+    tags: ['장소안내', '듣기', '교통'],
+    ...review,
+  },
+
+  // Audición · Tarea 2 — Experiencias de aprendizaje de idiomas
+  {
+    id: 'l-t2-idiomas-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona mejoró interactuando de forma relajada con hablantes de otras partes del mundo.',
+    options: [
+      { key: 'a', text: 'Carlos' },
+      { key: 'b', text: 'Lucía' },
+      { key: 'c', text: 'Marcos' },
+      { key: 'd', text: 'Elena' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      'Carlos는 다른 나라 사람들과 비디오 게임을 하며 자신도 모르게 영어를 배웠다고 말합니다. 편안한 상호작용을 통해 발전한 사례이므로 Carlos입니다.',
+    tags: ['의견매칭', '듣기', '언어학습'],
+    ...review,
+  },
+  {
+    id: 'l-t2-idiomas-02',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona considera indispensable conocer las reglas de la lengua antes de practicarla.',
+    options: [
+      { key: 'a', text: 'Carlos' },
+      { key: 'b', text: 'Lucía' },
+      { key: 'c', text: 'Marcos' },
+      { key: 'd', text: 'Elena' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      'Marcos는 구조가 많이 필요하며 문법을 기초부터 이해하지 못하면 길을 잃은 느낌을 받는다고 말했습니다. 매일 1시간씩 이론을 복습한다는 Marcos가 정답입니다.',
+    tags: ['의견매칭', '듣기', '언어학습'],
+    ...review,
+  },
+  {
+    id: 'l-t2-idiomas-03',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona aprendió progresivamente al superar su inseguridad en las conversaciones.',
+    options: [
+      { key: 'a', text: 'Carlos' },
+      { key: 'b', text: 'Lucía' },
+      { key: 'c', text: 'Marcos' },
+      { key: 'd', text: 'Elena' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      'Lucía는 처음에는 문법 실수가 많았지만 말하기에 대한 두려움을 극복하고(perder el miedo a hablar) 원어민들과 대화하면서 유창성을 얻었다고 말합니다.',
+    tags: ['의견매칭', '듣기', '언어학습'],
+    ...review,
+  },
+
+  // Audición · Tarea 4 — Entrevista a un joven artista
+  {
+    id: 'l-t4-artista-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: '¿Qué le impulsó a crear su colección de esta manera?',
+    options: [
+      { key: 'a', text: 'La falta de recursos económicos para comprar materiales.' },
+      { key: 'b', text: 'El deseo de llamar la atención sobre el cuidado del medio ambiente.' },
+      { key: 'c', text: 'Una propuesta de la galería de arte en la que expone.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      'Mario는 쓰레기에서 아름다운 것이 탄생할 수 있음을 보여주고 관객들이 성찰하게 만들고 싶었다고 말합니다(hacer reflexionar al público). 환경 문제(impacto ambiental)에 대한 경각심을 일깨우고자 했으므로 b입니다.',
+    tags: ['목적', '듣기', '환경'],
+    ...review,
+  },
+  {
+    id: 'l-t4-artista-02',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: 'En su opinión, lo más importante para alguien que empieza en el arte es…',
+    options: [
+      { key: 'a', text: 'tener un espacio de trabajo adecuado y organizado.' },
+      { key: 'b', text: 'invertir en herramientas de buena calidad.' },
+      { key: 'c', text: 'comunicar un mensaje personal con los medios disponibles.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      '완벽한 작업실이나 비싼 도구(herramientas caras)를 기다리지 말고 당장 손에 있는 것으로 시작하라고 조언합니다. 예술은 소통하는 것이고 자신만의 목소리를 찾는 게 중요하므로 c가 맞습니다.',
+    tags: ['조언', '듣기', '예술'],
+    ...review,
+  },
   {
     id: 'w-local-market-article',
     skill: 'writing',

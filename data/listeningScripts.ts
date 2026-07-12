@@ -53,4 +53,62 @@ CONFERENCIANTE: Termino con una idea. Reducir el desperdicio no exige grandes sa
     sourceNote,
     ...review,
   },
+  {
+    id: 'listening-t1-anuncio-estacion',
+    task: 'tarea1',
+    title: 'Aviso en la estación de tren',
+    audioSrc: '/audio/listening/listening-t1-anuncio-estacion.m4a',
+    transcript: `LOCUTOR: Atención, por favor. Los pasajeros con destino a Sevilla, cuyo tren tenía salida prevista a las diecisiete treinta horas, deben dirigirse a la vía número cuatro en lugar de la vía número seis. Les informamos que, debido a una avería en las instalaciones, el tren sufrirá un retraso estimado de veinte minutos. Sentimos las molestias que esto les pueda ocasionar y les rogamos que permanezcan atentos a próximos avisos. Muchas gracias.`,
+    voices: {
+      LOCUTOR: 'es-ES-AlvaroNeural',
+    },
+    rate: '+5%',
+    sourceNote,
+    ...review,
+  },
+  {
+    id: 'listening-t2-experiencias-idiomas',
+    task: 'tarea2',
+    title: 'Experiencias de aprendizaje de idiomas',
+    audioSrc: '/audio/listening/listening-t2-experiencias-idiomas.m4a',
+    transcript: `PRESENTADOR: Hoy en nuestro programa hablamos de cómo aprender idiomas. Tenemos a cuatro oyentes en línea. Empezamos con Carlos.
+CARLOS: Hola. Yo he descubierto que apuntarme a clases tradicionales no me funciona. Lo que de verdad me hizo avanzar con el inglés fue jugar a videojuegos con gente de otros países. Así aprendí sin darme cuenta.
+PRESENTADOR: Gracias, Carlos. Ahora escuchamos a Lucía.
+LUCÍA: Buenas tardes. Para mí, la clave es perder el miedo a hablar. Al principio cometía muchísimos errores gramaticales, pero me forzaba a hablar con nativos en intercambios. Poco a poco gané fluidez y los errores fueron desapareciendo solos.
+PRESENTADOR: Muy interesante, Lucía. ¿Qué nos cuentas tú, Marcos?
+MARCOS: Hola a todos. Pues yo soy todo lo contrario. Necesito mucha estructura. Si no entiendo la gramática desde la base, me siento perdido. Compro libros de ejercicios y dedico al menos una hora diaria a repasar la teoría.
+PRESENTADOR: Y por último, tenemos a Elena.
+ELENA: Buenas. Mi método es el entretenimiento. Veo series, películas y escucho podcasts constantemente en el idioma que quiero aprender. Al final, el oído se acostumbra a la pronunciación y adquiero vocabulario de forma natural.
+PRESENTADOR: Cuatro estrategias muy diferentes. Gracias a todos por compartir sus experiencias.`,
+    voices: {
+      PRESENTADOR: 'es-MX-JorgeNeural',
+      CARLOS: 'es-ES-AlvaroNeural',
+      LUCÍA: 'es-ES-ElviraNeural',
+      MARCOS: 'es-US-AlonsoNeural',
+      ELENA: 'es-US-PalomaNeural',
+    },
+    rate: '+0%',
+    sourceNote,
+    ...review,
+  },
+  {
+    id: 'listening-t4-entrevista-artista',
+    task: 'tarea4',
+    title: 'Entrevista a un joven artista',
+    audioSrc: '/audio/listening/listening-t4-entrevista-artista.m4a',
+    transcript: `PERIODISTA: Hoy estamos con Mario, un joven artista que acaba de inaugurar su primera exposición. Mario, felicidades. ¿Cómo te sientes al ver tus obras en esta galería?
+MARIO: Muchas gracias. La verdad es que estoy emocionado y un poco abrumado. Llevo trabajando en esta colección casi dos años en el sótano de mi casa, y verla aquí, con tanta gente interesada, es un sueño cumplido.
+PERIODISTA: Tus cuadros destacan por el uso de colores muy vivos y materiales reciclados. ¿De dónde surge esta idea?
+MARIO: Siempre me ha preocupado el impacto ambiental de nuestro consumo. Un día empecé a recoger plásticos y cartones abandonados en la playa. Quería demostrar que de la basura puede nacer algo hermoso y, al mismo tiempo, hacer reflexionar al público.
+PERIODISTA: ¿Qué le dirías a otros jóvenes que quieren dedicarse al arte pero no se atreven?
+MARIO: Que no esperen a tener el estudio perfecto o los mejores materiales. Que empiecen hoy mismo con lo que tengan a mano. El arte se trata de comunicar, no de tener herramientas caras. Lo importante es encontrar tu propia voz.
+PERIODISTA: Un gran consejo. Muchas gracias por tu tiempo, Mario.`,
+    voices: {
+      PERIODISTA: 'es-ES-ElviraNeural',
+      MARIO: 'es-ES-AlvaroNeural',
+    },
+    rate: '+0%',
+    sourceNote,
+    ...review,
+  },
 ];

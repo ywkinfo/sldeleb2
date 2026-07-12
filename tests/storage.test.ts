@@ -103,3 +103,47 @@ describe("AttemptStore", () => {
     expect(() => createAttemptStore(new FakeStorage()).save(bad)).toThrow(TypeError);
   });
 });
+
+import { mergeSnapshots, importProgress, exportProgress } from "../lib/storage";
+
+describe("importProgress & mergeSnapshots", () => {
+  it("merges incoming snapshots, preferring newer timestamps", () => {
+    const current: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {
+        "item-1": { kind: "reading", itemId: "item-1", attemptCount: 1, lastAttemptedAt: 100, correct: true, flagged: false, selectedAnswer: "a" }
+      }
+    };
+    const incoming: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {
+        "item-1": { kind: "reading", itemId: "item-1", attemptCount: 2, lastAttemptedAt: 50, correct: false, flagged: true, selectedAnswer: "b" },
+        "item-2": { kind: "open", itemId: "item-2", attemptCount: 1, lastAttemptedAt: 200, completed: false, draft: "hello", flagged: false }
+      }
+    };
+    
+    const merged = mergeSnapshots(current, incoming);
+    
+    // item-1 should keep the current one because 100 >= 50
+    expect(merged.attempts["item-1"].attemptCount).toBe(1);
+    // item-2 should be added
+    expect(merged.attempts["item-2"]).toBeDefined();
+    if (merged.attempts["item-2"].kind === "open") {
+      expect(merged.attempts["item-2"].draft).toBe("hello");
+    }
+  });
+
+  it("updates store when imported", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.save(snapshot);
+    const jsonStr = JSON.stringify({
+      schemaVersion: 1,
+      attempts: {
+        "reading-1": { ...snapshot.attempts["reading-1"], attemptCount: 5, lastAttemptedAt: 999 }
+      }
+    });
+    
+    expect(importProgress(store, jsonStr)).toBe(true);
+    expect(store.load().snapshot.attempts["reading-1"].attemptCount).toBe(5);
+  });
+});
