@@ -12,8 +12,8 @@ export function SyncProgress() {
       const data = exportProgress(getDefaultAttemptStore());
       navigator.clipboard.writeText(data);
       setMessage("진도 데이터가 클립보드에 복사되었습니다.");
-    } catch (e) {
-      setMessage("데이터 내보내기에 실패했습니다.");
+    } catch {
+      alert("클립보드 복사에 실패했습니다.");
     }
   };
 
@@ -27,8 +27,8 @@ export function SyncProgress() {
       } else {
         setMessage("유효하지 않은 데이터 형식입니다.");
       }
-    } catch (e) {
-      setMessage("오류가 발생했습니다.");
+    } catch {
+      alert("잘못된 데이터 형식입니다.");
     }
   };
 

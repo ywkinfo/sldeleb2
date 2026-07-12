@@ -104,7 +104,7 @@ describe("AttemptStore", () => {
   });
 });
 
-import { mergeSnapshots, importProgress, exportProgress } from "../lib/storage";
+import { mergeSnapshots, importProgress } from "../lib/storage";
 
 describe("importProgress & mergeSnapshots", () => {
   it("merges incoming snapshots, preferring newer timestamps", () => {

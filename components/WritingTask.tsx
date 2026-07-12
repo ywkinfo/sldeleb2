@@ -8,27 +8,18 @@ import { useAttempts } from "./useAttempts";
 
 export function WritingTask({ item }: { item: WritingTaskItem }) {
   const { attempts, hydrated, update } = useAttempts();
-  const [draft, setDraft] = useState("");
-  const [loaded, setLoaded] = useState(false);
+  const [localDraft, setLocalDraft] = useState<string | null>(null);
+
+  const attempt = attempts[item.id];
+  const storedDraft = attempt?.kind === "open" ? attempt.draft || "" : "";
+  const draft = localDraft !== null ? localDraft : (hydrated ? storedDraft : "");
 
   useEffect(() => {
-    if (!loaded && hydrated) {
-      const attempt = attempts[item.id];
-      if (attempt?.kind === "open" && attempt.draft) {
-        setDraft(attempt.draft);
-      }
-      setLoaded(true);
-    }
-  }, [attempts, item.id, loaded, hydrated]);
-
-  useEffect(() => {
-    if (!loaded) return;
+    if (localDraft === null) return;
     const timer = setTimeout(() => {
-      const attempt = attempts[item.id];
-      const existingDraft = attempt?.kind === "open" ? attempt.draft || "" : "";
-      if (draft !== existingDraft) {
+      if (localDraft !== storedDraft) {
         if (attempt?.kind === "open") {
-          update({ ...attempt, draft, lastAttemptedAt: Date.now() });
+          update({ ...attempt, draft: localDraft, lastAttemptedAt: Date.now() });
         } else {
           update({
             itemId: item.id,
@@ -37,13 +28,13 @@ export function WritingTask({ item }: { item: WritingTaskItem }) {
             flagged: false,
             attemptCount: 1,
             lastAttemptedAt: Date.now(),
-            draft,
+            draft: localDraft,
           });
         }
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, [draft, attempts, item.id, update, loaded]);
+  }, [localDraft, storedDraft, attempt, item.id, update]);
 
   const count = draft.trim() ? draft.trim().split(/\s+/).length : 0;
   return <article className="card" id={item.id}>
@@ -51,7 +42,7 @@ export function WritingTask({ item }: { item: WritingTaskItem }) {
     <h2>쓰기 과제</h2><p className="badge warning">창작 과제 · 공식 기출 아님</p>
     <p lang="es" className="lead">{item.prompt}</p>
     <Timer minutes={item.timeLimitMin} label="쓰기" />
-    <div className="field" style={{ marginTop: "1rem" }}><label htmlFor={`${item.id}-draft`}>연습 답안 — 브라우저 로컬 저장소에 자동 저장됩니다</label><textarea id={`${item.id}-draft`} lang="es" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Escribe aquí…" /><span className="muted" aria-live="polite">{count} palabras · 권장 {item.wordCount[0]}–{item.wordCount[1]} palabras</span></div>
+    <div className="field" style={{ marginTop: "1rem" }}><label htmlFor={`${item.id}-draft`}>연습 답안 — 브라우저 로컬 저장소에 자동 저장됩니다</label><textarea id={`${item.id}-draft`} lang="es" value={draft} onChange={(e) => setLocalDraft(e.target.value)} placeholder="Escribe aquí…" /><span className="muted" aria-live="polite">{count} palabras · 권장 {item.wordCount[0]}–{item.wordCount[1]} palabras</span></div>
     <div className="grid cols-2" style={{ marginTop: "1.2rem" }}><div><h3>B2 체크리스트</h3><ul className="checklist">{item.checklistKo.map((line) => <li key={line}>{line}</li>)}</ul></div><details><summary><strong>모범 개요 보기</strong></summary><div className="outline-box">{item.modelOutlineKo}</div></details></div>
     <SelfAssessment itemId={item.id} />
   </article>;

@@ -41,7 +41,7 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
   });
 
   const vulnerableTags = Array.from(tagStats.entries())
-    .filter(([_, stats]) => stats.total >= 2) // 최소 2번 이상 푼 태그
+    .filter(([, stats]) => stats.total >= 2) // 최소 2번 이상 푼 태그
     .map(([tag, stats]) => ({ tag, rate: Math.round(stats.incorrect / stats.total * 100) }))
     .filter(t => t.rate >= 30) // 오답률 30% 이상만
     .sort((a, b) => b.rate - a.rate)
