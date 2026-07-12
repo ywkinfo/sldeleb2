@@ -3,9 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Practice Set Flow', () => {
   test('should navigate from practice index to a set and answer a question', async ({ page, baseURL }) => {
     const startUrl = baseURL?.endsWith('/') ? baseURL : `${baseURL}/`;
-    const isLocal = baseURL?.includes('localhost');
-    const path = isLocal ? '/sldeleb2/practice/' : '/practice/';
-    const targetUrl = new URL(path, startUrl).href;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const targetUrl = new URL(basePath + '/practice', startUrl).href;
 
     await page.goto(targetUrl);
 

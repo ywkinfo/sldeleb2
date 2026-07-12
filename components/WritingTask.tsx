@@ -44,6 +44,6 @@ export function WritingTask({ item }: { item: WritingTaskItem }) {
     <Timer minutes={item.timeLimitMin} label="쓰기" />
     <div className="field" style={{ marginTop: "1rem" }}><label htmlFor={`${item.id}-draft`}>연습 답안 — 브라우저 로컬 저장소에 자동 저장됩니다</label><textarea id={`${item.id}-draft`} lang="es" value={draft} onChange={(e) => setLocalDraft(e.target.value)} placeholder="Escribe aquí…" /><span className="muted" aria-live="polite">{count} palabras · 권장 {item.wordCount[0]}–{item.wordCount[1]} palabras</span></div>
     <div className="grid cols-2" style={{ marginTop: "1.2rem" }}><div><h3>B2 체크리스트</h3><ul className="checklist">{item.checklistKo.map((line) => <li key={line}>{line}</li>)}</ul></div><details><summary><strong>모범 개요 보기</strong></summary><div className="outline-box">{item.modelOutlineKo}</div></details></div>
-    <SelfAssessment itemId={item.id} />
+    <SelfAssessment itemId={item.id} skill="writing" />
   </article>;
 }

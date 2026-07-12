@@ -25,10 +25,11 @@ async function request(url: string, method: "HEAD" | "GET"): Promise<Response> {
 }
 
 async function check(id: string, url: string): Promise<LinkResult> {
+  const checkUrl = url.split('#')[0];
   try {
-    let response = await request(url, "HEAD");
+    let response = await request(checkUrl, "HEAD");
     if (response.status === 405 || response.status === 501) {
-      response = await request(url, "GET");
+      response = await request(checkUrl, "GET");
     }
     await response.body?.cancel();
     return { id, url, status: response.status };

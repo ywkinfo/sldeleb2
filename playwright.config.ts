@@ -8,8 +8,15 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3005',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3005',
     trace: 'on-first-retry',
+  },
+  webServer: {
+    command: 'npm run serve:pages',
+    url: 'http://127.0.0.1:3005/sldeleb2/',
+    reuseExistingServer: !process.env.CI,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
   projects: [
     {

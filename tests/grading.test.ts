@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   completeOpenAttempt,
+  completeOpenAttemptWithRubric,
   gradeListeningAttempt,
   gradeReadingAttempt,
   setAttemptFlag,
@@ -77,16 +78,56 @@ describe("listening grading", () => {
 });
 
 describe("open-task self assessment", () => {
-  it("records completion and the 1–3 self score", () => {
+  it("records completion and the 1-3 self score", () => {
     const first = completeOpenAttempt("write-1", 1, undefined, 100);
     const second = completeOpenAttempt("write-1", 3, first, 200);
     expect(second).toEqual({
       kind: "open",
       itemId: "write-1",
       completed: true,
+      draft: undefined,
       selfScore: 3,
       flagged: false,
       attemptCount: 2,
+      lastAttemptedAt: 200,
+    });
+  });
+
+  it("preserves draft and flag across completions", () => {
+    const incomplete = {
+      kind: "open",
+      itemId: "write-1",
+      completed: false,
+      draft: "mi borrador",
+      flagged: true,
+      attemptCount: 1,
+      lastAttemptedAt: 100,
+    } as const;
+    const completed = completeOpenAttempt("write-1", 2, incomplete, 150);
+    expect(completed.draft).toBe("mi borrador");
+    expect(completed.flagged).toBe(true);
+  });
+
+  it("calculates rubric stats properly and preserves previous state", () => {
+    const incomplete = {
+      kind: "open",
+      itemId: "speak-1",
+      completed: false,
+      draft: "notas",
+      flagged: false,
+      attemptCount: 2,
+      lastAttemptedAt: 100,
+    } as const;
+    
+    const completed = completeOpenAttemptWithRubric("speak-1", "speaking", { coherence: 2, fluency: 3, accuracy: 2, range: 3 }, incomplete, 200);
+    expect(completed).toMatchObject({
+      kind: "open",
+      itemId: "speak-1",
+      completed: true,
+      draft: "notas",
+      selfScore: 3, // average 2.5 -> 3
+      rubricScores: { coherence: 2, fluency: 3, accuracy: 2, range: 3 },
+      attemptCount: 3,
       lastAttemptedAt: 200,
     });
   });

@@ -8,10 +8,8 @@ test.describe('GitHub Pages Deployment', () => {
     // Actually, local playwright config uses http://localhost:3000.
     // When served by serve:pages script, the URL is http://localhost:3000/sldeleb2/
     
-    // We should explicitly go to /sldeleb2/ if it's local test. Wait, CI uses github pages base URL.
-    const isLocal = baseURL?.includes('localhost');
-    const path = isLocal ? '/sldeleb2/' : '/';
-    const targetUrl = new URL(path, startUrl).href;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const targetUrl = new URL(basePath + '/', startUrl).href;
 
     await page.goto(targetUrl);
     

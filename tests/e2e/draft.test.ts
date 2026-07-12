@@ -3,9 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Writing Draft Autosave', () => {
   test('should autosave draft to localStorage and restore it on reload', async ({ page, baseURL }) => {
     const startUrl = baseURL?.endsWith('/') ? baseURL : `${baseURL}/`;
-    const isLocal = baseURL?.includes('localhost');
-    const path = isLocal ? '/sldeleb2/practice/set/set-writing-formal/' : '/practice/set/set-writing-formal/';
-    const targetUrl = new URL(path, startUrl).href;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const targetUrl = new URL(basePath + '/practice/set/set-writing-formal', startUrl).href;
 
     await page.goto(targetUrl);
 

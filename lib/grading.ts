@@ -6,6 +6,7 @@ import type {
   ReadingAttempt,
   ReadingMCQItem,
 } from "./types";
+import { calculateRubricStats } from "./rubric";
 
 function previousCount(previous: AttemptState | undefined): number {
   return previous?.attemptCount ?? 0;
@@ -64,6 +65,7 @@ export function createOpenAttempt(
     kind: "open",
     itemId,
     completed: false,
+    draft: previous?.kind === "open" ? previous.draft : undefined,
     flagged: previousFlag(previous),
     attemptCount: previousCount(previous),
     lastAttemptedAt: now,
@@ -84,7 +86,30 @@ export function completeOpenAttempt(
     kind: "open",
     itemId,
     completed: true,
+    draft: previous?.kind === "open" ? previous.draft : undefined,
     selfScore,
+    flagged: previousFlag(previous),
+    attemptCount: previousCount(previous) + 1,
+    lastAttemptedAt: now,
+  };
+}
+
+export function completeOpenAttemptWithRubric(
+  itemId: string,
+  skill: "writing" | "speaking",
+  scores: import("./types").RubricScores,
+  previous?: AttemptState,
+  now = Date.now(),
+): OpenAttempt {
+  const stats = calculateRubricStats(skill, scores);
+
+  return {
+    kind: "open",
+    itemId,
+    completed: true,
+    draft: previous?.kind === "open" ? previous.draft : undefined,
+    selfScore: stats.holisticScore,
+    rubricScores: scores,
     flagged: previousFlag(previous),
     attemptCount: previousCount(previous) + 1,
     lastAttemptedAt: now,

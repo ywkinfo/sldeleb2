@@ -102,6 +102,43 @@ describe("AttemptStore", () => {
     };
     expect(() => createAttemptStore(new FakeStorage()).save(bad)).toThrow(TypeError);
   });
+
+  it("validates open attempts with rubricScores", () => {
+    const store = createAttemptStore(new FakeStorage());
+    const validWithRubric = {
+      ...snapshot,
+      attempts: {
+        "write-1": {
+          kind: "open",
+          itemId: "write-1",
+          completed: true,
+          selfScore: 2,
+          rubricScores: { adequacy: 2, coherence: 2, accuracy: 2, range: 2 },
+          flagged: false,
+          attemptCount: 1,
+          lastAttemptedAt: 100,
+        }
+      }
+    } as const;
+    expect(() => store.save(validWithRubric as unknown as ProgressSnapshot)).not.toThrow();
+
+    const invalidRubric = {
+      ...snapshot,
+      attempts: {
+        "write-1": {
+          kind: "open",
+          itemId: "write-1",
+          completed: true,
+          selfScore: 2,
+          rubricScores: { adequacy: 2, coherence: 2, accuracy: 2 }, // Missing range
+          flagged: false,
+          attemptCount: 1,
+          lastAttemptedAt: 100,
+        }
+      }
+    } as const;
+    expect(() => store.save(invalidRubric as unknown as ProgressSnapshot)).toThrow(TypeError);
+  });
 });
 
 import { mergeSnapshots, importProgress } from "../lib/storage";

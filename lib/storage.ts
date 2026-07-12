@@ -1,4 +1,5 @@
 import type { AttemptState, ProgressSnapshot } from "./types";
+import { isValidRubric } from "./rubric";
 
 export const PROGRESS_STORAGE_KEY = "dele-b2:v1";
 export const THEME_STORAGE_KEY = "dele-b2:theme:v1";
@@ -63,8 +64,16 @@ export function isAttemptState(value: unknown): value is AttemptState {
     return false;
   }
 
-  if (!attempt.completed) return attempt.selfScore === undefined;
-  return attempt.selfScore === 1 || attempt.selfScore === 2 || attempt.selfScore === 3;
+  if (!attempt.completed) {
+    return attempt.selfScore === undefined && attempt.rubricScores === undefined;
+  }
+  if (attempt.selfScore !== 1 && attempt.selfScore !== 2 && attempt.selfScore !== 3) {
+    return false;
+  }
+  if (attempt.rubricScores !== undefined) {
+    return isValidRubric("writing", attempt.rubricScores) || isValidRubric("speaking", attempt.rubricScores);
+  }
+  return true;
 }
 
 export function isProgressSnapshot(value: unknown): value is ProgressSnapshot {

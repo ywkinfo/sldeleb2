@@ -25,7 +25,16 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
   const readingRate = reading.length ? Math.round(reading.filter((a) => a.correct).length / reading.length * 100) : 0;
   const listeningRate = listening.length ? Math.round(listening.filter((a) => a.correct).length / listening.length * 100) : 0;
   const avg = open.length ? (open.reduce((sum, a) => sum + (a.kind === "open" && a.completed ? a.selfScore : 0), 0) / open.length).toFixed(1) : "–";
-  const review = list.filter((a) => a.flagged || (a.kind === "open" ? a.completed && a.selfScore === 1 : !a.correct));
+  const review = list.filter((a) => {
+    if (a.flagged) return true;
+    if (a.kind === "open") {
+      if (!a.completed) return false;
+      if (a.selfScore === 1) return true;
+      if (a.rubricScores) return Object.values(a.rubricScores).some((score) => score === 1);
+      return false;
+    }
+    return !a.correct;
+  });
 
   // 취약 태그 분석
   const tagStats = new Map<string, { total: number; incorrect: number }>();
@@ -48,13 +57,16 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
     .slice(0, 2);
 
   const vulnerableTagsSet = new Set(vulnerableTags.map(v => v.tag));
-  let recommended = incorrect
+  let recommended: import("@/lib/types").AttemptState[] = incorrect
     .filter(a => {
       const item = items.find(i => i.id === a.itemId);
       return item && "tags" in item && item.tags?.some(tag => vulnerableTagsSet.has(tag));
     });
   
-  if (recommended.length === 0) recommended = incorrect;
+  if (recommended.length === 0) {
+    const lowScores = open.filter((a) => a.kind === "open" && a.completed && a.selfScore === 1);
+    recommended = [...incorrect, ...lowScores];
+  }
   const todaysReview = recommended.sort((a, b) => a.lastAttemptedAt - b.lastAttemptedAt).slice(0, 3);
 
   return <>
@@ -88,7 +100,20 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
         const item = items.find((candidate) => candidate.id === attempt.itemId);
         const setId = item ? getSetIdForItem(item.id) : null;
         const targetUrl = setId ? sitePath(`/practice/set/${setId}#${item!.id}`) : sitePath("/practice");
-        return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong><div className="muted">{attempt.kind === "open" ? (attempt.completed ? `자기평가 ${attempt.selfScore}/3` : "미완료") : attempt.correct ? "정답" : "오답"} · {attempt.attemptCount}회 시도</div></div><div className="question-actions"><a className="button small" href={targetUrl}>다시 연습</a><button className="button secondary small" type="button" onClick={() => remove(attempt.itemId)}>기록 삭제</button></div></div>;
+        
+        let weakLabel = "";
+        if (attempt.kind === "open" && attempt.completed && attempt.rubricScores) {
+          const { calculateRubricStats, DIMENSION_LABELS } = require("@/lib/rubric");
+          const stats = calculateRubricStats(item?.skill === "writing" ? "writing" : "speaking", attempt.rubricScores);
+          if (stats.weakestDimensions.length > 0) {
+            weakLabel = `취약: ${DIMENSION_LABELS[stats.weakestDimensions[0]] || stats.weakestDimensions[0]}`;
+            if (stats.weakestDimensions.length > 1) {
+              weakLabel += ` 외 ${stats.weakestDimensions.length - 1}개`;
+            }
+          }
+        }
+
+        return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong><div className="muted">{attempt.kind === "open" ? (attempt.completed ? `자기평가 ${attempt.selfScore}/3${weakLabel ? ` · ${weakLabel}` : ""}` : "미완료") : attempt.correct ? "정답" : "오답"} · {attempt.attemptCount}회 시도</div></div><div className="question-actions"><a className="button small" href={targetUrl}>다시 연습</a><button className="button secondary small" type="button" onClick={() => remove(attempt.itemId)}>기록 삭제</button></div></div>;
       })}</div>}
     </div>
     {incorrect.length > 0 && <p className="muted" style={{ marginTop: "0.5rem" }}>정답률은 각 읽기·듣기 문항의 가장 최근 시도로 계산합니다. 자기평가는 공식 DELE 점수가 아닙니다.</p>}

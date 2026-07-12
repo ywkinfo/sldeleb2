@@ -140,18 +140,38 @@ export interface ListeningAttempt extends BaseAttempt {
   correct: boolean;
 }
 
+export type RubricScore = 1 | 2 | 3;
+
+export interface WritingRubricScores {
+  adequacy: RubricScore;
+  coherence: RubricScore;
+  accuracy: RubricScore;
+  range: RubricScore;
+}
+
+export interface SpeakingRubricScores {
+  coherence: RubricScore;
+  fluency: RubricScore;
+  accuracy: RubricScore;
+  range: RubricScore;
+}
+
+export type RubricScores = WritingRubricScores | SpeakingRubricScores;
+
 export type OpenAttempt =
   | (BaseAttempt & {
       kind: "open";
       completed: false;
       draft?: string;
       selfScore?: never;
+      rubricScores?: never;
     })
   | (BaseAttempt & {
       kind: "open";
       completed: true;
       draft?: string;
       selfScore: 1 | 2 | 3;
+      rubricScores?: RubricScores;
     });
 
 export type AttemptState = ReadingAttempt | ListeningAttempt | OpenAttempt;

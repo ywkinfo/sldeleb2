@@ -44,6 +44,6 @@ export function SpeakingTask({ item }: { item: SpeakingTaskItem }) {
     <div className="grid cols-2"><Timer minutes={item.prepTimeMin} label="준비" /><Timer minutes={item.speakTimeMin} label="발화" /></div>
     <div className="recorder" style={{ marginTop: "1rem" }}><strong>로컬 녹음</strong><span className="muted">음성은 업로드되거나 저장되지 않으며 이 페이지 세션에서만 재생됩니다.</span><div className="recorder-controls">{!recording ? <button className="button small" type="button" onClick={start}>● 녹음 시작</button> : <button className="button small" type="button" onClick={stop}>■ 녹음 중지</button>} {recording && <span role="status">녹음 중…</span>}</div>{audioUrl && <audio controls src={audioUrl}>녹음 재생을 지원하지 않는 브라우저입니다.</audio>}{error && <p className="storage-warning" role="alert">{error}</p>}</div>
     <div className="grid cols-2" style={{ marginTop: "1.2rem" }}><div><h3>B2 체크리스트</h3><ul className="checklist">{item.checklistKo.map((line) => <li key={line}>{line}</li>)}</ul></div><details><summary><strong>모범 개요 보기</strong></summary><div className="outline-box">{item.modelOutlineKo}</div></details></div>
-    <SelfAssessment itemId={item.id} />
+    <SelfAssessment itemId={item.id} skill="speaking" />
   </article>;
 }
