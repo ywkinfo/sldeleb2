@@ -1,7 +1,27 @@
 import type { NextConfig } from "next";
 
+const isStaticExport = process.env.STATIC_EXPORT === "1";
+
+if (isStaticExport) {
+  if (!process.env.NEXT_PUBLIC_BASE_PATH) {
+    throw new Error("NEXT_PUBLIC_BASE_PATH is required for static export");
+  }
+  if (!process.env.NEXT_PUBLIC_SITE_URL) {
+    throw new Error("NEXT_PUBLIC_SITE_URL is required for static export");
+  }
+}
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  ...(isStaticExport
+    ? {
+        output: "export",
+        basePath: process.env.NEXT_PUBLIC_BASE_PATH,
+        trailingSlash: true,
+        images: {
+          unoptimized: true,
+        },
+      }
+    : {}),
 };
 
 export default nextConfig;

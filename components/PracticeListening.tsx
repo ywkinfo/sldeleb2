@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ListeningMCQItem, ListeningScript } from "@/lib/types";
 import { gradeListeningAttempt, setAttemptFlag } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
+import { sitePath } from "@/lib/url";
 import { StorageNotice } from "./StorageNotice";
 
 export function PracticeListening({ script, items }: { script: ListeningScript; items: ListeningMCQItem[] }) {
@@ -19,7 +20,7 @@ export function PracticeListening({ script, items }: { script: ListeningScript; 
     <div className="eyebrow">Audición · {script.task.replace("tarea", "Tarea ")}</div>
     <h2 lang="es">{script.title}</h2>
     <p className="badge warning">창작 스크립트 · 합성 음성(TTS) · 공식 기출 아님</p>
-    <audio controls preload="metadata" src={script.audioSrc}>이 브라우저는 오디오 재생을 지원하지 않습니다.</audio>
+    <audio controls preload="metadata" src={sitePath(script.audioSrc)}>이 브라우저는 오디오 재생을 지원하지 않습니다.</audio>
     <details className="transcript">
       <summary>대본 보기 — 먼저 듣고 문제를 푼 뒤 확인하세요</summary>
       <div className="passage" lang="es">{script.transcript}</div>
