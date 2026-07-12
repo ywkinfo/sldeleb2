@@ -13,17 +13,18 @@ export function MaterialsFilter({ resources }: { resources: OfficialResource[] }
   const [type, setType] = useState("all");
   const [year, setYear] = useState("all");
   const years = [...new Set(resources.map((r) => r.year).filter((v): v is number => typeof v === "number"))].sort((a,b) => b-a);
+  const hasTasks = resources.some(r => r.task);
   const filtered = resources.filter((r) =>
     (skill === "all" || r.skill === skill || r.skill === "all") &&
-    (task === "all" || r.task === task) &&
+    (task === "all" || !hasTasks || r.task === task) &&
     (type === "all" || r.resourceType === type) &&
-    (year === "all" || String(r.year) === year)
+    (year === "all" || (year === "none" ? r.year === null : String(r.year) === year))
   );
   return <>
     <div className="filters" aria-label="공식 자료 필터">
-      <div className="field"><label htmlFor="filter-year">연도</label><select id="filter-year" value={year} onChange={(e) => setYear(e.target.value)}><option value="all">모든 연도</option><option value="null">연도 없는 모델</option>{years.map((v) => <option key={v}>{v}</option>)}</select></div>
+      <div className="field"><label htmlFor="filter-year">연도</label><select id="filter-year" value={year} onChange={(e) => setYear(e.target.value)}><option value="all">모든 연도</option><option value="none">연도 없는 모델</option>{years.map((v) => <option key={v}>{v}</option>)}</select></div>
       <div className="field"><label htmlFor="filter-skill">영역</label><select id="filter-skill" value={skill} onChange={(e) => setSkill(e.target.value)}><option value="all">모든 영역</option>{Object.entries(skillLabels).filter(([k]) => k !== "all").map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-      <div className="field"><label htmlFor="filter-task">과제</label><select id="filter-task" value={task} onChange={(e) => setTask(e.target.value)}><option value="all">모든 Tarea</option>{[1,2,3,4,5].map((n) => <option key={n} value={`tarea${n}`}>Tarea {n}</option>)}</select></div>
+      {hasTasks && <div className="field"><label htmlFor="filter-task">과제</label><select id="filter-task" value={task} onChange={(e) => setTask(e.target.value)}><option value="all">모든 Tarea</option>{[1,2,3,4,5].map((n) => <option key={n} value={`tarea${n}`}>Tarea {n}</option>)}</select></div>}
       <div className="field"><label htmlFor="filter-type">자료 유형</label><select id="filter-type" value={type} onChange={(e) => setType(e.target.value)}><option value="all">모든 유형</option>{Object.entries(typeLabels).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></div>
     </div>
     <p className="result-count" role="status">자료 {filtered.length}개</p>

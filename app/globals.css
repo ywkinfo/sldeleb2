@@ -133,7 +133,7 @@ h3 { margin: 0 0 .7rem; font-size: 1.35rem; }
 
 .page-hero { padding: clamp(3.5rem, 8vw, 7rem) 0 2.5rem; border-bottom: 1px solid var(--line); }
 .page-hero h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
-.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1.5rem; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; margin-bottom: 1.5rem; }
 .field { display: grid; gap: .35rem; }
 .field label { font-size: .82rem; font-weight: 750; }
 .field select, .field input, .field textarea {
