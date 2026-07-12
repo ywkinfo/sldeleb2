@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NavLinks } from "@/components/NavLinks";
 import "./globals.css";
 
 import { requestOrigin, absoluteUrl, sitePath } from "@/lib/url";
@@ -50,11 +51,11 @@ function Header() {
         <span className="brand-copy"><strong>Spanish Lab · DELE B2</strong><span>스페인어 연구소</span></span>
       </a>
       <nav className="site-nav desktop-nav" aria-label="주요 메뉴">
-        {nav.map(([label, href]) => <a key={href} href={sitePath(href)}>{label}</a>)}
+        <NavLinks items={nav} />
       </nav>
       <ThemeToggle />
     </div>
-    <nav className="mobile-nav" aria-label="모바일 메뉴"><div className="site-shell">{nav.map(([label, href]) => <a key={href} href={sitePath(href)}>{label}</a>)}</div></nav>
+    <nav className="mobile-nav" aria-label="모바일 메뉴"><div className="site-shell"><NavLinks items={nav} /></div></nav>
   </header>;
 }
 

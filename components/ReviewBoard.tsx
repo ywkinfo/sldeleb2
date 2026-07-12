@@ -6,6 +6,7 @@ import { StorageNotice } from "./StorageNotice";
 import { sitePath } from "@/lib/url";
 import { getSetIdForItem } from "@/lib/sets";
 import { calculateRubricStats, DIMENSION_LABELS } from "@/lib/rubric";
+import { summarizeRate, RATE_MIN_ATTEMPTS } from "@/lib/progress";
 
 import { SyncProgress } from "./SyncProgress";
 
@@ -23,8 +24,8 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
   const open = list.filter((a) => a.kind === "open" && a.completed);
   const mcq = [...reading, ...listening];
   const incorrect = mcq.filter((a) => !a.correct);
-  const readingRate = reading.length ? Math.round(reading.filter((a) => a.correct).length / reading.length * 100) : 0;
-  const listeningRate = listening.length ? Math.round(listening.filter((a) => a.correct).length / listening.length * 100) : 0;
+  const readingRate = summarizeRate(reading.filter((a) => a.correct).length, reading.length);
+  const listeningRate = summarizeRate(listening.filter((a) => a.correct).length, listening.length);
   const avg = open.length ? (open.reduce((sum, a) => sum + (a.kind === "open" && a.completed ? a.selfScore : 0), 0) / open.length).toFixed(1) : "–";
   const review = list.filter((a) => {
     if (a.flagged) return true;
@@ -73,8 +74,8 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
   return <>
     <StorageNotice persistent={persistent} />
     <div className="review-summary">
-      <div className="card flat"><span className="eyebrow">읽기</span><h3>{readingRate}%</h3><span className="muted">최근 시도 기준 정답률</span><div className="progress"><span style={{ width: `${readingRate}%` }} /></div></div>
-      <div className="card flat"><span className="eyebrow">듣기</span><h3>{listeningRate}%</h3><span className="muted">최근 시도 기준 정답률</span><div className="progress"><span style={{ width: `${listeningRate}%` }} /></div></div>
+      <div className="card flat"><span className="eyebrow">읽기</span><h3>{readingRate.text}</h3><span className="muted">{readingRate.kind === "percent" ? "최근 시도 기준 정답률" : `최근 시도 기준 (${RATE_MIN_ATTEMPTS}문항부터 %)`}</span><div className="progress"><span style={{ width: `${readingRate.pct}%` }} /></div></div>
+      <div className="card flat"><span className="eyebrow">듣기</span><h3>{listeningRate.text}</h3><span className="muted">{listeningRate.kind === "percent" ? "최근 시도 기준 정답률" : `최근 시도 기준 (${RATE_MIN_ATTEMPTS}문항부터 %)`}</span><div className="progress"><span style={{ width: `${listeningRate.pct}%` }} /></div></div>
       <div className="card flat"><span className="eyebrow">쓰기·말하기</span><h3>{avg} / 3</h3><span className="muted">완료한 자기평가 평균</span></div>
       <div className="card flat"><span className="eyebrow">다시 볼 항목</span><h3>{review.length}개</h3><span className="muted">오답·낮은 자기평가·플래그</span></div>
     </div>

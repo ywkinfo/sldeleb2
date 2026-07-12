@@ -21,7 +21,7 @@ export function SetSummary({ set, items, allSets }: { set: PracticeSet, items: P
   });
 
   return (
-    <div className="card" style={{ marginTop: "2rem", borderColor: "var(--accent)", borderWidth: "2px" }}>
+    <div className="card" id="set-summary" style={{ marginTop: "2rem", borderColor: "var(--accent)", borderWidth: "2px" }}>
       <h2>세트 요약</h2>
       <p className="lead" style={{ marginBottom: "1rem" }}>
         진행 상태: <strong>{prog.answered} / {prog.total} 완료</strong>

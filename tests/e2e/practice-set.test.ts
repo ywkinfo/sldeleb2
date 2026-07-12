@@ -26,8 +26,9 @@ test.describe('Practice Set Flow', () => {
     await checkAnswerBtn.click();
     await expect(page.locator('.feedback').first()).toBeVisible();
 
-    // Check SetSummary displays 1/6 and the wrong item link
-    await expect(page.locator('text=1 / 6 완료')).toBeVisible();
+    // Both the sticky progress bar and SetSummary display 1/6
+    await expect(page.locator('.set-progress-bar')).toContainText('1 / 6 완료');
+    await expect(page.locator('#set-summary')).toContainText('1 / 6 완료');
     
     // The anchor link for r-lib-01 should be visible since it was wrong
     const wrongLink = page.locator('a[href="#r-lib-01"]');
@@ -59,8 +60,10 @@ test.describe('Practice Set Flow', () => {
     // Go back to the set page
     await page.goto(new URL(basePath + '/practice/set/set-reading-library', startUrl).href);
     
-    // Check SetSummary shows done
-    await expect(page.locator('text=6 / 6 완료')).toBeVisible();
+    // Sticky bar shows completion plus the results CTA; SetSummary shows the score
+    await expect(page.locator('.set-progress-bar')).toContainText('6 / 6 완료');
+    await expect(page.locator('.set-progress-bar a:has-text("세트 결과 보기")')).toBeVisible();
+    await expect(page.locator('#set-summary')).toContainText('6 / 6 완료');
     await expect(page.locator('text=(정답 5/6)')).toBeVisible();
 
     // Should have "다음 세트" link

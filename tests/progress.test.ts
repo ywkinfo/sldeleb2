@@ -119,3 +119,23 @@ describe('Progress Helpers', () => {
     });
   });
 });
+
+import { summarizeRate, RATE_MIN_ATTEMPTS } from '../lib/progress';
+
+describe('summarizeRate', () => {
+  it('returns an empty marker when nothing was attempted', () => {
+    expect(summarizeRate(0, 0)).toEqual({ kind: 'empty', text: '–', pct: 0 });
+  });
+
+  it('shows a fraction below the minimum sample size', () => {
+    const rate = summarizeRate(1, RATE_MIN_ATTEMPTS - 1);
+    expect(rate.kind).toBe('sample');
+    expect(rate.text).toBe(`1/${RATE_MIN_ATTEMPTS - 1} 정답`);
+    expect(rate.pct).toBe(25);
+  });
+
+  it('shows a percentage at or above the minimum sample size', () => {
+    expect(summarizeRate(3, RATE_MIN_ATTEMPTS)).toEqual({ kind: 'percent', text: '60%', pct: 60 });
+    expect(summarizeRate(10, 10)).toEqual({ kind: 'percent', text: '100%', pct: 100 });
+  });
+});

@@ -180,7 +180,38 @@ describe("importProgress & mergeSnapshots", () => {
       }
     });
     
-    expect(importProgress(store, jsonStr)).toBe(true);
+    expect(importProgress(store, jsonStr)).toEqual({ added: 0, updated: 1, skipped: 0 });
     expect(store.load().snapshot.attempts["reading-1"].attemptCount).toBe(5);
+  });
+
+  it("returns merge stats for added, updated and skipped attempts", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.save({
+      schemaVersion: 1,
+      attempts: {
+        "keep-newer": { kind: "reading", itemId: "keep-newer", attemptCount: 3, lastAttemptedAt: 900, correct: true, flagged: false, selectedAnswer: "a" },
+        "replace-older": { kind: "reading", itemId: "replace-older", attemptCount: 1, lastAttemptedAt: 100, correct: false, flagged: false, selectedAnswer: "b" },
+      },
+    });
+    const incoming = JSON.stringify({
+      schemaVersion: 1,
+      attempts: {
+        "keep-newer": { kind: "reading", itemId: "keep-newer", attemptCount: 1, lastAttemptedAt: 100, correct: false, flagged: false, selectedAnswer: "c" },
+        "replace-older": { kind: "reading", itemId: "replace-older", attemptCount: 2, lastAttemptedAt: 500, correct: true, flagged: false, selectedAnswer: "a" },
+        "brand-new": { kind: "listening", itemId: "brand-new", attemptCount: 1, lastAttemptedAt: 300, correct: true, flagged: false, selectedAnswer: "b" },
+      },
+    });
+
+    expect(importProgress(store, incoming)).toEqual({ added: 1, updated: 1, skipped: 1 });
+    const merged = store.load().snapshot.attempts;
+    expect(merged["keep-newer"].attemptCount).toBe(3);
+    expect(merged["replace-older"].attemptCount).toBe(2);
+    expect(merged["brand-new"]).toBeDefined();
+  });
+
+  it("returns null for invalid payloads", () => {
+    const store = createAttemptStore(new FakeStorage());
+    expect(importProgress(store, "not json")).toBeNull();
+    expect(importProgress(store, JSON.stringify({ schemaVersion: 99, attempts: {} }))).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ import { PracticeListening } from "@/components/PracticeListening";
 import { WritingTask } from "@/components/WritingTask";
 import { SpeakingTask } from "@/components/SpeakingTask";
 import { SetSummary } from "@/components/SetSummary";
+import { SetProgressBar } from "@/components/SetProgressBar";
 import type { PracticeItem, ReadingMCQItem, ListeningMCQItem, WritingTaskItem, SpeakingTaskItem } from "@/lib/types";
 
 export async function generateStaticParams() {
@@ -46,6 +47,8 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
           </p>
         </div>
       </header>
+
+      <SetProgressBar set={set} />
 
       {reading.length > 0 && (
         <section className="page-section compact" id="reading">

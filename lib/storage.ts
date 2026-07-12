@@ -118,13 +118,27 @@ export function exportProgress(store: AttemptStore): string {
   return JSON.stringify(store.load().snapshot);
 }
 
-export function importProgress(store: AttemptStore, jsonStr: string): boolean {
+export interface ImportStats {
+  added: number;
+  updated: number;
+  skipped: number;
+}
+
+export function importProgress(store: AttemptStore, jsonStr: string): ImportStats | null {
   const incoming = parseProgressSnapshot(jsonStr);
-  if (!incoming) return false;
+  if (!incoming) return null;
   const current = store.load().snapshot;
-  const merged = mergeSnapshots(current, incoming);
-  store.save(merged);
-  return true;
+
+  const stats: ImportStats = { added: 0, updated: 0, skipped: 0 };
+  for (const [itemId, attempt] of Object.entries(incoming.attempts)) {
+    const existing = current.attempts[itemId];
+    if (!existing) stats.added += 1;
+    else if (attempt.lastAttemptedAt >= existing.lastAttemptedAt) stats.updated += 1;
+    else stats.skipped += 1;
+  }
+
+  store.save(mergeSnapshots(current, incoming));
+  return stats;
 }
 
 class MemoryStorage implements StorageLike {

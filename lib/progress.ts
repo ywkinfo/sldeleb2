@@ -59,6 +59,24 @@ export function summarizeSetProgress(set: PracticeSet, attempts: Record<string, 
   };
 }
 
+/** 표본이 이보다 작으면 %가 과장되므로 "m/n 정답" 형태로 표기한다. */
+export const RATE_MIN_ATTEMPTS = 5;
+
+export interface RateSummary {
+  kind: "empty" | "sample" | "percent";
+  text: string;
+  pct: number;
+}
+
+export function summarizeRate(correct: number, total: number): RateSummary {
+  if (total === 0) return { kind: "empty", text: "–", pct: 0 };
+  const pct = Math.round((correct / total) * 100);
+  if (total < RATE_MIN_ATTEMPTS) {
+    return { kind: "sample", text: `${correct}/${total} 정답`, pct };
+  }
+  return { kind: "percent", text: `${pct}%`, pct };
+}
+
 export function pickNextSet(currentSetId: string, sets: PracticeSet[], attempts: Record<string, AttemptState>): PracticeSet | undefined {
   const currentSetIndex = sets.findIndex(s => s.id === currentSetId);
   if (currentSetIndex === -1) return undefined;

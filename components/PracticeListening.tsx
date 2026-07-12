@@ -16,6 +16,24 @@ export function PracticeListening({ script, items }: { script: ListeningScript; 
     const previous = attempts[item.id]?.kind === "listening" ? attempts[item.id] : undefined;
     update(gradeListeningAttempt(item, selected, previous));
   };
+  // 포커스가 속한 문항 안에서만 동작: A/B/C로 선택, Enter로 정답 확인
+  const handleKeyDown = (item: ListeningMCQItem, event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("input, textarea, select, audio")) return;
+    const letterIndex = /^Key[A-Z]$/.test(event.code) ? event.code.charCodeAt(3) - 65 : -1;
+    if (letterIndex >= 0 && letterIndex < item.options.length) {
+      event.preventDefault();
+      const key = item.options[letterIndex].key;
+      setSelections((prev) => ({ ...prev, [item.id]: key }));
+      return;
+    }
+    if (event.key === "Enter") {
+      if (target.closest(".question-actions")) return;
+      event.preventDefault();
+      answer(item);
+    }
+  };
   return <article className="card" id={script.id}>
     <div className="eyebrow">Audición · {script.task.replace("tarea", "Tarea ")}</div>
     <h2 lang="es">{script.title}</h2>
@@ -29,7 +47,7 @@ export function PracticeListening({ script, items }: { script: ListeningScript; 
       const stored = attempts[item.id];
       const attempt = stored?.kind === "listening" ? stored : undefined;
       const selected = selections[item.id] ?? attempt?.selectedAnswer;
-      return <section className="question" key={item.id} id={item.id} aria-labelledby={`${item.id}-prompt`}>
+      return <section className="question" key={item.id} id={item.id} aria-labelledby={`${item.id}-prompt`} onKeyDown={(e) => handleKeyDown(item, e)}>
         <h3 id={`${item.id}-prompt`}>{index + 1}. <span lang="es">{item.prompt}</span></h3>
         <div className="options" role="radiogroup" aria-label={`${index + 1}번 선택지`}>
           {item.options.map((option) => <button type="button" role="radio" aria-checked={selected === option.key} className={`option ${selected === option.key ? "selected" : ""} ${attempt && option.key === item.correctAnswer ? "correct" : ""} ${attempt && selected === option.key && !attempt.correct ? "wrong" : ""}`} key={option.key} onClick={() => setSelections((prev) => ({...prev, [item.id]: option.key}))}>
