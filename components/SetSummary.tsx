@@ -21,7 +21,7 @@ export function SetSummary({ set, items, allSets }: { set: PracticeSet, items: P
   });
 
   return (
-    <div className="card" style={{ marginTop: "2rem", borderColor: "var(--color-primary)", borderWidth: "2px" }}>
+    <div className="card" style={{ marginTop: "2rem", borderColor: "var(--accent)", borderWidth: "2px" }}>
       <h2>세트 요약</h2>
       <p className="lead" style={{ marginBottom: "1rem" }}>
         진행 상태: <strong>{prog.answered} / {prog.total} 완료</strong>
@@ -34,7 +34,7 @@ export function SetSummary({ set, items, allSets }: { set: PracticeSet, items: P
           <ul style={{ listStyle: "none", paddingLeft: 0, marginTop: "0.5rem" }}>
             {wrongItems.map(item => (
               <li key={item.id} style={{ marginBottom: "0.25rem" }}>
-                <a href={`#${item.id}`} style={{ textDecoration: "none", color: "var(--color-primary)", fontWeight: "bold" }}>→ {item.kind === "mcq" ? item.prompt : item.id}</a>
+                <a href={`#${item.id}`} style={{ textDecoration: "none", color: "var(--accent)", fontWeight: "bold" }}>→ {item.kind === "mcq" ? item.prompt : item.id}</a>
               </li>
             ))}
           </ul>
@@ -44,11 +44,11 @@ export function SetSummary({ set, items, allSets }: { set: PracticeSet, items: P
       {prog.status === "done" && (
         <div style={{ marginTop: "1.5rem" }}>
           {nextSet ? (
-            <a className="button primary" href={sitePath(`/practice/set/${nextSet.id}`)}>
+            <a className="button" href={sitePath(`/practice/set/${nextSet.id}`)}>
               다음 세트: {nextSet.title}
             </a>
           ) : (
-            <a className="button primary" href={sitePath("/review")}>
+            <a className="button" href={sitePath("/review")}>
               모든 세트 완료! 복습 큐로 가기
             </a>
           )}

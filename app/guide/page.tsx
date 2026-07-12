@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Glossary } from "@/components/Glossary";
 import { glossary } from "@/data/glossary";
+import { absoluteUrl } from "@/lib/url";
 
-export const metadata: Metadata = { title: "DELE B2 시험 가이드", description: "DELE B2 시험 구조, 시간, 합격 그룹과 영역별 준비법을 한국어로 확인하세요.", alternates: { canonical: "/guide" } };
+export const metadata: Metadata = { title: "DELE B2 시험 가이드", description: "DELE B2 시험 구조, 시간, 합격 그룹과 영역별 준비법을 한국어로 확인하세요.", alternates: { canonical: absoluteUrl("/guide") } };
 const tests = [
   ["읽기", "Comprensión de lectura", "70분", "4 Tareas"],
   ["듣기", "Comprensión auditiva", "40분", "5 Tareas"],

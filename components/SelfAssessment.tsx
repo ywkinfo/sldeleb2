@@ -58,7 +58,7 @@ export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writ
     </div>
 
     <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-      <button className="button primary" type="button" disabled={!isComplete} onClick={handleSave}>
+      <button className="button" type="button" disabled={!isComplete} onClick={handleSave}>
         평가 저장
       </button>
       {current?.completed && (

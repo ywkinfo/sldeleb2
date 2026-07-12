@@ -154,9 +154,12 @@ h3 { margin: 0 0 .7rem; font-size: 1.35rem; }
 }
 .option:hover { border-color: var(--accent); }
 .option.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
-.option.correct { border-color: var(--success); }
+.option.correct { border-color: var(--success); background: color-mix(in srgb, var(--success) 8%, var(--surface-strong)); }
 .option.wrong { border-color: var(--accent); }
 .option-key { flex: 0 0 1.6rem; width: 1.6rem; height: 1.6rem; display: grid; place-items: center; border-radius: 50%; background: var(--bg); font-weight: 800; }
+.option-state { margin-left: auto; align-self: center; flex: 0 0 auto; font-size: .78rem; font-weight: 800; white-space: nowrap; letter-spacing: .02em; }
+.option-state.is-correct { color: var(--success); }
+.option-state.is-wrong { color: var(--accent); }
 .feedback { margin-top: .8rem; border-radius: 10px; padding: .8rem; background: color-mix(in srgb, var(--success) 8%, var(--surface)); }
 .feedback.incorrect { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .question-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }

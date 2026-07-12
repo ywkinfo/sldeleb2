@@ -9,12 +9,13 @@ export function sitePath(path: string): string {
   return `${basePath}${normalizedPath}`;
 }
 
+/** base/NEXT_PUBLIC_SITE_URL은 origin만 담는다(basePath 제외). 경로 쪽에서 sitePath로 합성한다. */
 export function absoluteUrl(path: string, base?: string): string {
   const baseUrl = base || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  
-  return `${normalizedBase}${normalizedPath}`;
+  const origin = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  const pathWithBase = sitePath(path);
+
+  return `${origin}${pathWithBase === "/" ? "/" : pathWithBase}`;
 }
 
 export function requestOrigin(req?: Request): string {

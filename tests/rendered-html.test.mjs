@@ -53,6 +53,16 @@ for (const [path, expected] of [
   });
 }
 
+test("dev/worker build keeps internal links root-relative (no leaked base path)", async () => {
+  // vinext dev/worker는 루트에서 서빙하므로, 빌드에 NEXT_PUBLIC_BASE_PATH가
+  // 인라인되면 모든 내부 링크가 404가 된다. (.env.local에 두지 말 것)
+  const response = await render();
+  const html = await response.text();
+  assert.match(html, /href="\/practice"/);
+  assert.match(html, /href="\/materials"/);
+  assert.doesNotMatch(html, /href="\/sldeleb2\//);
+});
+
 test("serves host-derived sitemap and robots metadata", async () => {
   const sitemap = await render("/sitemap.xml");
   assert.equal(sitemap.status, 200);

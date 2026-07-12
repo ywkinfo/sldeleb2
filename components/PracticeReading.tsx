@@ -29,6 +29,8 @@ export function PracticeReading({ text, items }: { text: ReadingText; items: Rea
         <div className="options" role="radiogroup" aria-label={`${index + 1}번 선택지`}>
           {item.options.map((option) => <button type="button" role="radio" aria-checked={selected === option.key} className={`option ${selected === option.key ? "selected" : ""} ${attempt && option.key === item.correctAnswer ? "correct" : ""} ${attempt && selected === option.key && !attempt.correct ? "wrong" : ""}`} key={option.key} onClick={() => setSelections((prev) => ({...prev, [item.id]: option.key}))}>
             <span className="option-key">{option.key.toUpperCase()}</span><span lang="es">{option.text}</span>
+            {attempt && option.key === item.correctAnswer && <span className="option-state is-correct">✓ 정답</span>}
+            {attempt && !attempt.correct && selected === option.key && option.key !== item.correctAnswer && <span className="option-state is-wrong">✕ 내 선택</span>}
           </button>)}
         </div>
         <div className="question-actions"><button className="button small" type="button" onClick={() => answer(item)} disabled={!selected}>정답 확인</button>

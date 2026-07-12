@@ -27,7 +27,7 @@ export function PracticeSetList({ sets }: { sets: PracticeSet[] }) {
           progressBar = <div className="progress set-progress" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>;
         } else if (prog.status === "done") {
           badge = <span className="badge" style={{ marginLeft: "0.5rem", verticalAlign: "middle" }}>{prog.isMcqSet ? `완료 · 정답 ${prog.correct}/${prog.total}` : (set.skill === "writing" || set.skill === "speaking" ? "자기평가 완료" : `완료 · ${prog.total}개`)}</span>;
-          progressBar = <div className="progress set-progress" aria-hidden="true"><span style={{ width: '100%', backgroundColor: 'var(--color-primary)' }} /></div>;
+          progressBar = <div className="progress set-progress" aria-hidden="true"><span style={{ width: '100%' }} /></div>;
         }
 
         return (

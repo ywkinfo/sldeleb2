@@ -80,7 +80,7 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
     </div>
 
     {todaysReview.length > 0 && (
-      <div className="card" style={{ marginTop: "1.2rem", borderColor: "var(--color-primary)", borderWidth: "2px" }}>
+      <div className="card" style={{ marginTop: "1.2rem", borderColor: "var(--accent)", borderWidth: "2px" }}>
         <h2>🎯 오늘의 맞춤 복습</h2>
         {vulnerableTags.length > 0 && (
           <p className="muted" style={{ marginBottom: "1rem" }}>
@@ -91,7 +91,7 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
           const item = items.find((candidate) => candidate.id === attempt.itemId);
           const setId = item ? getSetIdForItem(item.id) : null;
           const targetUrl = setId ? sitePath(`/practice/set/${setId}#${item!.id}`) : sitePath("/practice");
-          return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong></div><div className="question-actions"><a className="button small primary" href={targetUrl}>우선 복습하기</a></div></div>;
+          return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong></div><div className="question-actions"><a className="button small" href={targetUrl}>우선 복습하기</a></div></div>;
         })}</div>
       </div>
     )}
@@ -113,7 +113,7 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
           }
         }
 
-        return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong><div className="muted">{attempt.kind === "open" ? (attempt.completed ? `자기평가 ${attempt.selfScore}/3${weakLabel ? ` · ${weakLabel}` : ""}` : "미완료") : attempt.correct ? "정답" : "오답"} · {attempt.attemptCount}회 시도</div></div><div className="question-actions"><a className="button small" href={targetUrl}>다시 연습</a><button className="button secondary small" type="button" onClick={() => remove(attempt.itemId)}>기록 삭제</button></div></div>;
+        return <div className="review-row" key={attempt.itemId}><div><strong>{itemLabel(item)}</strong><div className="muted">{attempt.kind === "open" ? (attempt.completed ? `자기평가 ${attempt.selfScore}/3${weakLabel ? ` · ${weakLabel}` : ""}` : "미완료") : attempt.correct ? "정답" : "오답"} · {attempt.attemptCount}회 시도</div></div><div className="question-actions"><a className="button small" href={targetUrl}>다시 연습</a><button className="button secondary small" type="button" onClick={() => { if (window.confirm("이 문항의 학습 기록을 삭제할까요? 삭제한 기록은 되돌릴 수 없습니다.")) remove(attempt.itemId); }}>기록 삭제</button></div></div>;
       })}</div>}
     </div>
     {incorrect.length > 0 && <p className="muted" style={{ marginTop: "0.5rem" }}>정답률은 각 읽기·듣기 문항의 가장 최근 시도로 계산합니다. 자기평가는 공식 DELE 점수가 아닙니다.</p>}
