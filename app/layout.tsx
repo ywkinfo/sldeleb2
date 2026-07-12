@@ -1,7 +1,4 @@
-/* Plain anchors are intentional: vinext currently throws an invalid-hook error for next/link in the shared shell. */
-/* eslint-disable @next/next/no-html-link-for-pages */
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 

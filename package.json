@@ -17,7 +17,7 @@
     "test": "npm run test:unit && npm run build && npm run test:render",
     "test:unit": "vitest run",
     "test:render": "node --test tests/rendered-html.test.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .serve_temp",
     "build:pages": "npm run validate:content && STATIC_EXPORT=1 next build",
     "test:export": "node --experimental-strip-types scripts/test-export.ts",
     "test:e2e": "playwright test",
