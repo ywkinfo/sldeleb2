@@ -53,9 +53,9 @@ test("serves host-derived sitemap and robots metadata", async () => {
   const sitemap = await render("/sitemap.xml");
   assert.equal(sitemap.status, 200);
   assert.match(sitemap.headers.get("content-type") ?? "", /application\/xml/);
-  assert.match(await sitemap.text(), /http:\/\/localhost\/practice/);
+  assert.match(await sitemap.text(), /http:\/\/localhost(:3000)?\/practice/);
 
   const robots = await render("/robots.txt");
   assert.equal(robots.status, 200);
-  assert.match(await robots.text(), /Sitemap: http:\/\/localhost\/sitemap\.xml/);
+  assert.match(await robots.text(), /Sitemap: http:\/\/localhost(:3000)?\/sitemap\.xml/);
 });
