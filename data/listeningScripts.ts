@@ -6,6 +6,12 @@ const review = {
   reviewedAt: '2026-07-11',
 };
 
+const listeningExpansionReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-12',
+};
+
 const sourceNote =
   'DELE B2 유형을 참고해 Spanish Lab이 새로 제작한 창작 스크립트이며, 음성은 TTS로 합성한 것으로 공식 기출 음원이 아닙니다.';
 
@@ -67,18 +73,134 @@ CONFERENCIANTE: Termino con una idea. Reducir el desperdicio no exige grandes sa
     ...review,
   },
   {
-    id: 'listening-t2-experiencias-idiomas',
+    id: 'listening-t1-reserva-restaurante',
+    task: 'tarea1',
+    title: 'Cambio de una reserva en un restaurante',
+    audioSrc: '/audio/listening/listening-t1-reserva-restaurante.m4a',
+    transcript: `CLIENTA: Buenas tardes. Tengo una mesa reservada para cuatro a las nueve, a nombre de Laura Pérez, pero dos amigos llegarán media hora tarde. ¿Podríamos retrasar la reserva?
+CAMARERO: A las nueve y media ya no nos queda ninguna mesa grande. Si vienen ustedes dos a la hora prevista, podemos mantenerla hasta que lleguen sus amigos.
+CLIENTA: De acuerdo, entonces iremos puntuales y pediremos algo mientras esperamos. Muchas gracias.`,
+    voices: {
+      CLIENTA: 'es-ES-ElviraNeural',
+      CAMARERO: 'es-ES-AlvaroNeural',
+    },
+    rate: '+0%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'listening-t1-devolucion-biblioteca',
+    task: 'tarea1',
+    title: 'Devolución de un libro en la biblioteca',
+    audioSrc: '/audio/listening/listening-t1-devolucion-biblioteca.m4a',
+    transcript: `USUARIO: Hola. Venía a devolver esta novela, pero he visto que la biblioteca cerrará mañana por obras. ¿Puedo llevarme hoy otro libro?
+BIBLIOTECARIA: Claro. El préstamo funciona con normalidad esta tarde. Además, como permaneceremos cerrados toda la semana, tendrá diez días adicionales para devolverlo.
+USUARIO: Perfecto. Entonces buscaré la nueva novela de Mendoza, si está disponible.
+BIBLIOTECARIA: Está prestada, pero puedo reservarla para usted.`,
+    voices: {
+      USUARIO: 'es-MX-JorgeNeural',
+      BIBLIOTECARIA: 'es-US-PalomaNeural',
+    },
+    rate: '-2%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'listening-t1-bicicleta-vecina',
+    task: 'tarea1',
+    title: 'Una bicicleta en el portal',
+    audioSrc: '/audio/listening/listening-t1-bicicleta-vecina.m4a',
+    transcript: `VECINO: Ana, ¿es tuya la bicicleta que está junto al ascensor? El presidente ha pedido que no dejemos nada en el portal.
+VECINA: Sí, perdona. Se rompió la cerradura del cuarto de bicicletas y la subí anoche para que no la robaran.
+VECINO: El técnico viene esta tarde. Mientras tanto, puedes guardarla en mi trastero.
+VECINA: Gracias, la bajaré ahora mismo y esta noche la pondré en su sitio.`,
+    voices: {
+      VECINO: 'es-US-AlonsoNeural',
+      VECINA: 'es-ES-ElviraNeural',
+    },
+    rate: '+1%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'listening-t1-cambio-chaqueta',
+    task: 'tarea1',
+    title: 'Cambio de una chaqueta',
+    audioSrc: '/audio/listening/listening-t1-cambio-chaqueta.m4a',
+    transcript: `DEPENDIENTA: ¿En qué puedo ayudarle?
+CLIENTE: Me regalaron esta chaqueta, pero me queda grande. No tengo el recibo porque fue un regalo.
+DEPENDIENTA: Podemos cambiarla por otra talla si conserva la etiqueta. De ese color no queda la mediana, aunque podemos pedirla y recibirla el jueves.
+CLIENTE: El viernes viajo. Prefiero probarme la azul, que parece igual.
+DEPENDIENTA: Sí, el modelo es el mismo y cuesta exactamente lo mismo.`,
+    voices: {
+      DEPENDIENTA: 'es-US-PalomaNeural',
+      CLIENTE: 'es-MX-JorgeNeural',
+    },
+    rate: '+0%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'listening-t1-cita-dentista',
+    task: 'tarea1',
+    title: 'Una llamada de la clínica dental',
+    audioSrc: '/audio/listening/listening-t1-cita-dentista.m4a',
+    transcript: `RECEPCIONISTA: Buenos días, llamo de la clínica Robles. La doctora no podrá atenderle mañana a las diez por una urgencia. Tenemos un hueco a las doce o, si lo prefiere, el miércoles a primera hora.
+PACIENTE: Mañana al mediodía estoy en una reunión. El miércoles puedo llegar a las ocho y media.
+RECEPCIONISTA: Perfecto. Le cambio la cita al miércoles a esa hora. Recibirá la confirmación por mensaje.
+PACIENTE: Muchas gracias.`,
+    voices: {
+      RECEPCIONISTA: 'es-ES-ElviraNeural',
+      PACIENTE: 'es-US-AlonsoNeural',
+    },
+    rate: '-1%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'listening-t2-fiesta-barrio',
     task: 'tarea2',
+    title: 'Preparativos para la fiesta del barrio',
+    audioSrc: '/audio/listening/listening-t2-fiesta-barrio.m4a',
+    transcript: `DIEGO: Sofía, ¿al final vas a ayudar en la fiesta del barrio? Ayer no te vi en la reunión de voluntarios.
+SOFÍA: Sí, aunque reconozco que al principio no quería apuntarme. Pensaba que habría demasiada gente y que acabaría pasando el día entre empujones. Pero Marta me explicó que este año limitarán el aforo de la plaza.
+DIEGO: Me alegro. Yo participo desde hace tres años. Lo que más me gusta no son los conciertos, sino conocer a vecinos con los que normalmente solo coincido en el ascensor.
+SOFÍA: Eso también me atrae. He propuesto organizar un taller para que los niños construyan instrumentos con envases usados. Necesito que alguien consiga cajas y botellas limpias.
+DIEGO: Puedo pedirlas en la cafetería de la esquina. Eso sí, prefiero preparar una lista esta misma semana. Cuando dejamos las cosas para el último momento, terminamos comprando material que ya teníamos.
+SOFÍA: Totalmente. Yo me encargo de preguntar a las familias cuántos niños vendrán. Así sabremos si hacen falta dos monitores o cuatro. Por cierto, ¿ya está resuelto lo del escenario?
+DIEGO: No del todo. El proveedor habitual ha subido mucho el precio. Algunos quieren cancelar la música, pero yo buscaría primero un escenario más pequeño. No hace falta gastar más; podemos adaptar el programa.
+SOFÍA: Estoy de acuerdo. Incluso podríamos empezar con los músicos del barrio y dejar al grupo invitado para el final. Lo importante es que el cambio se anuncie bien.
+DIEGO: Para la difusión, había pensado crear una cuenta nueva en redes sociales.
+SOFÍA: Servirá para los jóvenes, pero no debería ser el único medio. Mi vecina nunca mira esas aplicaciones. Pondría carteles en el mercado y dejaría programas impresos en el centro de salud.
+DIEGO: Buena idea. También podríamos pedir a los comercios que los entreguen con las compras. Yo redacto el programa, pero necesito que alguien lo revise: siempre se me escapa alguna fecha.
+SOFÍA: Envíamelo y lo reviso. A cambio, ayúdame el sábado a probar el taller. Nunca he trabajado con un grupo grande de niños y quiero comprobar cuánto dura cada actividad.
+DIEGO: Hecho. Podemos invitar a mis sobrinos. Si pierden el interés a los diez minutos, sabremos que hay que simplificarla.
+SOFÍA: Perfecto. Al final me estoy ilusionando más de lo que esperaba. Me preocupaba que los voluntarios veteranos no aceptaran ideas nuevas, pero todos han sido bastante abiertos.
+DIEGO: Es que la fiesta funciona precisamente porque cada año cambia un poco. Si repetimos todo sin escuchar a la gente, deja de representar al barrio.
+SOFÍA: Entonces nos vemos el sábado. Llevaré un modelo del instrumento y una lista de materiales.
+DIEGO: Y yo traeré las cajas. Esta vez llegaremos preparados a la reunión.`,
+    voices: {
+      DIEGO: 'es-ES-AlvaroNeural',
+      SOFÍA: 'es-US-PalomaNeural',
+    },
+    rate: '+8%',
+    sourceNote,
+    ...listeningExpansionReview,
+  },
+  // 이 id는 역사적 명칭이며 script.task가 현재 시험 배치의 진실이다.
+  {
+    id: 'listening-t2-experiencias-idiomas',
+    task: 'tarea4',
     title: 'Experiencias de aprendizaje de idiomas',
     audioSrc: '/audio/listening/listening-t2-experiencias-idiomas.m4a',
     transcript: `PRESENTADOR: Hoy en nuestro programa hablamos de cómo aprender idiomas. Tenemos a cuatro oyentes en línea. Empezamos con Carlos.
-CARLOS: Hola. Yo he descubierto que apuntarme a clases tradicionales no me funciona. Lo que de verdad me hizo avanzar con el inglés fue jugar a videojuegos con gente de otros países. Así aprendí sin darme cuenta.
+CARLOS: Hola. Yo he descubierto que apuntarme a clases tradicionales no me funciona. Lo que de verdad me hizo avanzar con el inglés fue jugar a videojuegos con gente de otros países. Así aprendí sin darme cuenta. Como necesitaba reaccionar rápido, dejé de traducir cada frase mentalmente. La competición me motivaba a buscar después las palabras que no había entendido.
 PRESENTADOR: Gracias, Carlos. Ahora escuchamos a Lucía.
-LUCÍA: Buenas tardes. Para mí, la clave es perder el miedo a hablar. Al principio cometía muchísimos errores gramaticales, pero me forzaba a hablar con nativos en intercambios. Poco a poco gané fluidez y los errores fueron desapareciendo solos.
+LUCÍA: Buenas tardes. Para mí, la clave es perder el miedo a hablar. Al principio cometía muchísimos errores gramaticales, pero me forzaba a hablar con nativos en intercambios. Poco a poco gané fluidez y los errores fueron desapareciendo solos. Mi compañera solo me corrige cuando repito varias veces el mismo fallo, para no interrumpir la conversación. Además, grabo un mensaje de voz cada semana y así noto mis avances.
 PRESENTADOR: Muy interesante, Lucía. ¿Qué nos cuentas tú, Marcos?
-MARCOS: Hola a todos. Pues yo soy todo lo contrario. Necesito mucha estructura. Si no entiendo la gramática desde la base, me siento perdido. Compro libros de ejercicios y dedico al menos una hora diaria a repasar la teoría.
+MARCOS: Hola a todos. Pues yo soy todo lo contrario. Necesito mucha estructura. Si no entiendo la gramática desde la base, me siento perdido. Compro libros de ejercicios y dedico al menos una hora diaria a repasar la teoría. Anoto en un cuaderno los errores de cada ejercicio y los reviso los domingos. Aun así, sé que después tengo que usar esas reglas hablando con alguien.
 PRESENTADOR: Y por último, tenemos a Elena.
-ELENA: Buenas. Mi método es el entretenimiento. Veo series, películas y escucho podcasts constantemente en el idioma que quiero aprender. Al final, el oído se acostumbra a la pronunciación y adquiero vocabulario de forma natural.
+ELENA: Buenas. Mi método es el entretenimiento. Veo series, películas y escucho podcasts constantemente en el idioma que quiero aprender. Al final, el oído se acostumbra a la pronunciación y adquiero vocabulario de forma natural. Primero veo cada episodio con subtítulos en el mismo idioma y luego repito algunas escenas sin ellos. Apunto expresiones completas, no palabras aisladas, e intento utilizarlas al día siguiente.
 PRESENTADOR: Cuatro estrategias muy diferentes. Gracias a todos por compartir sus experiencias.`,
     voices: {
       PRESENTADOR: 'es-MX-JorgeNeural',
@@ -89,26 +211,33 @@ PRESENTADOR: Cuatro estrategias muy diferentes. Gracias a todos por compartir su
     },
     rate: '+0%',
     sourceNote,
-    ...review,
+    ...listeningExpansionReview,
   },
+  // 이 id는 역사적 명칭이며 script.task가 현재 시험 배치의 진실이다.
   {
     id: 'listening-t4-entrevista-artista',
-    task: 'tarea4',
+    task: 'tarea3',
     title: 'Entrevista a un joven artista',
     audioSrc: '/audio/listening/listening-t4-entrevista-artista.m4a',
     transcript: `PERIODISTA: Hoy estamos con Mario, un joven artista que acaba de inaugurar su primera exposición. Mario, felicidades. ¿Cómo te sientes al ver tus obras en esta galería?
 MARIO: Muchas gracias. La verdad es que estoy emocionado y un poco abrumado. Llevo trabajando en esta colección casi dos años en el sótano de mi casa, y verla aquí, con tanta gente interesada, es un sueño cumplido.
 PERIODISTA: Tus cuadros destacan por el uso de colores muy vivos y materiales reciclados. ¿De dónde surge esta idea?
 MARIO: Siempre me ha preocupado el impacto ambiental de nuestro consumo. Un día empecé a recoger plásticos y cartones abandonados en la playa. Quería demostrar que de la basura puede nacer algo hermoso y, al mismo tiempo, hacer reflexionar al público.
+PERIODISTA: ¿Ha reaccionado el público como esperabas?
+MARIO: No del todo. Imaginaba que la gente se fijaría primero en el mensaje ecológico, pero muchos visitantes se acercan atraídos por las texturas. Solo después descubren de qué están hechas las obras. Esa sorpresa abre conversaciones que yo no habría conseguido provocar con un cartel informativo.
+PERIODISTA: También organizas talleres en un centro juvenil. ¿Qué buscas con esa actividad?
+MARIO: No pretendo formar artistas profesionales. Quiero que los participantes observen de otra manera los objetos que desechan y se atrevan a experimentar sin miedo a equivocarse. A veces una sesión breve cambia más hábitos que una charla llena de datos.
 PERIODISTA: ¿Qué le dirías a otros jóvenes que quieren dedicarse al arte pero no se atreven?
 MARIO: Que no esperen a tener el estudio perfecto o los mejores materiales. Que empiecen hoy mismo con lo que tengan a mano. El arte se trata de comunicar, no de tener herramientas caras. Lo importante es encontrar tu propia voz.
-PERIODISTA: Un gran consejo. Muchas gracias por tu tiempo, Mario.`,
+PERIODISTA: ¿Y cuál será tu próximo proyecto cuando termine la exposición?
+MARIO: Trabajaré con fotografías antiguas que me han prestado varias familias del barrio. Todavía estoy investigando cómo combinarlas con materiales actuales, así que no quiero fijar una fecha. Esta vez me interesa hablar de la memoria colectiva, aunque mantendré el uso de elementos recuperados.
+PERIODISTA: Un proyecto prometedor. Muchas gracias por tu tiempo, Mario.`,
     voices: {
       PERIODISTA: 'es-ES-ElviraNeural',
       MARIO: 'es-ES-AlvaroNeural',
     },
     rate: '+0%',
     sourceNote,
-    ...review,
+    ...listeningExpansionReview,
   },
 ];

@@ -6,6 +6,25 @@ const review = {
   reviewedAt: '2026-07-11',
 };
 
+const listeningExpansionReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-12',
+};
+
+const listeningT2SpeakerOptions = [
+  { key: 'a', text: 'El hombre' },
+  { key: 'b', text: 'La mujer' },
+  { key: 'c', text: 'Ninguno de los dos' },
+];
+
+const listeningT4SpeakerOptions = [
+  { key: 'a', text: 'Carlos' },
+  { key: 'b', text: 'Lucía' },
+  { key: 'c', text: 'Marcos' },
+  { key: 'd', text: 'Elena' },
+];
+
 // Tarea 2 공유 선택지 은행: 6개 빈칸에 공통으로 제시되는 8개 문장 조각(2개는 어디에도 맞지 않는 오답)
 const cineGapOptions = [
   {
@@ -923,25 +942,185 @@ export const practiceItems = [
     tags: ['장소안내', '듣기', '교통'],
     ...review,
   },
+  {
+    id: 'l-t1-reserva-restaurante-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-reserva-restaurante',
+    prompt: '¿Qué acuerdan finalmente la clienta y el camarero?',
+    options: [
+      { key: 'a', text: 'La clienta llegará a la hora reservada con otra persona.' },
+      { key: 'b', text: 'El restaurante guardará una mesa grande hasta las nueve y media.' },
+      { key: 'c', text: 'Los cuatro clientes cenarán en una mesa más pequeña.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '손님은 예약 시간을 미루는 대신 “iremos puntuales y pediremos algo mientras esperamos”라고 답합니다. 두 사람이 먼저 제시간에 가서 친구들을 기다리기로 했으므로 a가 맞습니다.',
+    tags: ['합의', '듣기', '외식'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t1-devolucion-biblioteca-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-devolucion-biblioteca',
+    prompt: '¿Qué ventaja tendrá el usuario por el cierre de la biblioteca?',
+    options: [
+      { key: 'a', text: 'Podrá llevarse dos libros adicionales.' },
+      { key: 'b', text: 'Dispondrá de más tiempo para devolver el préstamo.' },
+      { key: 'c', text: 'Recibirá en casa la novela que busca.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '도서관 직원이 휴관 때문에 “tendrá diez días adicionales para devolverlo”라고 안내합니다. 반납 기간이 열흘 늘어나므로 b가 정답입니다.',
+    tags: ['세부정보', '듣기', '도서관'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t1-bicicleta-vecina-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-bicicleta-vecina',
+    prompt: '¿Por qué dejó Ana la bicicleta en el portal?',
+    options: [
+      { key: 'a', text: 'Porque el ascensor no llegaba hasta el trastero.' },
+      { key: 'b', text: 'Porque esperaba que el técnico la reparara allí.' },
+      { key: 'c', text: 'Porque no podía guardarla con seguridad en su lugar habitual.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      'Ana는 “Se rompió la cerradura del cuarto de bicicletas”라서 도난을 피하려고 자전거를 올려 두었다고 설명합니다. 평소 보관 장소를 안전하게 쓸 수 없었으므로 c입니다.',
+    tags: ['이유', '듣기', '주거'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t1-cambio-chaqueta-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-cambio-chaqueta',
+    prompt: '¿Qué decide hacer el cliente?',
+    options: [
+      { key: 'a', text: 'Esperar a que llegue la chaqueta del mismo color.' },
+      { key: 'b', text: 'Probarse el mismo modelo en otro color.' },
+      { key: 'c', text: 'Devolver la chaqueta a la persona que se la regaló.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '원래 색상의 중간 사이즈는 목요일에 오지만, 손님은 “Prefiero probarme la azul”이라고 합니다. 같은 모델의 파란색을 입어 보기로 했으므로 b가 맞습니다.',
+    tags: ['결정', '듣기', '쇼핑'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t1-cita-dentista-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t1-cita-dentista',
+    prompt: '¿Cuándo atenderán finalmente al paciente?',
+    options: [
+      { key: 'a', text: 'Mañana a las diez.' },
+      { key: 'b', text: 'Mañana a las doce.' },
+      { key: 'c', text: 'El miércoles a las ocho y media.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      '환자가 수요일 8시 30분에 갈 수 있다고 하자 접수원이 “Le cambio la cita al miércoles a esa hora”라고 확정합니다. 따라서 c가 정답입니다.',
+    tags: ['시간확인', '듣기', '병원'],
+    ...listeningExpansionReview,
+  },
 
-  // Audición · Tarea 2 — Experiencias de aprendizaje de idiomas
+  // Audición · Tarea 2 — Preparativos para la fiesta del barrio
+  {
+    id: 'l-t2-fiesta-barrio-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que al principio no quería participar por la cantidad de asistentes?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'b',
+    explanationKo:
+      'Sofía는 처음에는 참여하고 싶지 않았고 “Pensaba que habría demasiada gente”라고 이유를 밝힙니다. 여자 화자의 말이므로 b입니다.',
+    tags: ['화자판별', '듣기', '지역축제'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-fiesta-barrio-02',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que valora especialmente la oportunidad de conocer mejor a sus vecinos?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'a',
+    explanationKo:
+      'Diego는 콘서트보다 “conocer a vecinos”가 가장 좋다고 말합니다. 남자 화자가 이웃과 친해질 기회를 특히 중시하므로 a가 정답입니다.',
+    tags: ['화자판별', '듣기', '이웃관계'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-fiesta-barrio-03',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que conviene preparar con antelación una lista de materiales?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'a',
+    explanationKo:
+      'Diego가 “prefiero preparar una lista esta misma semana”이라고 말하며 막판 준비로 불필요한 구매를 하는 일을 피하려 합니다. 따라서 a입니다.',
+    tags: ['화자판별', '듣기', '준비'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-fiesta-barrio-04',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que quiere organizar una actividad infantil con objetos reutilizados?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'b',
+    explanationKo:
+      'Sofía가 아이들이 “construyan instrumentos con envases usados”라는 워크숍을 제안했다고 밝힙니다. 여자 화자의 제안이므로 b입니다.',
+    tags: ['화자판별', '듣기', '재활용'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-fiesta-barrio-05',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que la fiesta debería anunciarse exclusivamente por las redes sociales?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'c',
+    explanationKo:
+      'Diego는 SNS 계정을 제안하지만 그것만 써야 한다고 말하지 않습니다. Sofía도 “no debería ser el único medio”라며 포스터와 인쇄물을 제안하므로 어느 쪽도 해당하지 않아 c입니다.',
+    tags: ['화자판별', '듣기', '홍보'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-fiesta-barrio-06',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-fiesta-barrio',
+    prompt: '¿Quién dice que los voluntarios más antiguos rechazaron las propuestas nuevas?',
+    options: listeningT2SpeakerOptions,
+    correctAnswer: 'c',
+    explanationKo:
+      'Sofía는 그런 반응을 걱정했지만 실제로는 “todos han sido bastante abiertos”라고 말합니다. Diego도 거부했다고 하지 않으므로 둘 다 아닌 c가 정답입니다.',
+    tags: ['화자판별', '듣기', '협업'],
+    ...listeningExpansionReview,
+  },
+
+  // Audición · Tarea 4 — Experiencias de aprendizaje de idiomas
   {
     id: 'l-t2-idiomas-01',
     skill: 'listening',
     kind: 'mcq',
     scriptId: 'listening-t2-experiencias-idiomas',
     prompt: 'Esta persona mejoró interactuando de forma relajada con hablantes de otras partes del mundo.',
-    options: [
-      { key: 'a', text: 'Carlos' },
-      { key: 'b', text: 'Lucía' },
-      { key: 'c', text: 'Marcos' },
-      { key: 'd', text: 'Elena' },
-    ],
+    options: listeningT4SpeakerOptions,
     correctAnswer: 'a',
     explanationKo:
-      'Carlos는 다른 나라 사람들과 비디오 게임을 하며 자신도 모르게 영어를 배웠다고 말합니다. 편안한 상호작용을 통해 발전한 사례이므로 Carlos입니다.',
+      'Carlos는 다른 나라 사람들과 비디오 게임을 하며 발전했다고 말합니다. “jugar a videojuegos con gente de otros países”와 “aprendí sin darme cuenta”가 편안한 상호작용의 직접 근거이므로 Carlos입니다.',
     tags: ['의견매칭', '듣기', '언어학습'],
-    ...review,
+    ...listeningExpansionReview,
   },
   {
     id: 'l-t2-idiomas-02',
@@ -949,17 +1128,12 @@ export const practiceItems = [
     kind: 'mcq',
     scriptId: 'listening-t2-experiencias-idiomas',
     prompt: 'Esta persona considera indispensable conocer las reglas de la lengua antes de practicarla.',
-    options: [
-      { key: 'a', text: 'Carlos' },
-      { key: 'b', text: 'Lucía' },
-      { key: 'c', text: 'Marcos' },
-      { key: 'd', text: 'Elena' },
-    ],
+    options: listeningT4SpeakerOptions,
     correctAnswer: 'c',
     explanationKo:
-      'Marcos는 구조가 많이 필요하며 문법을 기초부터 이해하지 못하면 길을 잃은 느낌을 받는다고 말했습니다. 매일 1시간씩 이론을 복습한다는 Marcos가 정답입니다.',
+      'Marcos는 “Si no entiendo la gramática desde la base, me siento perdido”라고 하며 기초 문법과 구조를 먼저 알아야 한다고 말합니다. 따라서 Marcos가 정답입니다.',
     tags: ['의견매칭', '듣기', '언어학습'],
-    ...review,
+    ...listeningExpansionReview,
   },
   {
     id: 'l-t2-idiomas-03',
@@ -967,20 +1141,54 @@ export const practiceItems = [
     kind: 'mcq',
     scriptId: 'listening-t2-experiencias-idiomas',
     prompt: 'Esta persona aprendió progresivamente al superar su inseguridad en las conversaciones.',
-    options: [
-      { key: 'a', text: 'Carlos' },
-      { key: 'b', text: 'Lucía' },
-      { key: 'c', text: 'Marcos' },
-      { key: 'd', text: 'Elena' },
-    ],
+    options: listeningT4SpeakerOptions,
     correctAnswer: 'b',
     explanationKo:
-      'Lucía는 처음에는 문법 실수가 많았지만 말하기에 대한 두려움을 극복하고(perder el miedo a hablar) 원어민들과 대화하면서 유창성을 얻었다고 말합니다.',
+      'Lucía는 “la clave es perder el miedo a hablar”라고 하고, 원어민과 계속 대화하며 “Poco a poco gané fluidez”라고 설명합니다. 불안을 극복하며 점차 배운 화자는 Lucía입니다.',
     tags: ['의견매칭', '듣기', '언어학습'],
-    ...review,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-idiomas-04',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona combina los subtítulos con una segunda escucha sin apoyo escrito.',
+    options: listeningT4SpeakerOptions,
+    correctAnswer: 'd',
+    explanationKo:
+      'Elena는 “Primero veo cada episodio con subtítulos”라고 한 뒤 일부 장면을 자막 없이 다시 본다고 합니다. 두 방식을 결합하는 화자는 Elena입니다.',
+    tags: ['의견매칭', '듣기', '영상학습'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-idiomas-05',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona prefiere que no le señalen cada equivocación mientras habla.',
+    options: listeningT4SpeakerOptions,
+    correctAnswer: 'b',
+    explanationKo:
+      'Lucía의 파트너는 대화를 방해하지 않도록 “solo me corrige cuando repito varias veces el mismo fallo”라고 합니다. 모든 실수를 즉시 지적받지 않는 화자는 Lucía입니다.',
+    tags: ['의견매칭', '듣기', '말하기연습'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t2-idiomas-06',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t2-experiencias-idiomas',
+    prompt: 'Esta persona registra sus fallos y los repasa en un momento fijo de la semana.',
+    options: listeningT4SpeakerOptions,
+    correctAnswer: 'c',
+    explanationKo:
+      'Marcos는 “Anoto en un cuaderno los errores”라고 하며 일요일마다 다시 본다고 설명합니다. 오류를 기록하고 정기적으로 복습하는 화자는 Marcos입니다.',
+    tags: ['의견매칭', '듣기', '복습전략'],
+    ...listeningExpansionReview,
   },
 
-  // Audición · Tarea 4 — Entrevista a un joven artista
+  // Audición · Tarea 3 — Entrevista a un joven artista
   {
     id: 'l-t4-artista-01',
     skill: 'listening',
@@ -996,7 +1204,7 @@ export const practiceItems = [
     explanationKo:
       'Mario는 쓰레기에서 아름다운 것이 탄생할 수 있음을 보여주고 관객들이 성찰하게 만들고 싶었다고 말합니다(hacer reflexionar al público). 환경 문제(impacto ambiental)에 대한 경각심을 일깨우고자 했으므로 b입니다.',
     tags: ['목적', '듣기', '환경'],
-    ...review,
+    ...listeningExpansionReview,
   },
   {
     id: 'l-t4-artista-02',
@@ -1013,7 +1221,75 @@ export const practiceItems = [
     explanationKo:
       '완벽한 작업실이나 비싼 도구(herramientas caras)를 기다리지 말고 당장 손에 있는 것으로 시작하라고 조언합니다. 예술은 소통하는 것이고 자신만의 목소리를 찾는 게 중요하므로 c가 맞습니다.',
     tags: ['조언', '듣기', '예술'],
-    ...review,
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t4-artista-03',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: '¿Qué sorprendió a Mario de la reacción de los visitantes?',
+    options: [
+      { key: 'a', text: 'Se interesaron primero por el aspecto visual de las obras.' },
+      { key: 'b', text: 'Rechazaron que utilizara materiales encontrados en la playa.' },
+      { key: 'c', text: 'Comprendieron el mensaje antes de acercarse a los cuadros.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      'Mario는 관객이 환경 메시지를 먼저 볼 줄 알았지만 실제로는 “se acercan atraídos por las texturas”라고 말합니다. 시각적 질감에 먼저 끌렸으므로 a입니다.',
+    tags: ['반응', '듣기', '전시'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t4-artista-04',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: '¿Cuál es el objetivo principal de los talleres de Mario?',
+    options: [
+      { key: 'a', text: 'Preparar a jóvenes para una carrera artística profesional.' },
+      { key: 'b', text: 'Enseñar datos científicos sobre la contaminación.' },
+      { key: 'c', text: 'Cambiar la mirada sobre los residuos mediante la experimentación.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      'Mario는 전문 예술가 양성이 목적이 아니며, 참가자들이 “observen de otra manera los objetos que desechan”라고 말합니다. 실험을 통해 폐기물을 보는 관점을 바꾸려는 것이므로 c입니다.',
+    tags: ['목적', '듣기', '교육'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t4-artista-05',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: '¿Por qué Mario todavía no anuncia cuándo presentará su próximo proyecto?',
+    options: [
+      { key: 'a', text: 'Porque aún está explorando cómo combinar sus materiales.' },
+      { key: 'b', text: 'Porque las familias no le han entregado las fotografías.' },
+      { key: 'c', text: 'Porque quiere abandonar definitivamente los elementos reciclados.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '다음 작업은 사진과 현대 재료를 어떻게 결합할지 “Todavía estoy investigando” 중이라 날짜를 정하고 싶지 않다고 합니다. 따라서 a가 정답입니다.',
+    tags: ['이유', '듣기', '창작과정'],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'l-t4-artista-06',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t4-entrevista-artista',
+    prompt: '¿Qué tema quiere tratar Mario en su próximo trabajo?',
+    options: [
+      { key: 'a', text: 'La transformación de las playas urbanas.' },
+      { key: 'b', text: 'Los recuerdos compartidos por una comunidad.' },
+      { key: 'c', text: 'La falta de espacios para artistas jóvenes.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      'Mario는 여러 동네 가족의 옛 사진을 활용해 “hablar de la memoria colectiva”에 관심이 있다고 합니다. 공동체가 공유하는 기억이 주제이므로 b입니다.',
+    tags: ['주제', '듣기', '기억'],
+    ...listeningExpansionReview,
   },
   {
     id: 'w-local-market-article',

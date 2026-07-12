@@ -6,6 +6,12 @@ const review = {
   reviewedAt: '2026-07-11',
 };
 
+const listeningExpansionReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-12',
+};
+
 export const practiceSets = [
   {
     id: 'set-reading-library',
@@ -157,26 +163,62 @@ export const practiceSets = [
   },
   {
     id: 'set-listening-t1',
-    title: '듣기 Tarea 1 · 기차역 안내방송',
-    estimatedMin: 5,
+    title: '듣기 Tarea 1 · 일상 단문과 안내방송',
+    estimatedMin: 12,
     skill: 'listening',
-    itemIds: ['l-t1-estacion-01'],
-    ...review,
+    itemIds: [
+      'l-t1-estacion-01',
+      'l-t1-reserva-restaurante-01',
+      'l-t1-devolucion-biblioteca-01',
+      'l-t1-bicicleta-vecina-01',
+      'l-t1-cambio-chaqueta-01',
+      'l-t1-cita-dentista-01',
+    ],
+    ...listeningExpansionReview,
   },
   {
     id: 'set-listening-t2',
-    title: '듣기 Tarea 2 · 언어 학습 경험담 (역할 매칭)',
-    estimatedMin: 8,
+    title: '듣기 Tarea 2 · 동네 축제 준비 대화 (화자 판별)',
+    estimatedMin: 10,
     skill: 'listening',
-    itemIds: ['l-t2-idiomas-01', 'l-t2-idiomas-02', 'l-t2-idiomas-03'],
-    ...review,
+    itemIds: [
+      'l-t2-fiesta-barrio-01',
+      'l-t2-fiesta-barrio-02',
+      'l-t2-fiesta-barrio-03',
+      'l-t2-fiesta-barrio-04',
+      'l-t2-fiesta-barrio-05',
+      'l-t2-fiesta-barrio-06',
+    ],
+    ...listeningExpansionReview,
   },
   {
     id: 'set-listening-t4',
-    title: '듣기 Tarea 4 · 젊은 예술가 인터뷰',
-    estimatedMin: 8,
+    title: '듣기 Tarea 4 · 네 사람의 언어 학습 경험',
+    estimatedMin: 10,
     skill: 'listening',
-    itemIds: ['l-t4-artista-01', 'l-t4-artista-02'],
-    ...review,
+    itemIds: [
+      'l-t2-idiomas-01',
+      'l-t2-idiomas-02',
+      'l-t2-idiomas-03',
+      'l-t2-idiomas-04',
+      'l-t2-idiomas-05',
+      'l-t2-idiomas-06',
+    ],
+    ...listeningExpansionReview,
+  },
+  {
+    id: 'set-listening-t3-arte',
+    title: '듣기 Tarea 3 · 젊은 예술가 인터뷰',
+    estimatedMin: 10,
+    skill: 'listening',
+    itemIds: [
+      'l-t4-artista-01',
+      'l-t4-artista-02',
+      'l-t4-artista-03',
+      'l-t4-artista-04',
+      'l-t4-artista-05',
+      'l-t4-artista-06',
+    ],
+    ...listeningExpansionReview,
   },
 ] satisfies PracticeSet[];
