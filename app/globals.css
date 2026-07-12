@@ -184,6 +184,8 @@ audio { width: 100%; }
 .progress { height: 8px; background: var(--line); overflow: hidden; border-radius: 999px; margin-top: .8rem; }
 .progress > span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
 .review-list { display: grid; gap: .7rem; margin-top: 1.5rem; }
+.block-link { text-decoration: none; display: block; }
+.set-progress { position: absolute; bottom: 0; left: 0; right: 0; margin-top: 0; border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px); }
 .review-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--line); padding: 1rem 0; }
 .review-row:first-child { border-top: 0; }
 

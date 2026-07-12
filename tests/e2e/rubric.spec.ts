@@ -61,7 +61,8 @@ test.describe('Multidimensional Rubrics & Review Board', () => {
     expect(snapshot.schemaVersion).toBe(1);
     
     const attempts = Object.values(snapshot.attempts);
-    const writingAttempt = attempts.find((a: any) => a.kind === 'open') as any;
+    interface AnyAttempt { kind?: string; rubricScores?: unknown }
+    const writingAttempt = attempts.find((a: unknown) => (a as AnyAttempt).kind === 'open') as AnyAttempt;
     expect(writingAttempt).toBeTruthy();
     expect(writingAttempt.rubricScores).toEqual({
       adequacy: 2,

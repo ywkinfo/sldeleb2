@@ -1,5 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as fs from 'fs';
 
+try {
+  const envConfig = fs.readFileSync('.env.local', 'utf8');
+  for (const line of envConfig.split('\n')) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim();
+  }
+} catch (e) {
+  // Ignore missing .env.local
+}
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,

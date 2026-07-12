@@ -5,6 +5,7 @@ import { useAttempts } from "./useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { sitePath } from "@/lib/url";
 import { getSetIdForItem } from "@/lib/sets";
+import { calculateRubricStats, DIMENSION_LABELS } from "@/lib/rubric";
 
 import { SyncProgress } from "./SyncProgress";
 
@@ -103,7 +104,6 @@ export function ReviewBoard({ items }: { items: PracticeItem[] }) {
         
         let weakLabel = "";
         if (attempt.kind === "open" && attempt.completed && attempt.rubricScores) {
-          const { calculateRubricStats, DIMENSION_LABELS } = require("@/lib/rubric");
           const stats = calculateRubricStats(item?.skill === "writing" ? "writing" : "speaking", attempt.rubricScores);
           if (stats.weakestDimensions.length > 0) {
             weakLabel = `취약: ${DIMENSION_LABELS[stats.weakestDimensions[0]] || stats.weakestDimensions[0]}`;

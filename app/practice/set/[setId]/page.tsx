@@ -8,6 +8,7 @@ import { PracticeReading } from "@/components/PracticeReading";
 import { PracticeListening } from "@/components/PracticeListening";
 import { WritingTask } from "@/components/WritingTask";
 import { SpeakingTask } from "@/components/SpeakingTask";
+import { SetSummary } from "@/components/SetSummary";
 import type { PracticeItem, ReadingMCQItem, ListeningMCQItem, WritingTaskItem, SpeakingTaskItem } from "@/lib/types";
 
 export async function generateStaticParams() {
@@ -93,6 +94,12 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
           </div>
         </section>
       )}
+
+      <section className="page-section compact">
+        <div className="site-shell">
+          <SetSummary set={set} items={items} allSets={getPublishedSets()} />
+        </div>
+      </section>
     </>
   );
 }

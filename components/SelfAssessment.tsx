@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { OpenAttempt } from "@/lib/types";
 import { completeOpenAttemptWithRubric, setAttemptFlag } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
@@ -14,12 +14,14 @@ export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writ
   const dimensions = skill === "writing" ? DIMENSIONS_WRITING : DIMENSIONS_SPEAKING;
   
   const [selections, setSelections] = useState<Record<string, RubricScore>>({});
-  
-  useEffect(() => {
-    if (hydrated && current?.completed && current.rubricScores) {
+  const [prevCurrent, setPrevCurrent] = useState(current);
+
+  if (hydrated && current !== prevCurrent) {
+    setPrevCurrent(current);
+    if (current?.completed && current.rubricScores) {
       setSelections(current.rubricScores as unknown as Record<string, RubricScore>);
     }
-  }, [hydrated, current?.completed, current?.rubricScores]);
+  }
 
   const isComplete = dimensions.every(d => selections[d] !== undefined);
 
