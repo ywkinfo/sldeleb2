@@ -18,12 +18,24 @@ Node.js `>=22.13.0`이 필요합니다.
 
 - `npm run typecheck`: TypeScript 검사
 - `npm run lint`: ESLint 검사
-- `npm run validate:content`: 콘텐츠 참조·검수 상태 검사
+- `npm run validate:content`: 콘텐츠 참조·검수 상태·듣기 음원 존재 검사
 - `npm run check:links`: 공식 자료 링크 상태 검사
 - `npm test`: 단위 테스트, 프로덕션 빌드, 렌더링 테스트
+
+## 듣기 음원 생성
+
+- `npm run generate:audio`: `data/listeningScripts.ts`의 창작 스크립트를
+  Edge TTS 뉴럴 음성(es-ES-ElviraNeural 등)으로 합성해
+  `public/audio/listening/*.m4a`를 만듭니다.
+- `edge-tts`(`pip install edge-tts`, 네트워크 필요)와 Homebrew `ffmpeg`가
+  필요합니다. `EDGE_TTS_PYTHON`으로 edge_tts가 설치된 파이썬을 지정할 수
+  있으며, 없으면 `~/spanish-lab/.venv`를 자동으로 사용합니다.
+- 스크립트 해시 매니페스트로 내용이 바뀐 음원만 다시 생성합니다.
+  전체 재생성은 `npm run generate:audio -- --force`.
 
 ## 콘텐츠 원칙
 
 - 공개되는 창작 콘텐츠는 `published` 및 검수 이력이 있어야 합니다.
 - 공식 자료는 Instituto Cervantes 원문 링크만 제공하며 재호스팅하지 않습니다.
+- 듣기 음원은 창작 스크립트를 TTS로 합성한 것으로, 공식 기출 음원을 복제하지 않습니다.
 - 학습 기록과 테마는 브라우저에만 저장되고, 녹음은 업로드하지 않습니다.

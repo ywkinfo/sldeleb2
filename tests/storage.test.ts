@@ -34,6 +34,15 @@ const snapshot: ProgressSnapshot = {
       attemptCount: 1,
       lastAttemptedAt: 100,
     },
+    "listen-1": {
+      kind: "listening",
+      itemId: "listen-1",
+      selectedAnswer: "a",
+      correct: false,
+      flagged: true,
+      attemptCount: 2,
+      lastAttemptedAt: 200,
+    },
   },
 };
 

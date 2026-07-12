@@ -34,12 +34,40 @@ function validCollections(): ContentCollections {
         ...review,
       },
     ],
+    listeningScripts: [
+      {
+        id: "script-1",
+        task: "tarea3",
+        title: "Entrevista",
+        audioSrc: "/audio/listening/script-1.m4a",
+        transcript: "PERIODISTA: Hola.\nDOCTORA: Buenas tardes.",
+        voices: { PERIODISTA: "es-MX-JorgeNeural", DOCTORA: "es-ES-ElviraNeural" },
+        rate: "+0%",
+        sourceNote: "창작 스크립트",
+        ...review,
+      },
+    ],
     practiceItems: [
       {
         id: "read-1",
         skill: "reading",
         kind: "mcq",
         textId: "text-1",
+        prompt: "Pregunta",
+        options: [
+          { key: "a", text: "A" },
+          { key: "b", text: "B" },
+        ],
+        correctAnswer: "a",
+        explanationKo: "A가 정답입니다.",
+        tags: ["detalle"],
+        ...review,
+      },
+      {
+        id: "listen-1",
+        skill: "listening",
+        kind: "mcq",
+        scriptId: "script-1",
         prompt: "Pregunta",
         options: [
           { key: "a", text: "A" },
@@ -60,6 +88,14 @@ function validCollections(): ContentCollections {
         itemIds: ["read-1"],
         ...review,
       },
+      {
+        id: "set-2",
+        title: "짧은 듣기",
+        estimatedMin: 10,
+        skill: "listening",
+        itemIds: ["listen-1"],
+        ...review,
+      },
     ],
   };
 }
@@ -72,7 +108,9 @@ describe("content validation", () => {
   it("detects duplicate IDs, missing text references, and invalid answers", () => {
     const base = validCollections();
     const originalItem = base.practiceItems[0];
-    if (originalItem.kind !== "mcq") throw new Error("Expected reading fixture");
+    if (originalItem.kind !== "mcq" || originalItem.skill !== "reading") {
+      throw new Error("Expected reading fixture");
+    }
     const data: ContentCollections = {
       ...base,
       readingTexts: [...base.readingTexts, { ...base.readingTexts[0] }],
@@ -86,6 +124,26 @@ describe("content validation", () => {
     };
     const fields = validateContent(data).map((issue) => issue.field);
     expect(fields).toEqual(expect.arrayContaining(["id", "textId", "correctAnswer"]));
+  });
+
+  it("detects broken listening script references and invalid audio paths", () => {
+    const base = validCollections();
+    const listeningItem = base.practiceItems[1];
+    if (listeningItem.kind !== "mcq" || listeningItem.skill !== "listening") {
+      throw new Error("Expected listening fixture");
+    }
+    const data: ContentCollections = {
+      ...base,
+      listeningScripts: [
+        { ...base.listeningScripts[0], audioSrc: "media/script-1.m4a" },
+      ],
+      practiceItems: [
+        base.practiceItems[0],
+        { ...listeningItem, scriptId: "missing" },
+      ],
+    };
+    const fields = validateContent(data).map((issue) => issue.field);
+    expect(fields).toEqual(expect.arrayContaining(["audioSrc", "scriptId"]));
   });
 
   it("rejects invalid skill/task combinations on official resources", () => {

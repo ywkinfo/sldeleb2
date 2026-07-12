@@ -1,5 +1,7 @@
 import type {
   AttemptState,
+  ListeningAttempt,
+  ListeningMCQItem,
   OpenAttempt,
   ReadingAttempt,
   ReadingMCQItem,
@@ -13,18 +15,19 @@ function previousFlag(previous: AttemptState | undefined): boolean {
   return previous?.flagged ?? false;
 }
 
-export function gradeReadingAttempt(
-  item: ReadingMCQItem,
+function gradeMCQAttempt<K extends "reading" | "listening">(
+  kind: K,
+  item: ReadingMCQItem | ListeningMCQItem,
   selectedAnswer: string,
-  previous?: AttemptState,
-  now = Date.now(),
-): ReadingAttempt {
+  previous: AttemptState | undefined,
+  now: number,
+) {
   if (!item.options.some((option) => option.key === selectedAnswer)) {
     throw new RangeError(`Unknown answer key "${selectedAnswer}" for ${item.id}`);
   }
 
   return {
-    kind: "reading",
+    kind,
     itemId: item.id,
     selectedAnswer,
     correct: selectedAnswer === item.correctAnswer,
@@ -32,6 +35,24 @@ export function gradeReadingAttempt(
     attemptCount: previousCount(previous) + 1,
     lastAttemptedAt: now,
   };
+}
+
+export function gradeReadingAttempt(
+  item: ReadingMCQItem,
+  selectedAnswer: string,
+  previous?: AttemptState,
+  now = Date.now(),
+): ReadingAttempt {
+  return gradeMCQAttempt("reading", item, selectedAnswer, previous, now);
+}
+
+export function gradeListeningAttempt(
+  item: ListeningMCQItem,
+  selectedAnswer: string,
+  previous?: AttemptState,
+  now = Date.now(),
+): ListeningAttempt {
+  return gradeMCQAttempt("listening", item, selectedAnswer, previous, now);
 }
 
 export function createOpenAttempt(

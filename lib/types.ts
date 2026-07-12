@@ -1,5 +1,5 @@
 export type ExamSkill = "reading" | "listening" | "writing" | "speaking";
-export type PracticeSkill = Exclude<ExamSkill, "listening">;
+export type PracticeSkill = ExamSkill;
 export type Task = "tarea1" | "tarea2" | "tarea3" | "tarea4" | "tarea5";
 
 export type ContentStatus = "draft" | "reviewed" | "published";
@@ -36,11 +36,36 @@ export interface ReadingText extends ContentReviewMetadata {
   sourceNote: string;
 }
 
+export interface ListeningScript extends ContentReviewMetadata {
+  id: string;
+  task: Task;
+  title: string;
+  audioSrc: string;
+  transcript: string;
+  // 화자 라벨 → Edge TTS 음성 이름(예: es-ES-ElviraNeural). scripts/generate-listening-audio.ts가 사용.
+  voices: Record<string, string>;
+  // Edge TTS 속도 오프셋 (예: "+0%", "-6%")
+  rate: string;
+  sourceNote: string;
+}
+
 export interface ReadingMCQItem extends ContentReviewMetadata {
   id: string;
   skill: "reading";
   kind: "mcq";
   textId: string;
+  prompt: string;
+  options: { key: string; text: string }[];
+  correctAnswer: string;
+  explanationKo: string;
+  tags: string[];
+}
+
+export interface ListeningMCQItem extends ContentReviewMetadata {
+  id: string;
+  skill: "listening";
+  kind: "mcq";
+  scriptId: string;
   prompt: string;
   options: { key: string; text: string }[];
   correctAnswer: string;
@@ -76,6 +101,7 @@ export interface SpeakingTaskItem extends ContentReviewMetadata {
 
 export type PracticeItem =
   | ReadingMCQItem
+  | ListeningMCQItem
   | WritingTaskItem
   | SpeakingTaskItem;
 
@@ -108,6 +134,12 @@ export interface ReadingAttempt extends BaseAttempt {
   correct: boolean;
 }
 
+export interface ListeningAttempt extends BaseAttempt {
+  kind: "listening";
+  selectedAnswer: string;
+  correct: boolean;
+}
+
 export type OpenAttempt =
   | (BaseAttempt & {
       kind: "open";
@@ -120,7 +152,7 @@ export type OpenAttempt =
       selfScore: 1 | 2 | 3;
     });
 
-export type AttemptState = ReadingAttempt | OpenAttempt;
+export type AttemptState = ReadingAttempt | ListeningAttempt | OpenAttempt;
 
 export interface ProgressSnapshot {
   schemaVersion: 1;

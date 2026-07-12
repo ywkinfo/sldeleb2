@@ -653,6 +653,214 @@ export const practiceItems = [
     ...review,
   },
 
+  // Audición · Tarea 3 — Entrevista a una investigadora del sueño
+  {
+    id: 'l-sueno-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: '¿Qué resultado sorprendió al equipo de la doctora?',
+    options: [
+      { key: 'a', text: 'Que los adolescentes duermen menos de lo recomendado.' },
+      { key: 'b', text: 'Que el desajuste entre semana y fin de semana empeora el descanso.' },
+      { key: 'c', text: 'Que los adolescentes han dejado de hacer siestas.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '적게 잔다는 사실은 "eso ya lo sabíamos"(이미 알고 있었다)라고 말합니다. 놀라웠던 것은 주중과 주말의 수면 차이가 체내 시계를 더 흐트러뜨린다는 점이므로 b입니다.',
+    tags: ['세부정보', '듣기', '건강'],
+    ...review,
+  },
+  {
+    id: 'l-sueno-02',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: 'Según la doctora, recuperar sueño el fin de semana…',
+    options: [
+      { key: 'a', text: 'es siempre perjudicial para el reloj interno.' },
+      { key: 'b', text: 'es aceptable si la diferencia no es demasiado grande.' },
+      { key: 'c', text: 'solo funciona si se duerme hasta mediodía.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '한두 시간 보충은 해가 없고(no hace daño), 세 시간을 넘길 때 문제가 생긴다고 합니다. 한도 안에서는 괜찮다는 b가 정답입니다. a는 "항상 해롭다"로 과장된 진술입니다.',
+    tags: ['조건', '듣기', '수치'],
+    ...review,
+  },
+  {
+    id: 'l-sueno-03',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: 'Sobre las pantallas, la doctora afirma que…',
+    options: [
+      { key: 'a', text: 'la luz es la causa principal del retraso del sueño.' },
+      { key: 'b', text: 'los contenidos retrasan el sueño más que el brillo.' },
+      { key: 'c', text: 'los juegos afectan menos que los vídeos.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '통설(빛 때문)을 부정하며 "no es el brillo…, sino el contenido"라고 대조합니다. 계속 보게 설계된 콘텐츠가 문제라는 b가 정답입니다.',
+    tags: ['대조', '듣기', '디지털'],
+    ...review,
+  },
+  {
+    id: 'l-sueno-04',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: '¿Qué aconseja la doctora a las familias?',
+    options: [
+      { key: 'a', text: 'Prohibir los dispositivos por la noche.' },
+      { key: 'b', text: 'Trasladar el estudio al dormitorio.' },
+      { key: 'c', text: 'Acordar las normas junto con los adolescentes.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      '"Más que prohibir, aconsejo acordar un horario con los propios adolescentes" — 금지보다 합의를 권합니다. 함께 정한 규칙이 더 오래 지켜진다는 이유도 덧붙이므로 c입니다.',
+    tags: ['조언', '듣기', '가족'],
+    ...review,
+  },
+  {
+    id: 'l-sueno-05',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: 'Según la entrevista, una siesta de unos veinte minutos…',
+    options: [
+      { key: 'a', text: 'favorece la atención por la tarde.' },
+      { key: 'b', text: 'roba horas al sueño nocturno.' },
+      { key: 'c', text: 'sustituye el sueño de la noche.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '짧은 낮잠은 오후 집중력을 높이고(mejora la atención), 밤잠을 빼앗는 것은 긴 낮잠(las siestas largas, en cambio)입니다. 대조 표현 en cambio를 놓치지 않는 것이 관건입니다.',
+    tags: ['대조', '듣기', '습관'],
+    ...review,
+  },
+  {
+    id: 'l-sueno-06',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t3-entrevista-sueno',
+    prompt: 'Al final de la entrevista, la periodista…',
+    options: [
+      { key: 'a', text: 'pide a la doctora un resumen del estudio.' },
+      { key: 'b', text: 'anuncia que volverá a invitarla más adelante.' },
+      { key: 'c', text: 'se despide sin planes de otro encuentro.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '기자는 연구의 다음 단계가 발표되면 다시 초대하겠다고 말하며 마무리합니다(Volveremos a invitarla). 재초대 계획이 명시되므로 b입니다.',
+    tags: ['화자의도', '듣기'],
+    ...review,
+  },
+
+  // Audición · Tarea 5 — Charla: el desperdicio de alimentos en casa
+  {
+    id: 'l-comida-01',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: 'Según la conferenciante, la mayor parte del desperdicio se produce…',
+    options: [
+      { key: 'a', text: 'en los supermercados.' },
+      { key: 'b', text: 'en los restaurantes.' },
+      { key: 'c', text: 'en los hogares.' },
+    ],
+    correctAnswer: 'c',
+    explanationKo:
+      '흔히 슈퍼마켓과 식당을 탓하지만(solemos culpar…) 유럽 연구들은 절반 이상이 가정에서 발생한다는 데 일치한다고 합니다. 통념과 사실의 대비를 듣는 문제입니다.',
+    tags: ['세부정보', '듣기', '환경'],
+    ...review,
+  },
+  {
+    id: 'l-comida-02',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: 'La primera causa del desperdicio que menciona es…',
+    options: [
+      { key: 'a', text: 'comprar sin planificar.' },
+      { key: 'b', text: 'el tamaño insuficiente de las neveras.' },
+      { key: 'c', text: 'el precio bajo de los alimentos.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '첫 번째 이유는 계획의 부재("la planificación, o mejor dicho, su ausencia")입니다. 목록 없이 사고 불필요한 할인 상품을 사는 행동이 예시로 이어지므로 a입니다.',
+    tags: ['원인', '듣기', '소비'],
+    ...review,
+  },
+  {
+    id: 'l-comida-03',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: 'La fecha de consumo preferente indica que el producto…',
+    options: [
+      { key: 'a', text: 'supone un riesgo para la salud.' },
+      { key: 'b', text: 'puede perder sabor o textura.' },
+      { key: 'c', text: 'debe tirarse de inmediato.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '건강상 위험을 나타내는 것은 fecha de caducidad(유통기한)이고, consumo preferente(품질유지기한)는 맛과 질감이 떨어질 수 있음을 알릴 뿐입니다. 두 라벨의 구분이 핵심입니다.',
+    tags: ['용어구분', '듣기'],
+    ...review,
+  },
+  {
+    id: 'l-comida-04',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: '¿Qué recomienda sobre la colocación de los alimentos?',
+    options: [
+      { key: 'a', text: 'Guardar las ofertas al fondo de la nevera.' },
+      { key: 'b', text: 'Poner a la vista lo que caduca antes.' },
+      { key: 'c', text: 'Ordenarlos por tipo de producto.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '두 번째 제안은 먼저 상하는 식품을 눈에 띄게 앞에 두라는 것입니다. "lo que no se ve, no se come"(안 보이면 안 먹는다)가 근거 문장입니다.',
+    tags: ['조언', '듣기'],
+    ...review,
+  },
+  {
+    id: 'l-comida-05',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: 'Sobre la congelación, la conferenciante afirma que…',
+    options: [
+      { key: 'a', text: 'muchos platos cocinados la soportan bien.' },
+      { key: 'b', text: 'solo es adecuada para el pan.' },
+      { key: 'c', text: 'cambia el sabor de forma peligrosa.' },
+    ],
+    correctAnswer: 'a',
+    explanationKo:
+      '빵과 치즈뿐 아니라 조리된 음식도(incluso muchos platos cocinados) 냉동고에서 몇 주를 견딘다고 합니다. 냉동에 대한 두려움을 버리라는 취지이므로 a입니다.',
+    tags: ['세부정보', '듣기'],
+    ...review,
+  },
+  {
+    id: 'l-comida-06',
+    skill: 'listening',
+    kind: 'mcq',
+    scriptId: 'listening-t5-desperdicio-alimentos',
+    prompt: 'El mensaje final de la charla es que…',
+    options: [
+      { key: 'a', text: 'reducir el desperdicio exige sacrificios importantes.' },
+      { key: 'b', text: 'los pequeños hábitos repetidos son suficientes.' },
+      { key: 'c', text: 'salvar una bolsa a la semana no merece la pena.' },
+    ],
+    correctAnswer: 'b',
+    explanationKo:
+      '"no exige grandes sacrificios, sino pequeños hábitos repetidos" — 큰 희생이 아니라 반복되는 작은 습관이면 충분하다는 결론입니다. c는 마지막 문장의 의미를 뒤집은 오답입니다.',
+    tags: ['결론', '듣기'],
+    ...review,
+  },
+
   // Expresión e interacción escritas
   {
     id: 'w-neighborhood-noise',

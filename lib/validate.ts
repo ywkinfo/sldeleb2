@@ -1,5 +1,7 @@
 import type {
   ContentReviewMetadata,
+  ListeningMCQItem,
+  ListeningScript,
   OfficialResource,
   PracticeItem,
   PracticeSet,
@@ -11,6 +13,7 @@ import type {
 export interface ContentCollections {
   officialResources: readonly OfficialResource[];
   readingTexts: readonly ReadingText[];
+  listeningScripts: readonly ListeningScript[];
   practiceItems: readonly PracticeItem[];
   practiceSets: readonly PracticeSet[];
 }
@@ -60,7 +63,7 @@ function validateUniqueIds<T extends { id: string }>(
 }
 
 function validateReview(
-  collection: "readingTexts" | "practiceItems" | "practiceSets",
+  collection: "readingTexts" | "listeningScripts" | "practiceItems" | "practiceSets",
   value: { id: string } & ContentReviewMetadata,
   issues: ValidationIssue[],
 ): void {
@@ -101,6 +104,31 @@ function validTaskForSkill(skill: string, task: Task | undefined): boolean {
   return task === undefined || SKILL_TASKS[skill]?.includes(task) === true;
 }
 
+function validateMCQOptions(
+  item: ReadingMCQItem | ListeningMCQItem,
+  issues: ValidationIssue[],
+): void {
+  const optionKeys = item.options.map((option) => option.key);
+  if (item.options.length < 2) {
+    add(issues, "practiceItems", item.id, "options", "At least two options are required");
+  }
+  if (new Set(optionKeys).size !== optionKeys.length) {
+    add(issues, "practiceItems", item.id, "options", "Option keys must be unique");
+  }
+  if (!optionKeys.includes(item.correctAnswer)) {
+    add(
+      issues,
+      "practiceItems",
+      item.id,
+      "correctAnswer",
+      "Correct answer must match an option key",
+    );
+  }
+  if (!item.explanationKo.trim()) {
+    add(issues, "practiceItems", item.id, "explanationKo", "Explanation is required");
+  }
+}
+
 function validateReadingItem(
   item: ReadingMCQItem,
   textById: Map<string, ReadingText>,
@@ -124,36 +152,47 @@ function validateReadingItem(
       `Published item references ${text.status} text: ${item.textId}`,
     );
   }
+  validateMCQOptions(item, issues);
+}
 
-  const optionKeys = item.options.map((option) => option.key);
-  if (item.options.length < 2) {
-    add(issues, "practiceItems", item.id, "options", "At least two options are required");
-  }
-  if (new Set(optionKeys).size !== optionKeys.length) {
-    add(issues, "practiceItems", item.id, "options", "Option keys must be unique");
-  }
-  if (!optionKeys.includes(item.correctAnswer)) {
+function validateListeningItem(
+  item: ListeningMCQItem,
+  scriptById: Map<string, ListeningScript>,
+  issues: ValidationIssue[],
+): void {
+  const script = scriptById.get(item.scriptId);
+  if (!script) {
     add(
       issues,
       "practiceItems",
       item.id,
-      "correctAnswer",
-      "Correct answer must match an option key",
+      "scriptId",
+      `Unknown listening script: ${item.scriptId}`,
+    );
+  } else if (item.status === "published" && script.status !== "published") {
+    add(
+      issues,
+      "practiceItems",
+      item.id,
+      "scriptId",
+      `Published item references ${script.status} script: ${item.scriptId}`,
     );
   }
-  if (!item.explanationKo.trim()) {
-    add(issues, "practiceItems", item.id, "explanationKo", "Explanation is required");
-  }
+  validateMCQOptions(item, issues);
 }
 
 export function validateContent(collections: ContentCollections): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   validateUniqueIds("officialResources", collections.officialResources, issues);
   validateUniqueIds("readingTexts", collections.readingTexts, issues);
+  validateUniqueIds("listeningScripts", collections.listeningScripts, issues);
   validateUniqueIds("practiceItems", collections.practiceItems, issues);
   validateUniqueIds("practiceSets", collections.practiceSets, issues);
 
   const textById = new Map(collections.readingTexts.map((text) => [text.id, text]));
+  const scriptById = new Map(
+    collections.listeningScripts.map((script) => [script.id, script]),
+  );
   const itemById = new Map(collections.practiceItems.map((item) => [item.id, item]));
 
   for (const resource of collections.officialResources) {
@@ -176,13 +215,36 @@ export function validateContent(collections: ContentCollections): ValidationIssu
     if (!text.sourceNote.trim()) add(issues, "readingTexts", text.id, "sourceNote", "Source note is required");
   }
 
+  for (const script of collections.listeningScripts) {
+    validateReview("listeningScripts", script, issues);
+    if (!script.title.trim()) add(issues, "listeningScripts", script.id, "title", "Title is required");
+    if (!script.transcript.trim()) add(issues, "listeningScripts", script.id, "transcript", "Transcript is required");
+    if (!script.sourceNote.trim()) add(issues, "listeningScripts", script.id, "sourceNote", "Source note is required");
+    if (!script.audioSrc.startsWith("/audio/")) {
+      add(issues, "listeningScripts", script.id, "audioSrc", "Audio source must live under /audio/");
+    }
+    if (!validTaskForSkill("listening", script.task)) {
+      add(issues, "listeningScripts", script.id, "task", "Invalid task for listening");
+    }
+    if (Object.keys(script.voices).length === 0) {
+      add(issues, "listeningScripts", script.id, "voices", "At least one voice mapping is required");
+    }
+    if (!/^[+-]\d+%$/.test(script.rate)) {
+      add(issues, "listeningScripts", script.id, "rate", "Rate must be an Edge TTS offset like +0% or -6%");
+    }
+  }
+
   for (const item of collections.practiceItems) {
     validateReview("practiceItems", item, issues);
     if (!item.prompt.trim()) add(issues, "practiceItems", item.id, "prompt", "Prompt is required");
     if (item.tags.length === 0) add(issues, "practiceItems", item.id, "tags", "At least one tag is required");
 
     if (item.kind === "mcq") {
-      validateReadingItem(item, textById, issues);
+      if (item.skill === "reading") {
+        validateReadingItem(item, textById, issues);
+      } else {
+        validateListeningItem(item, scriptById, issues);
+      }
     } else if (!validTaskForSkill(item.skill, item.task)) {
       add(issues, "practiceItems", item.id, "task", `Invalid task for ${item.skill}`);
     }

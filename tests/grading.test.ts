@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   completeOpenAttempt,
+  gradeListeningAttempt,
   gradeReadingAttempt,
   setAttemptFlag,
 } from "../lib/grading";
-import type { ReadingMCQItem } from "../lib/types";
+import type { ListeningMCQItem, ReadingMCQItem } from "../lib/types";
 
 const item: ReadingMCQItem = {
   id: "read-1",
@@ -41,6 +42,37 @@ describe("reading grading", () => {
 
   it("rejects an answer key not present in the options", () => {
     expect(() => gradeReadingAttempt(item, "z")).toThrow(RangeError);
+  });
+});
+
+describe("listening grading", () => {
+  const listeningItem: ListeningMCQItem = {
+    id: "listen-1",
+    skill: "listening",
+    kind: "mcq",
+    scriptId: "script-1",
+    prompt: "¿Qué afirma la doctora?",
+    options: item.options,
+    correctAnswer: "b",
+    explanationKo: "인터뷰의 근거는 B입니다.",
+    tags: ["detalle"],
+    status: "published",
+    reviewedBy: "Spanish Lab",
+    reviewedAt: "2026-07-11T00:00:00.000Z",
+  };
+
+  it("grades a listening answer with the listening attempt kind", () => {
+    const attempt = gradeListeningAttempt(listeningItem, "b", undefined, 100);
+    expect(attempt).toMatchObject({
+      kind: "listening",
+      itemId: "listen-1",
+      correct: true,
+      attemptCount: 1,
+    });
+  });
+
+  it("rejects an answer key not present in the options", () => {
+    expect(() => gradeListeningAttempt(listeningItem, "z")).toThrow(RangeError);
   });
 });
 

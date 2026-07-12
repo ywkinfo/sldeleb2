@@ -173,7 +173,11 @@ h3 { margin: 0 0 .7rem; font-size: 1.35rem; }
 .recorder-controls { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
 audio { width: 100%; }
 
-.review-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.transcript { margin-top: 1rem; border: 1px dashed var(--line); border-radius: 12px; padding: .8rem 1rem; }
+.transcript summary { cursor: pointer; font-weight: 700; }
+.transcript .passage { margin-top: .8rem; }
+
+.review-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
 .progress { height: 8px; background: var(--line); overflow: hidden; border-radius: 999px; margin-top: .8rem; }
 .progress > span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
 .review-list { display: grid; gap: .7rem; margin-top: 1.5rem; }

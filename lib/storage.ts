@@ -48,7 +48,7 @@ export function isAttemptState(value: unknown): value is AttemptState {
     return false;
   }
 
-  if (attempt.kind === "reading") {
+  if (attempt.kind === "reading" || attempt.kind === "listening") {
     return (
       typeof attempt.selectedAnswer === "string" &&
       typeof attempt.correct === "boolean"
