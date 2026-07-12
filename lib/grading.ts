@@ -56,6 +56,15 @@ export function gradeListeningAttempt(
   return gradeMCQAttempt("listening", item, selectedAnswer, previous, now);
 }
 
+export function gradeMcqAttempt(
+  item: ReadingMCQItem | ListeningMCQItem,
+  selectedAnswer: string,
+  previous?: AttemptState,
+  now = Date.now(),
+): ReadingAttempt | ListeningAttempt {
+  return gradeMCQAttempt(item.skill, item, selectedAnswer, previous, now) as ReadingAttempt | ListeningAttempt;
+}
+
 export function createOpenAttempt(
   itemId: string,
   previous?: AttemptState,

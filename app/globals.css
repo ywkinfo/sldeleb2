@@ -155,7 +155,8 @@ h3 { margin: 0 0 .7rem; font-size: 1.35rem; }
   display: flex; align-items: flex-start; gap: .65rem; text-align: left; width: 100%;
   color: var(--ink); background: var(--surface-strong); border: 1px solid var(--line); border-radius: 12px; padding: .8rem; cursor: pointer;
 }
-.option:hover { border-color: var(--accent); }
+.option:not(:disabled):hover { border-color: var(--accent); }
+.option:disabled { cursor: default; }
 .option.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
 .option.correct { border-color: var(--success); background: color-mix(in srgb, var(--success) 8%, var(--surface-strong)); }
 .option.wrong { border-color: var(--accent); }

@@ -22,3 +22,14 @@ export function getSetById(setId: string): PracticeSet | undefined {
 export function getSetIdForItem(itemId: string): string | undefined {
   return practiceSets.find((s) => s.itemIds.includes(itemId))?.id;
 }
+
+/**
+ * Orders items according to the itemIds defined in the practice set.
+ * Ignores items that are not in the set's itemIds.
+ */
+export function orderItemsBySet<T extends { id: string }>(set: PracticeSet, items: T[]): T[] {
+  const itemMap = new Map(items.map(item => [item.id, item]));
+  return set.itemIds
+    .map(id => itemMap.get(id))
+    .filter((item): item is T => item !== undefined);
+}

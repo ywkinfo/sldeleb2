@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPublishedSets, getSetById } from "@/lib/sets";
+import { getPublishedSets, getSetById, orderItemsBySet } from "@/lib/sets";
 import { practiceItems } from "@/data/practiceItems";
 import { readingTexts } from "@/data/readingTexts";
 import { listeningScripts } from "@/data/listeningScripts";
@@ -29,7 +29,8 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
   const set = getSetById(params.setId);
   if (!set || set.status !== "published") notFound();
 
-  const items: PracticeItem[] = practiceItems.filter((i) => set.itemIds.includes(i.id));
+  const items: PracticeItem[] = orderItemsBySet(set, practiceItems);
+  const numberByItemId = Object.fromEntries(items.map((item, index) => [item.id, index + 1]));
 
   const reading = items.filter((item): item is ReadingMCQItem => item.kind === "mcq" && item.skill === "reading");
   const listening = items.filter((item): item is ListeningMCQItem => item.kind === "mcq" && item.skill === "listening");
@@ -57,7 +58,7 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
               {Array.from(new Set(reading.map((i) => i.textId))).map((textId) => {
                 const text = readingTexts.find((t) => t.id === textId);
                 if (!text) return null;
-                return <PracticeReading key={text.id} text={text} items={reading.filter((i) => i.textId === text.id)} />;
+                return <PracticeReading key={text.id} text={text} items={reading.filter((i) => i.textId === text.id)} numberByItemId={numberByItemId} />;
               })}
             </div>
           </div>
@@ -71,7 +72,7 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
               {Array.from(new Set(listening.map((i) => i.scriptId))).map((scriptId) => {
                 const script = listeningScripts.find((s) => s.id === scriptId);
                 if (!script) return null;
-                return <PracticeListening key={script.id} script={script} items={listening.filter((i) => i.scriptId === script.id)} />;
+                return <PracticeListening key={script.id} script={script} items={listening.filter((i) => i.scriptId === script.id)} numberByItemId={numberByItemId} />;
               })}
             </div>
           </div>

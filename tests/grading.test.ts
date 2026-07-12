@@ -4,6 +4,7 @@ import {
   completeOpenAttemptWithRubric,
   gradeListeningAttempt,
   gradeReadingAttempt,
+  gradeMcqAttempt,
   setAttemptFlag,
 } from "../lib/grading";
 import type { ListeningMCQItem, ReadingMCQItem } from "../lib/types";
@@ -74,6 +75,45 @@ describe("listening grading", () => {
 
   it("rejects an answer key not present in the options", () => {
     expect(() => gradeListeningAttempt(listeningItem, "z")).toThrow(RangeError);
+  });
+});
+
+describe("mcq grading dispatcher", () => {
+  it("dispatches to reading grading when item skill is reading", () => {
+    const attempt = gradeMcqAttempt(item, "b", undefined, 300);
+    expect(attempt).toMatchObject({
+      kind: "reading",
+      itemId: "read-1",
+      correct: true,
+      attemptCount: 1,
+      lastAttemptedAt: 300,
+    });
+  });
+
+  it("dispatches to listening grading when item skill is listening", () => {
+    const mockListening: ListeningMCQItem = {
+      id: "listen-1",
+      skill: "listening",
+      kind: "mcq",
+      scriptId: "script-1",
+      prompt: "Test",
+      options: item.options,
+      correctAnswer: "a",
+      explanationKo: "test",
+      tags: [],
+      status: "published",
+      reviewedBy: "test",
+      reviewedAt: "2026-07-11T00:00:00.000Z",
+    };
+
+    const attempt = gradeMcqAttempt(mockListening, "a", undefined, 400);
+    expect(attempt).toMatchObject({
+      kind: "listening",
+      itemId: "listen-1",
+      correct: true,
+      attemptCount: 1,
+      lastAttemptedAt: 400,
+    });
   });
 });
 
