@@ -1,36 +1,23 @@
-/* Plain anchors are intentional: vinext currently throws an invalid-hook error for next/link in the shared shell. */
-/* eslint-disable @next/next/no-html-link-for-pages */
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
-async function requestOrigin() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return new URL(process.env.NEXT_PUBLIC_SITE_URL);
-  }
-
-  const requestHeaders = await headers();
-  const host = (requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000")
-    .split(",")[0]
-    .trim();
-  const protocol = (requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https"))
-    .split(",")[0]
-    .trim();
-
-  return new URL(`${protocol}://${host}`);
-}
+import { requestOrigin, absoluteUrl, sitePath } from "@/lib/url";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const metadataBase = await requestOrigin();
-  const socialImage = new URL("/og.png", metadataBase).toString();
+  const metadataBaseUrl = await requestOrigin();
+  const metadataBase = new URL(metadataBaseUrl);
+  // OG images and canonical use absoluteUrl to ensure basePath is included if needed
+  // Note: the original code just used metadataBase. For export, absoluteUrl is safer.
+  const canonicalUrl = absoluteUrl("/", metadataBaseUrl);
+  const socialImage = absoluteUrl("/og.png", metadataBaseUrl);
 
   return {
     metadataBase,
     title: { default: "Spanish Lab · DELE B2", template: "%s | Spanish Lab" },
     description: "한국어로 이해하고 연습하는 무료 DELE B2 학습 도구. 공식 자료 링크, 창작 연습문항, 오답 복습을 제공합니다.",
     applicationName: "Spanish Lab · DELE B2",
-    alternates: { canonical: metadataBase },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       type: "website",
       locale: "ko_KR",
@@ -58,23 +45,23 @@ const nav = [
 function Header() {
   return <header className="site-header">
     <div className="site-shell header-row">
-      <a className="brand" href="/" aria-label="Spanish Lab DELE B2 홈">
+      <a className="brand" href={sitePath("/")} aria-label="Spanish Lab DELE B2 홈">
         <span className="brand-mark" aria-hidden="true">S</span>
         <span className="brand-copy"><strong>Spanish Lab · DELE B2</strong><span>스페인어 연구소</span></span>
       </a>
       <nav className="site-nav desktop-nav" aria-label="주요 메뉴">
-        {nav.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+        {nav.map(([label, href]) => <a key={href} href={sitePath(href)}>{label}</a>)}
       </nav>
       <ThemeToggle />
     </div>
-    <nav className="mobile-nav" aria-label="모바일 메뉴"><div className="site-shell">{nav.map(([label, href]) => <a key={href} href={href}>{label}</a>)}</div></nav>
+    <nav className="mobile-nav" aria-label="모바일 메뉴"><div className="site-shell">{nav.map(([label, href]) => <a key={href} href={sitePath(href)}>{label}</a>)}</div></nav>
   </header>;
 }
 
 function Footer() {
   return <footer className="site-footer"><div className="site-shell footer-grid">
-    <div><a className="brand" href="/"><span className="brand-mark" aria-hidden="true">S</span><span className="brand-copy"><strong>Spanish Lab</strong><span>DELE B2 연구 노트</span></span></a>
-      <div className="footer-links"><a href="https://www.youtube.com/@spanishlabkr" target="_blank" rel="noreferrer">YouTube @spanishlabkr ↗</a><a href="/guide">시험 가이드</a></div>
+    <div><a className="brand" href={sitePath("/")}><span className="brand-mark" aria-hidden="true">S</span><span className="brand-copy"><strong>Spanish Lab</strong><span>DELE B2 연구 노트</span></span></a>
+      <div className="footer-links"><a href="https://www.youtube.com/@spanishlabkr" target="_blank" rel="noreferrer">YouTube @spanishlabkr ↗</a><a href={sitePath("/guide")}>시험 가이드</a></div>
     </div>
     <div className="footer-notes">
       <p>Spanish Lab · DELE B2는 Spanish Lab · 스페인어 연구소가 제작한 비공식 학습 도구이며 Instituto Cervantes와 제휴·보증 관계가 없습니다.</p>
