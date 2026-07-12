@@ -29,7 +29,7 @@ export function PracticeListening({ script, items }: { script: ListeningScript; 
       const stored = attempts[item.id];
       const attempt = stored?.kind === "listening" ? stored : undefined;
       const selected = selections[item.id] ?? attempt?.selectedAnswer;
-      return <section className="question" key={item.id} aria-labelledby={`${item.id}-prompt`}>
+      return <section className="question" key={item.id} id={item.id} aria-labelledby={`${item.id}-prompt`}>
         <h3 id={`${item.id}-prompt`}>{index + 1}. <span lang="es">{item.prompt}</span></h3>
         <div className="options" role="radiogroup" aria-label={`${index + 1}번 선택지`}>
           {item.options.map((option) => <button type="button" role="radio" aria-checked={selected === option.key} className={`option ${selected === option.key ? "selected" : ""} ${attempt && option.key === item.correctAnswer ? "correct" : ""} ${attempt && selected === option.key && !attempt.correct ? "wrong" : ""}`} key={option.key} onClick={() => setSelections((prev) => ({...prev, [item.id]: option.key}))}>
