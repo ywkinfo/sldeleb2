@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ReadingMCQItem, ListeningMCQItem } from "@/lib/types";
 import { gradeMcqAttempt, setAttemptFlag } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
+import { McqOptions, handleMcqKeyDown, type McqOptionState } from "./McqOptions";
 
 export function McqQuestion({
   item,
@@ -30,87 +31,42 @@ export function McqQuestion({
     setRetrying(false);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (event.altKey || event.ctrlKey || event.metaKey) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("input, textarea, select, audio")) return;
-
-    const letterIndex = /^Key[A-Z]$/.test(event.code) ? event.code.charCodeAt(3) - 65 : -1;
-    if (letterIndex >= 0 && letterIndex < item.options.length) {
-      event.preventDefault();
-      if (isAnswering) {
-        setLocalSelection(item.options[letterIndex].key);
-      }
-      return;
+  const stateByKey: Partial<Record<string, McqOptionState>> = {};
+  if (isLocked) {
+    stateByKey[item.correctAnswer] = "correct";
+    if (!attempt?.correct && currentSelection && currentSelection !== item.correctAnswer) {
+      stateByKey[currentSelection] = "wrong";
     }
-
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-      if (!isAnswering) return;
-      const optionsNodes = Array.from(event.currentTarget.querySelectorAll('[role="radio"]')) as HTMLElement[];
-      const currentIndex = currentSelection ? item.options.findIndex(o => o.key === currentSelection) : 0;
-      let nextIndex = currentIndex;
-      if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-        nextIndex = (currentIndex + 1) % item.options.length;
-      } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-        nextIndex = (currentIndex - 1 + item.options.length) % item.options.length;
-      }
-      event.preventDefault();
-      setLocalSelection(item.options[nextIndex].key);
-      optionsNodes[nextIndex]?.focus();
-      return;
-    }
-
-    if (event.key === "Enter" || event.key === " ") {
-      const isOption = target.getAttribute("role") === "radio";
-      if (isOption) {
-        if (event.key === " ") {
-          event.preventDefault();
-          if (isAnswering) setLocalSelection(target.getAttribute("data-key") || undefined);
-        }
-        return; // Enter는 native click을 발생시킴
-      }
-      if (target.closest(".question-actions")) return;
-      event.preventDefault();
-      if (isAnswering) answer();
-    }
-  };
+  }
 
   const lastChar = String.fromCharCode(65 + item.options.length - 1);
   const shortcutHint = `단축키: A–${lastChar} 선택 · ↑↓ 이동 · Enter 확인`;
 
   return (
-    <section className="question" id={item.id} aria-labelledby={`${item.id}-prompt`} onKeyDown={handleKeyDown}>
+    <section
+      className="question"
+      id={item.id}
+      aria-labelledby={`${item.id}-prompt`}
+      onKeyDown={(event) =>
+        handleMcqKeyDown(event, {
+          options: item.options,
+          canSelect: isAnswering,
+          currentKey: currentSelection,
+          onSelect: setLocalSelection,
+          onSubmit: answer,
+        })
+      }
+    >
       <h3 id={`${item.id}-prompt`}>{number}. <span lang="es">{item.prompt}</span></h3>
-      
-      <div className="options" role="radiogroup" aria-label={`${number}번 선택지`}>
-        {item.options.map((option, index) => {
-          const isSelected = currentSelection === option.key;
-          const isCorrect = isLocked && option.key === item.correctAnswer;
-          const isWrong = isLocked && !attempt?.correct && isSelected && option.key !== item.correctAnswer;
-          const isTabable = isSelected || (!currentSelection && index === 0);
 
-          return (
-            <button
-              type="button"
-              role="radio"
-              aria-checked={isSelected}
-              tabIndex={isTabable ? 0 : -1}
-              disabled={isLocked}
-              data-key={option.key}
-              className={`option ${isSelected ? "selected" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}
-              key={option.key}
-              onClick={() => {
-                if (isAnswering) setLocalSelection(option.key);
-              }}
-            >
-              <span className="option-key">{option.key.toUpperCase()}</span>
-              <span lang="es">{option.text}</span>
-              {isCorrect && <span className="option-state is-correct">✓ 정답</span>}
-              {isWrong && <span className="option-state is-wrong">✕ 내 선택</span>}
-            </button>
-          );
-        })}
-      </div>
+      <McqOptions
+        options={item.options}
+        ariaLabel={`${number}번 선택지`}
+        value={currentSelection}
+        disabled={isLocked}
+        onSelect={setLocalSelection}
+        stateByKey={stateByKey}
+      />
 
       <div className="question-actions">
         {isAnswering ? (
@@ -127,7 +83,7 @@ export function McqQuestion({
           </>
         )}
       </div>
-      
+
       {isAnswering && <div className="muted" style={{ fontSize: "0.82rem", marginTop: "0.6rem" }}>{shortcutHint}</div>}
 
       {isLocked && attempt && (
