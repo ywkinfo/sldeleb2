@@ -3,6 +3,12 @@ import type {
   ContentCollections,
 } from "../lib/validate";
 import { validateContent } from "../lib/validate";
+import { examBlueprints } from "../data/examBlueprints";
+import { listeningScripts } from "../data/listeningScripts";
+import { officialResources } from "../data/officialResources";
+import { practiceItems } from "../data/practiceItems";
+import { practiceSets } from "../data/practiceSets";
+import { readingTexts } from "../data/readingTexts";
 
 function validCollections(): ContentCollections {
   const review = {
@@ -174,5 +180,67 @@ describe("content validation", () => {
           issue.message.includes("references draft item"),
       ),
     ).toBe(true);
+  });
+});
+
+describe("exam blueprint validation", () => {
+  const realCollections: ContentCollections = {
+    officialResources,
+    readingTexts,
+    listeningScripts,
+    practiceItems,
+    practiceSets,
+    examBlueprints,
+  };
+
+  it("accepts the shipped listening blueprint against real content", () => {
+    expect(validateContent(realCollections)).toEqual([]);
+  });
+
+  it("rejects a blueprint that does not cover Tarea 1-5 in order", () => {
+    const broken = {
+      ...realCollections,
+      examBlueprints: [
+        { ...examBlueprints[0], sections: examBlueprints[0].sections.slice(0, 4) },
+      ],
+    };
+    expect(
+      validateContent(broken).some(
+        (issue) => issue.collection === "examBlueprints" && issue.message.includes("in order"),
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects unknown sets and task/script mismatches", () => {
+    const sections = examBlueprints[0].sections.map((section) =>
+      section.task === "tarea5" ? { ...section, setId: "missing-set" } : section,
+    );
+    // Tarea 2 슬롯에 Tarea 3 세트를 꽂으면 스크립트 task 불일치가 잡혀야 한다.
+    const swapped = sections.map((section) =>
+      section.task === "tarea2" ? { ...section, setId: "set-listening-t3-arte" } : section,
+    );
+    const issues = validateContent({
+      ...realCollections,
+      examBlueprints: [{ ...examBlueprints[0], sections: swapped }],
+    });
+    expect(issues.some((issue) => issue.message.includes("Unknown practice set: missing-set"))).toBe(true);
+    expect(issues.some((issue) => issue.message.includes("section expects tarea2"))).toBe(true);
+  });
+
+  it("rejects sections whose sets are not exactly six items", () => {
+    const shortSet = practiceSets.find((set) => set.id === "set-reading-career");
+    expect(shortSet).toBeDefined();
+    const issues = validateContent({
+      ...realCollections,
+      examBlueprints: [
+        {
+          ...examBlueprints[0],
+          sections: examBlueprints[0].sections.map((section) =>
+            section.task === "tarea1" ? { ...section, setId: "set-reading-career" } : section,
+          ),
+        },
+      ],
+    });
+    expect(issues.some((issue) => issue.message.includes("exactly 6 items"))).toBe(true);
   });
 });

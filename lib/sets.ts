@@ -27,7 +27,7 @@ export function getSetIdForItem(itemId: string): string | undefined {
  * Orders items according to the itemIds defined in the practice set.
  * Ignores items that are not in the set's itemIds.
  */
-export function orderItemsBySet<T extends { id: string }>(set: PracticeSet, items: T[]): T[] {
+export function orderItemsBySet<T extends { id: string }>(set: PracticeSet, items: readonly T[]): T[] {
   const itemMap = new Map(items.map(item => [item.id, item]));
   return set.itemIds
     .map(id => itemMap.get(id))

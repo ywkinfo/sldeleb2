@@ -11,6 +11,8 @@ import { practiceSets } from "../data/practiceSets.ts";
 // @ts-expect-error Node's type-stripping runtime requires explicit .ts extensions.
 import { readingTexts } from "../data/readingTexts.ts";
 // @ts-expect-error Node's type-stripping runtime requires explicit .ts extensions.
+import { examBlueprints } from "../data/examBlueprints.ts";
+// @ts-expect-error Node's type-stripping runtime requires explicit .ts extensions.
 import { assertValidContent } from "../lib/validate.ts";
 
 assertValidContent({
@@ -19,6 +21,7 @@ assertValidContent({
   listeningScripts,
   practiceItems,
   practiceSets,
+  examBlueprints,
 });
 
 const missingAudio = listeningScripts
@@ -36,5 +39,6 @@ if (missingAudio.length > 0) {
 console.log(
   `Content validated: ${officialResources.length} official resources, ` +
     `${readingTexts.length} reading texts, ${listeningScripts.length} listening scripts, ` +
-    `${practiceItems.length} practice items, ${practiceSets.length} practice sets.`,
+    `${practiceItems.length} practice items, ${practiceSets.length} practice sets, ` +
+    `${examBlueprints.length} exam blueprints.`,
 );

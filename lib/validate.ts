@@ -1,5 +1,6 @@
 import type {
   ContentReviewMetadata,
+  ExamBlueprint,
   ListeningMCQItem,
   ListeningScript,
   OfficialResource,
@@ -16,6 +17,7 @@ export interface ContentCollections {
   listeningScripts: readonly ListeningScript[];
   practiceItems: readonly PracticeItem[];
   practiceSets: readonly PracticeSet[];
+  examBlueprints?: readonly ExamBlueprint[];
 }
 
 export interface ValidationIssue {
@@ -181,6 +183,117 @@ function validateListeningItem(
   validateMCQOptions(item, issues);
 }
 
+/** 블루프린트 skill별 section당 기대 문항 수 (공식 청사진). */
+const EXPECTED_SECTION_ITEMS: Partial<Record<ExamBlueprint["skill"], number>> = {
+  listening: 6,
+};
+
+function validateExamBlueprints(
+  blueprints: readonly ExamBlueprint[],
+  setById: Map<string, PracticeSet>,
+  itemById: Map<string, PracticeItem>,
+  scriptById: Map<string, ListeningScript>,
+  issues: ValidationIssue[],
+): void {
+  validateUniqueIds("examBlueprints", blueprints, issues);
+
+  for (const blueprint of blueprints) {
+    if (!blueprint.title.trim()) {
+      add(issues, "examBlueprints", blueprint.id, "title", "Title is required");
+    }
+    if (!Number.isInteger(blueprint.version) || blueprint.version <= 0) {
+      add(issues, "examBlueprints", blueprint.id, "version", "Version must be a positive integer");
+    }
+    if (!Number.isFinite(blueprint.timeLimitMin) || blueprint.timeLimitMin <= 0) {
+      add(issues, "examBlueprints", blueprint.id, "timeLimitMin", "Time limit must be positive");
+    }
+
+    // 완전한 영역 시험: section task는 해당 skill의 Tarea 전체를 순서대로 덮어야 한다.
+    const expectedTasks = SKILL_TASKS[blueprint.skill] ?? [];
+    const sectionTasks = blueprint.sections.map((section) => section.task);
+    if (sectionTasks.join(",") !== expectedTasks.join(",")) {
+      add(
+        issues,
+        "examBlueprints",
+        blueprint.id,
+        "sections",
+        `Sections must cover ${expectedTasks.join(", ")} in order`,
+      );
+    }
+
+    const setIds = blueprint.sections.map((section) => section.setId);
+    if (new Set(setIds).size !== setIds.length) {
+      add(issues, "examBlueprints", blueprint.id, "sections", "Section set IDs must be unique");
+    }
+
+    const expectedCount = EXPECTED_SECTION_ITEMS[blueprint.skill];
+    const seenItemIds = new Set<string>();
+
+    for (const section of blueprint.sections) {
+      const field = `sections.${section.task}`;
+      const set = setById.get(section.setId);
+      if (!set) {
+        add(issues, "examBlueprints", blueprint.id, field, `Unknown practice set: ${section.setId}`);
+        continue;
+      }
+      if (set.status !== "published") {
+        add(issues, "examBlueprints", blueprint.id, field, `Set is not published: ${section.setId}`);
+      }
+      if (set.skill !== blueprint.skill) {
+        add(issues, "examBlueprints", blueprint.id, field, `Set skill must be ${blueprint.skill}: ${section.setId}`);
+      }
+      if (expectedCount !== undefined && set.itemIds.length !== expectedCount) {
+        add(
+          issues,
+          "examBlueprints",
+          blueprint.id,
+          field,
+          `Section must have exactly ${expectedCount} items, got ${set.itemIds.length}`,
+        );
+      }
+
+      for (const itemId of set.itemIds) {
+        if (seenItemIds.has(itemId)) {
+          add(issues, "examBlueprints", blueprint.id, field, `Duplicate item across sections: ${itemId}`);
+        }
+        seenItemIds.add(itemId);
+
+        const item = itemById.get(itemId);
+        if (!item) {
+          add(issues, "examBlueprints", blueprint.id, field, `Unknown practice item: ${itemId}`);
+          continue;
+        }
+        if (item.status !== "published") {
+          add(issues, "examBlueprints", blueprint.id, field, `Item is not published: ${itemId}`);
+        }
+        if (item.kind !== "mcq" || item.skill !== blueprint.skill) {
+          add(issues, "examBlueprints", blueprint.id, field, `Item must be a ${blueprint.skill} MCQ: ${itemId}`);
+          continue;
+        }
+        if (item.skill === "listening") {
+          const script = scriptById.get(item.scriptId);
+          if (!script) {
+            add(issues, "examBlueprints", blueprint.id, field, `Unknown listening script: ${item.scriptId}`);
+          } else {
+            if (script.status !== "published") {
+              add(issues, "examBlueprints", blueprint.id, field, `Script is not published: ${script.id}`);
+            }
+            if (script.task !== section.task) {
+              add(
+                issues,
+                "examBlueprints",
+                blueprint.id,
+                field,
+                `Script ${script.id} is ${script.task}, section expects ${section.task}`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 export function validateContent(collections: ContentCollections): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   validateUniqueIds("officialResources", collections.officialResources, issues);
@@ -283,6 +396,11 @@ export function validateContent(collections: ContentCollections): ValidationIssu
         add(issues, "practiceSets", set.id, "skill", `${itemId} does not match set skill ${set.skill}`);
       }
     }
+  }
+
+  if (collections.examBlueprints) {
+    const setById = new Map(collections.practiceSets.map((set) => [set.id, set]));
+    validateExamBlueprints(collections.examBlueprints, setById, itemById, scriptById, issues);
   }
 
   return issues;
