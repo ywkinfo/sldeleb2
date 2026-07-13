@@ -39,6 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const nav = [
   ["공식 자료", "/materials"],
   ["연습", "/practice"],
+  ["모의고사", "/exam"],
   ["복습", "/review"],
   ["시험 가이드", "/guide"],
 ] as const;

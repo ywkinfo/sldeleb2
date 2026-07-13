@@ -1,8 +1,17 @@
 import { requestOrigin, absoluteUrl } from "../../lib/url";
+import { examBlueprints } from "../../data/examBlueprints";
 
 export const dynamic = "force-static";
 
-const routes = ["/", "/materials", "/practice", "/review", "/guide"];
+const routes = [
+  "/",
+  "/materials",
+  "/practice",
+  "/exam",
+  ...examBlueprints.map((blueprint) => `/exam/${blueprint.id}`),
+  "/review",
+  "/guide",
+];
 
 export function GET(request: Request) {
   const origin = requestOrigin(request);

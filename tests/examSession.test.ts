@@ -4,6 +4,7 @@ import {
   applyPendingProjection,
   applyProjectionToSnapshot,
   canPlayScript,
+  closeActivePlaybacks,
   completePlayback,
   createExamSession,
   createExamSessionStore,
@@ -199,6 +200,14 @@ describe("playback slots", () => {
     session = refundPlayback(session, "s1", T0 + 2);
     expect(session.playbacks.s1).toEqual({ used: 0, active: false });
     expect(canPlayScript(session, "s1", T0 + 3)).toBe(true);
+  });
+
+  it("closes active slots on resume so refreshing mid-play still consumes the slot", () => {
+    let session: ExamSession = newSession();
+    session = reservePlayback(session, "s1", T0 + 1);
+    session = closeActivePlaybacks(session, T0 + 2);
+    expect(session.playbacks.s1).toEqual({ used: 1, active: false });
+    expect(closeActivePlaybacks(session, T0 + 3)).toBe(session);
   });
 });
 

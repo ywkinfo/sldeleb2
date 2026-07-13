@@ -185,6 +185,21 @@ export function completePlayback(session: ExamSession, scriptId: string, now: nu
   };
 }
 
+/**
+ * 세션 복원(새로고침) 시 active 슬롯을 닫는다. 끝까지 듣지 않고 새로고침을
+ * 반복해 같은 슬롯을 재사용하는 우회를 막는다 — 이탈하면 그 회차를 잃는다.
+ */
+export function closeActivePlaybacks(session: ExamSession, now: number): ExamSession {
+  if (!canMutateSession(session, now)) return session;
+  const activeIds = Object.keys(session.playbacks).filter((scriptId) => session.playbacks[scriptId].active);
+  if (activeIds.length === 0) return session;
+  const playbacks = { ...session.playbacks };
+  for (const scriptId of activeIds) {
+    playbacks[scriptId] = { used: playbacks[scriptId].used, active: false };
+  }
+  return { ...session, playbacks };
+}
+
 /** 재생 실패·media error — 예약된 슬롯 환불. */
 export function refundPlayback(session: ExamSession, scriptId: string, now: number): ExamSession {
   if (!canMutateSession(session, now)) return session;

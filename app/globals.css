@@ -198,6 +198,17 @@ audio { width: 100%; }
 .set-progress-count { color: var(--muted); font-size: .86rem; white-space: nowrap; }
 .set-progress-count strong { color: var(--ink); }
 
+.exam-player { display: grid; gap: .6rem; padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-strong); }
+.exam-player-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; }
+.exam-player-controls { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.exam-player-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.exam-script-block { margin-top: 1.2rem; }
+.exam-script-block:first-of-type { margin-top: 0; }
+.exam-shortcut-hint { font-size: .82rem; }
+.exam-bar-timer { font: 700 1.2rem/1 Georgia, serif; font-variant-numeric: tabular-nums; }
+.exam-bar-timer.low { color: var(--accent); }
+.exam-bytask { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .6rem; margin-top: 1rem; }
+
 .wordcount { color: var(--muted); }
 .wordcount.ok { color: var(--success); }
 .wordcount.out { color: var(--warning); }

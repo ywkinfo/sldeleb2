@@ -43,6 +43,8 @@ test("server-renders the finished Spanish Lab home page", async () => {
 for (const [path, expected] of [
   ["/materials", "공식 자료실"],
   ["/practice", "짧게, 제대로 연습"],
+  ["/exam", "실전처럼, 모의고사"],
+  ["/exam/exam-listening-b2", "듣기 모의고사"],
   ["/review", "다시 보면, 내 것이 됩니다"],
   ["/guide", "B2 시험, 한국어로 한눈에"],
 ]) {

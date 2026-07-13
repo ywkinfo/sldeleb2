@@ -26,15 +26,19 @@
   `tests/e2e/mcq.spec.ts`(연번·잠금·재제출 방지·복원·키보드).
 - 제출 전 별표는 스키마 영향 때문에 모의고사 설계와 함께 결정하기로 연기.
 
-## 2. 진행 중 — 모의고사 세션 (설계 확정, 듣기 v1 구현)
+## 2. 완료 — 모의고사 세션 듣기 v1 (2026-07-13)
 
-- 설계 확정본: `docs/mock-exam-session-design.md` (2026-07-13). 핵심 결정 —
+- 설계 확정본: `docs/mock-exam-session-design.md`. 핵심 결정 —
   별도 저장 키 `dele-b2:exam:v1`(`dele-b2:v1` 불변, 다운그레이드 안전),
   일괄 채점 + pending projection으로 복습 큐 연동, deadline 단일 진실의
   단일 finalize, 블루프린트 버전·결과 스냅샷, 오디오 재생 슬롯 2회,
   멀티탭 last-write-wins, terminal 세션 50개 보존.
-- v1 범위: 듣기 영역(Tarea 1~5 × 6문항 = 30문항/40분). 읽기는 36문항
-  청사진 콘텐츠 보강 후 확장.
+- 구현: `/exam` 목록 + `/exam/exam-listening-b2` 세션(30문항/40분, 이어하기,
+  새로고침 복원, 만료 자동 제출, 결과 정오표, 복습 큐 반영). 단위 테스트
+  `tests/examSession.test.ts`, E2E `tests/e2e/exam-*.spec.ts` 7종.
+- 다음 확장: 읽기 모의고사(36문항 청사진 콘텐츠 보강 후), 세션
+  export/import, Web Locks 단일 writer — `docs/mock-exam-session-design.md`
+  NOT in scope 절 참고.
 
 ## 3. (추후 장기 과제) AI 채점, 계정, 서버 동기화, 사용자 행동 분석
 - **Context**: 서버가 필요 없는 정적 환경(Static Export) 원칙을 벗어나는 대규모 아키텍처 변경입니다.
