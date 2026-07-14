@@ -237,7 +237,7 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
         </div>
         <button className="button small" type="button" onClick={submit}>답안 제출</button>
       </StickyBar>
-      <span className="sr-only" aria-live="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }}>{announcement}</span>
+      <span className="sr-only" aria-live="polite">{announcement}</span>
 
       <section className="page-section compact">
         <div className="site-shell practice-stack">
