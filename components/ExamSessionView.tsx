@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ExamBlueprint, ExamSession, FinalizedExamSession } from "@/lib/types";
+import type { ExamBlueprint, ExamItemContract, ExamSession, FinalizedExamSession } from "@/lib/types";
 import {
   answerExamItem,
   applyPendingProjection,
@@ -262,13 +262,13 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
                     .filter((entry): entry is ResolvedExamItem =>
                       entry !== undefined && entry.item.kind === "mcq" && entry.item.skill === "listening" && entry.item.scriptId === scriptId,
                     );
-                  const script = scriptEntries.find((entry) => entry.script)?.script;
+                  const scriptMeta = scriptEntries.find((entry) => entry.scriptMeta)?.scriptMeta;
                   return (
                     <div key={scriptId} className="exam-script-block">
-                      {script ? (
+                      {scriptMeta ? (
                         <ExamAudioPlayer
-                          title={script.title}
-                          audioSrc={script.audioSrc}
+                          title={scriptMeta.title}
+                          audioSrc={scriptMeta.audioSrc}
                           playback={session.playbacks[scriptId] ?? { used: 0, active: false }}
                           disabled={false}
                           onReserve={() => mutate((current, at) => reservePlayback(current, scriptId, at))}
@@ -384,7 +384,16 @@ function ExamResult({
   onRetryProjection: () => void;
   onRestart: () => void;
 }) {
-  const itemById = useMemo(() => new Map(practiceItems.map((item) => [item.id, item])), []);
+  // 결과 표시도 세션에 동결된 계약을 우선 사용해 배포와 무관하게 한다.
+  // 계약이 없는 옛 세션만 라이브 콘텐츠로 폴백한다.
+  const contractById = useMemo(() => {
+    const map = new Map<string, ExamItemContract>();
+    for (const section of session.sections) {
+      for (const contract of section.items ?? []) map.set(contract.id, contract);
+    }
+    return map;
+  }, [session]);
+  const liveItemById = useMemo(() => new Map(practiceItems.map((item) => [item.id, item])), []);
   const pending = projectionWarning || session.progressProjection.status === "pending";
   const tasks = session.sections.map((section) => section.task);
 
@@ -423,9 +432,11 @@ function ExamResult({
           <h2>문항별 결과</h2>
           <div className="review-list">
             {session.result.items.map((entry) => {
-              const item = itemById.get(entry.itemId);
-              const prompt = item && item.kind === "mcq" ? item.prompt : entry.itemId;
-              const explanation = item && item.kind === "mcq" ? item.explanationKo : undefined;
+              const contract = contractById.get(entry.itemId);
+              const live = liveItemById.get(entry.itemId);
+              const liveMcq = live && live.kind === "mcq" ? live : undefined;
+              const prompt = contract?.prompt ?? liveMcq?.prompt ?? entry.itemId;
+              const explanation = contract?.explanationKo ?? liveMcq?.explanationKo;
               return (
                 <div className="review-row" key={entry.itemId}>
                   <div>

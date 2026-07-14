@@ -1,6 +1,6 @@
 "use client";
 
-import type { ListeningMCQItem, ReadingMCQItem } from "@/lib/types";
+import type { ExamItemContract } from "@/lib/types";
 import { McqOptions, handleMcqKeyDown } from "./McqOptions";
 
 /**
@@ -16,7 +16,7 @@ export function ExamQuestion({
   onSelect,
   onToggleFlag,
 }: {
-  item: ReadingMCQItem | ListeningMCQItem;
+  item: ExamItemContract;
   number: number;
   value?: string;
   flagged: boolean;

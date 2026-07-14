@@ -8,6 +8,15 @@ import type {
 } from "./types";
 import { calculateRubricStats } from "./rubric";
 
+// 채점에 실제로 필요한 최소 형태. 라이브 아이템과 시험 세션의 동결 계약
+// (ExamItemContract) 모두 구조적으로 이 타입에 대입 가능하다.
+export interface GradableMcq {
+  id: string;
+  skill: "reading" | "listening";
+  options: { key: string; text: string }[];
+  correctAnswer: string;
+}
+
 function previousCount(previous: AttemptState | undefined): number {
   return previous?.attemptCount ?? 0;
 }
@@ -18,7 +27,7 @@ function previousFlag(previous: AttemptState | undefined): boolean {
 
 function gradeMCQAttempt<K extends "reading" | "listening">(
   kind: K,
-  item: ReadingMCQItem | ListeningMCQItem,
+  item: GradableMcq,
   selectedAnswer: string,
   previous: AttemptState | undefined,
   now: number,
@@ -57,7 +66,7 @@ export function gradeListeningAttempt(
 }
 
 export function gradeMcqAttempt(
-  item: ReadingMCQItem | ListeningMCQItem,
+  item: GradableMcq,
   selectedAnswer: string,
   previous?: AttemptState,
   now = Date.now(),

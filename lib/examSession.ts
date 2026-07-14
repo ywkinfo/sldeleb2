@@ -1,9 +1,11 @@
 import type {
   AttemptState,
   ExamBlueprint,
+  ExamItemContract,
   ExamPlayback,
   ExamResult,
   ExamResultItem,
+  ExamScriptContract,
   ExamSectionSnapshot,
   ExamSession,
   ExamSessionSnapshot,
@@ -30,10 +32,11 @@ export const MAX_TERMINAL_SESSIONS = 50;
 export type ExamMcqItem = ReadingMCQItem | ListeningMCQItem;
 
 export interface ResolvedExamItem {
-  item: ExamMcqItem;
+  /** 세션에 동결된 문항 계약(옛 세션은 라이브에서 투영). 채점·표시의 유일한 기준. */
+  item: ExamItemContract;
   task: Task;
-  /** 듣기 문항의 음원·대본. 콘텐츠에서 사라졌으면 undefined(채점에는 불필요). */
-  script?: ListeningScript;
+  /** 듣기 문항의 동결 음원 메타. 계약·라이브 모두에서 찾지 못하면 undefined. */
+  scriptMeta?: ExamScriptContract;
 }
 
 export interface ExamContentCollections {
@@ -42,56 +45,108 @@ export interface ExamContentCollections {
   listeningScripts: readonly ListeningScript[];
 }
 
+/** 라이브 MCQ 아이템을 동결 계약으로 투영한다. */
+function toItemContract(item: ExamMcqItem): ExamItemContract {
+  return {
+    id: item.id,
+    skill: item.skill,
+    kind: "mcq",
+    scriptId: item.skill === "listening" ? item.scriptId : undefined,
+    prompt: item.prompt,
+    options: item.options.map((option) => ({ key: option.key, text: option.text })),
+    correctAnswer: item.correctAnswer,
+    explanationKo: item.explanationKo,
+  };
+}
+
+/** 라이브 음원을 동결 음원 메타로 투영한다. */
+function toScriptContract(script: ListeningScript): ExamScriptContract {
+  return { scriptId: script.id, title: script.title, audioSrc: script.audioSrc };
+}
+
 // ---- 구성 스냅샷과 해석 ----
 
-/** 세션 시작 시 블루프린트를 구성 스냅샷으로 고정한다. */
+/**
+ * 세션 시작 시 블루프린트를 구성 스냅샷으로 고정한다. 순서(itemIds/scriptIds)뿐
+ * 아니라 문항·정답·음원 계약까지 동결해, 이후 배포로 콘텐츠가 바뀌어도 진행 중
+ * 세션의 채점·표시가 시작 시점 값을 그대로 쓰도록 한다.
+ */
 export function snapshotBlueprint(
   blueprint: ExamBlueprint,
   collections: ExamContentCollections,
 ): ExamSectionSnapshot[] {
+  const scriptById = new Map(collections.listeningScripts.map((script) => [script.id, script]));
   return blueprint.sections.map((section) => {
     const set = collections.practiceSets.find((candidate) => candidate.id === section.setId);
-    const items = set ? orderItemsBySet(set, collections.practiceItems) : [];
+    const orderedItems = set ? orderItemsBySet(set, collections.practiceItems) : [];
+    const mcqItems = orderedItems.filter((item): item is ExamMcqItem => item.kind === "mcq");
     const scriptIds: string[] = [];
-    for (const item of items) {
-      if (item.kind === "mcq" && item.skill === "listening" && !scriptIds.includes(item.scriptId)) {
+    const scripts: ExamScriptContract[] = [];
+    for (const item of mcqItems) {
+      if (item.skill === "listening" && !scriptIds.includes(item.scriptId)) {
         scriptIds.push(item.scriptId);
+        const script = scriptById.get(item.scriptId);
+        if (script) scripts.push(toScriptContract(script));
       }
     }
     return {
       task: section.task,
+      // itemIds는 mcq 문항으로 한정해 계약(items)과 1:1 정합을 보장한다 —
+      // 자동 채점 시험 세트는 전부 mcq라 현재 콘텐츠에서는 무변경.
       setId: section.setId,
-      itemIds: items.map((item) => item.id),
+      itemIds: mcqItems.map((item) => item.id),
       scriptIds,
+      items: mcqItems.map(toItemContract),
+      scripts,
     };
   });
 }
 
 /**
- * 세션의 스냅샷을 현재 콘텐츠로 해석한다. 배포로 콘텐츠가 바뀌어 문항이
- * 사라졌으면 missingItemIds로 보고한다(해당 문항은 미응답 처리).
+ * 세션의 스냅샷을 해석한다. 동결 계약(section.items/scripts)이 있으면 그것을
+ * 우선 사용하고(배포와 무관), 없는 옛 세션만 현재 콘텐츠로 폴백 조회한다. 폴백
+ * 조회에서도 문항이 사라졌으면 missingItemIds로 보고한다(해당 문항은 미응답 처리).
  */
 export function resolveSections(
   sections: readonly ExamSectionSnapshot[],
   collections: Pick<ExamContentCollections, "practiceItems" | "listeningScripts">,
 ): { resolved: ResolvedExamItem[]; missingItemIds: string[] } {
-  const itemById = new Map(collections.practiceItems.map((item) => [item.id, item]));
-  const scriptById = new Map(collections.listeningScripts.map((script) => [script.id, script]));
+  const liveItemById = new Map(collections.practiceItems.map((item) => [item.id, item]));
+  const liveScriptById = new Map(collections.listeningScripts.map((script) => [script.id, script]));
   const resolved: ResolvedExamItem[] = [];
   const missingItemIds: string[] = [];
 
+  // 세션 단위 all-or-nothing: 한 섹션이라도 동결이면 세션 전체를 동결로 취급해
+  // 어떤 섹션도 라이브를 읽지 않는다(혼합 세션 방어). 계약 없는 옛 세션만 폴백.
+  const frozen = sections.some((section) => section.items !== undefined);
+
   for (const section of sections) {
+    const contractById = new Map((section.items ?? []).map((contract) => [contract.id, contract]));
+    const scriptContractById = new Map((section.scripts ?? []).map((script) => [script.scriptId, script]));
+
     for (const itemId of section.itemIds) {
-      const item = itemById.get(itemId);
-      if (!item || item.kind !== "mcq") {
-        missingItemIds.push(itemId);
-        continue;
+      let contract = contractById.get(itemId);
+      if (!contract) {
+        if (frozen) {
+          // 동결 세션인데 계약이 없으면 라이브로 메우지 않고 누락 처리(미응답).
+          missingItemIds.push(itemId);
+          continue;
+        }
+        const live = liveItemById.get(itemId);
+        if (!live || live.kind !== "mcq") {
+          missingItemIds.push(itemId);
+          continue;
+        }
+        contract = toItemContract(live);
       }
-      resolved.push({
-        item,
-        task: section.task,
-        script: item.skill === "listening" ? scriptById.get(item.scriptId) : undefined,
-      });
+
+      let scriptMeta = contract.scriptId ? scriptContractById.get(contract.scriptId) : undefined;
+      if (!scriptMeta && contract.scriptId && !frozen) {
+        const liveScript = liveScriptById.get(contract.scriptId);
+        if (liveScript) scriptMeta = toScriptContract(liveScript);
+      }
+
+      resolved.push({ item: contract, task: section.task, scriptMeta });
     }
   }
   return { resolved, missingItemIds };
@@ -347,17 +402,109 @@ function isExamPlaybackMap(value: unknown): value is Record<string, ExamPlayback
   });
 }
 
-function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
-  const section = value as Partial<ExamSectionSnapshot>;
+function isMcqOptionArray(value: unknown): value is { key: string; text: string }[] {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => {
+      const option = entry as Partial<{ key: string; text: string }>;
+      return !!entry && typeof entry === "object" && typeof option.key === "string" && typeof option.text === "string";
+    })
+  );
+}
+
+function hasDuplicates(ids: readonly string[]): boolean {
+  return new Set(ids).size !== ids.length;
+}
+
+function isExamItemContract(value: unknown): value is ExamItemContract {
+  const contract = value as Partial<ExamItemContract>;
+  if (
+    !value ||
+    typeof value !== "object" ||
+    typeof contract.id !== "string" ||
+    (contract.skill !== "reading" && contract.skill !== "listening") ||
+    contract.kind !== "mcq" ||
+    (contract.scriptId !== undefined && typeof contract.scriptId !== "string") ||
+    typeof contract.prompt !== "string" ||
+    !isMcqOptionArray(contract.options) ||
+    typeof contract.correctAnswer !== "string" ||
+    typeof contract.explanationKo !== "string"
+  ) {
+    return false;
+  }
+  // 옵션 키는 유일하고, 정답 키는 선택지에 존재해야 한다.
+  const optionKeys = contract.options.map((option) => option.key);
+  return !hasDuplicates(optionKeys) && optionKeys.includes(contract.correctAnswer);
+}
+
+function isExamScriptContract(value: unknown): value is ExamScriptContract {
+  const script = value as Partial<ExamScriptContract>;
   return (
     !!value &&
     typeof value === "object" &&
-    typeof section.task === "string" &&
-    typeof section.setId === "string" &&
-    Array.isArray(section.itemIds) &&
-    section.itemIds.every((id) => typeof id === "string") &&
-    Array.isArray(section.scriptIds) &&
-    section.scriptIds.every((id) => typeof id === "string")
+    typeof script.scriptId === "string" &&
+    typeof script.title === "string" &&
+    typeof script.audioSrc === "string"
+  );
+}
+
+function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
+  const section = value as Partial<ExamSectionSnapshot>;
+  if (
+    !value ||
+    typeof value !== "object" ||
+    typeof section.task !== "string" ||
+    typeof section.setId !== "string" ||
+    !Array.isArray(section.itemIds) ||
+    !section.itemIds.every((id) => typeof id === "string") ||
+    !Array.isArray(section.scriptIds) ||
+    !section.scriptIds.every((id) => typeof id === "string")
+  ) {
+    return false;
+  }
+
+  // 동결 계약은 all-or-nothing. items·scripts는 함께 존재하거나 함께 없어야 한다.
+  const hasItems = section.items !== undefined;
+  const hasScripts = section.scripts !== undefined;
+  if (hasItems !== hasScripts) return false;
+  if (!hasItems) return true; // 옛 세션(계약 없음) — 비파괴 통과.
+
+  // 형태 검증.
+  if (!Array.isArray(section.items) || !section.items.every(isExamItemContract)) return false;
+  if (!Array.isArray(section.scripts) || !section.scripts.every(isExamScriptContract)) return false;
+
+  const contractItemIds = section.items.map((contract) => contract.id);
+  const contractScriptIds = section.scripts.map((script) => script.scriptId);
+
+  // 중복 ID 금지.
+  if (
+    hasDuplicates(section.itemIds) ||
+    hasDuplicates(section.scriptIds) ||
+    hasDuplicates(contractItemIds) ||
+    hasDuplicates(contractScriptIds)
+  ) {
+    return false;
+  }
+
+  // 계약 배열과 ID 목록이 정확히 일치해야 한다(누락·잉여 계약 모두 거부).
+  const itemIdSet = new Set(section.itemIds);
+  const scriptIdSet = new Set(section.scriptIds);
+  if (contractItemIds.length !== section.itemIds.length || !contractItemIds.every((id) => itemIdSet.has(id))) {
+    return false;
+  }
+  if (
+    contractScriptIds.length !== section.scriptIds.length ||
+    !contractScriptIds.every((id) => scriptIdSet.has(id))
+  ) {
+    return false;
+  }
+
+  // 문항–스크립트 관계: 듣기 문항은 섹션 스크립트에 포함(렌더 가능)돼야 하고,
+  // 읽기 문항은 scriptId를 갖지 않는다.
+  return section.items.every((contract) =>
+    contract.skill === "listening"
+      ? contract.scriptId !== undefined && scriptIdSet.has(contract.scriptId)
+      : contract.scriptId === undefined,
   );
 }
 
@@ -400,6 +547,10 @@ export function isExamSession(value: unknown): value is ExamSession {
   ) {
     return false;
   }
+
+  // 세션 단위 all-or-nothing — 섹션은 모두 동결이거나 모두 옛(계약 없음)이어야 한다.
+  const frozenFlags = (session.sections as ExamSectionSnapshot[]).map((s) => s.items !== undefined);
+  if (frozenFlags.some(Boolean) && !frozenFlags.every(Boolean)) return false;
 
   if (session.status === "in-progress") {
     return session.result === undefined && session.submittedAt === undefined;

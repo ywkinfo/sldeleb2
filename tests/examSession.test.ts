@@ -121,23 +121,241 @@ function resolved() {
   return resolveSections(newSession().sections, collections).resolved;
 }
 
+/** items·scripts 동결 계약이 없는 옛 세션 형태의 섹션을 만든다. */
+function legacySections() {
+  return snapshotBlueprint(blueprint, collections).map((section) => ({
+    task: section.task,
+    setId: section.setId,
+    itemIds: section.itemIds,
+    scriptIds: section.scriptIds,
+  }));
+}
+
+/** 스냅샷을 저장한 뒤 로드해 살아남은 세션을 돌려준다(검증 실패 시 빈 배열). */
+function sessionsAfterReload(sessions: readonly unknown[]): ExamSession[] {
+  const storage = new FakeStorage();
+  storage.setItem(EXAM_STORAGE_KEY, JSON.stringify({ schemaVersion: 1, sessions }));
+  return createExamSessionStore(storage).load().snapshot.sessions;
+}
+
+/** 동결 세션을 만든 뒤 section[0]의 계약만 변형한다(변조/손상 시뮬레이션). */
+function tamperFirstSection(
+  id: string,
+  mutate: (section: ReturnType<typeof snapshotBlueprint>[number]) => unknown,
+): ExamSession {
+  const session = createExamSession(blueprint, snapshotBlueprint(blueprint, collections), T0, id);
+  return {
+    ...session,
+    sections: session.sections.map((sec, index) => (index === 0 ? mutate(sec) : sec)),
+  } as ExamSession;
+}
+
 describe("snapshotBlueprint / resolveSections", () => {
   it("freezes item and script order from the blueprint's sets", () => {
     const sections = snapshotBlueprint(blueprint, collections);
-    expect(sections).toEqual([
+    expect(
+      sections.map((section) => ({
+        task: section.task,
+        setId: section.setId,
+        itemIds: section.itemIds,
+        scriptIds: section.scriptIds,
+      })),
+    ).toEqual([
       { task: "tarea1", setId: "setA", itemIds: ["l1", "l2"], scriptIds: ["s1"] },
       { task: "tarea2", setId: "setB", itemIds: ["l3"], scriptIds: ["s2"] },
     ]);
   });
 
-  it("reports items that disappeared from content as missing", () => {
+  it("freezes each item's prompt, options, correct answer and script metadata", () => {
+    const sections = snapshotBlueprint(blueprint, collections);
+    expect(sections[0].items).toEqual([
+      {
+        id: "l1",
+        skill: "listening",
+        kind: "mcq",
+        scriptId: "s1",
+        prompt: "Pregunta l1",
+        options: [
+          { key: "a", text: "A" },
+          { key: "b", text: "B" },
+          { key: "c", text: "C" },
+        ],
+        correctAnswer: "a",
+        explanationKo: "해설",
+      },
+      expect.objectContaining({ id: "l2", correctAnswer: "b" }),
+    ]);
+    expect(sections[0].scripts).toEqual([
+      { scriptId: "s1", title: "Guion s1", audioSrc: "/audio/listening/s1.m4a" },
+    ]);
+  });
+
+  it("keeps frozen items resolvable even when they vanish from live content", () => {
     const sections = snapshotBlueprint(blueprint, collections);
     const { resolved: found, missingItemIds } = resolveSections(sections, {
       practiceItems: items.filter((item) => item.id !== "l2"),
       listeningScripts: scripts,
     });
+    expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l2", "l3"]);
+    expect(missingItemIds).toEqual([]);
+  });
+
+  it("reports missing items only for legacy sessions without a frozen contract", () => {
+    const { resolved: found, missingItemIds } = resolveSections(legacySections(), {
+      practiceItems: items.filter((item) => item.id !== "l2"),
+      listeningScripts: scripts,
+    });
     expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l3"]);
     expect(missingItemIds).toEqual(["l2"]);
+  });
+
+  it("does not live-backfill a frozen section that is missing a contract (all-or-nothing)", () => {
+    const sections = snapshotBlueprint(blueprint, collections);
+    // 동결 세션인데 l2 계약만 제거(itemIds에는 남음) — 변조/손상 시나리오.
+    const tampered = sections.map((section, index) =>
+      index === 0 ? { ...section, items: (section.items ?? []).filter((c) => c.id !== "l2") } : section,
+    );
+    const { resolved: found, missingItemIds } = resolveSections(tampered, {
+      // 라이브에는 l2가 있지만 동결 세션은 이를 읽지 않아야 한다.
+      practiceItems: items.map((it) => (it.id === "l2" ? { ...it, correctAnswer: "a" } : it)),
+      listeningScripts: scripts,
+    });
+    expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l3"]);
+    expect(missingItemIds).toContain("l2");
+  });
+});
+
+describe("frozen content contract vs. live changes", () => {
+  const changedContent = {
+    practiceItems: items.map((item) => (item.id === "l1" ? { ...item, correctAnswer: "c" } : item)),
+    listeningScripts: scripts,
+  };
+
+  it("grades against the frozen answer even after a deploy changes the correct answer", () => {
+    let session: ExamSession = newSession();
+    session = answerExamItem(session, "l1", "a", T0 + 1); // 시작 시점 정답
+    const { resolved: found } = resolveSections(session.sections, changedContent);
+    const finalized = finalizeExamSession(session, found, {}, T0 + 10, "submit") as FinalizedExamSession;
+    const l1 = finalized.result.items.find((entry) => entry.itemId === "l1");
+    expect(l1).toMatchObject({ correctAnswer: "a", correct: true });
+    expect(finalized.result.correct).toBe(1);
+  });
+
+  it("legacy sessions grade against the live (changed) answer", () => {
+    const legacy = createExamSession(blueprint, legacySections(), T0, "legacy-1");
+    const session = answerExamItem(legacy, "l1", "a", T0 + 1);
+    const { resolved: found } = resolveSections(session.sections, changedContent);
+    const finalized = finalizeExamSession(session, found, {}, T0 + 10, "submit") as FinalizedExamSession;
+    const l1 = finalized.result.items.find((entry) => entry.itemId === "l1");
+    expect(l1).toMatchObject({ correctAnswer: "c", correct: false });
+  });
+
+  it("keeps a legacy snapshot valid so exam history is not wiped on load", () => {
+    const legacy = createExamSession(blueprint, legacySections(), T0, "legacy-2");
+    const store = createExamSessionStore(new FakeStorage());
+    expect(store.save({ schemaVersion: 1, sessions: [legacy] }).persistent).toBe(true);
+    expect(store.load().snapshot.sessions.map((session) => session.id)).toEqual(["legacy-2"]);
+  });
+
+  it("keeps frozen prompt, options, and audio even when live content mutates or is deleted", () => {
+    const sections = snapshotBlueprint(blueprint, collections);
+    const { resolved: found, missingItemIds } = resolveSections(sections, {
+      practiceItems: items
+        .filter((it) => it.id !== "l3") // l3 라이브 삭제
+        .map((it) =>
+          it.id === "l1"
+            ? { ...it, prompt: "CAMBIADO", options: [{ key: "a", text: "X" }], correctAnswer: "c" }
+            : it,
+        ),
+      listeningScripts: scripts.map((s) => (s.id === "s1" ? { ...s, title: "NUEVO", audioSrc: "/nuevo.m4a" } : s)),
+    });
+    const l1 = found.find((entry) => entry.item.id === "l1");
+    expect(l1?.item.prompt).toBe("Pregunta l1");
+    expect(l1?.item.options).toEqual([
+      { key: "a", text: "A" },
+      { key: "b", text: "B" },
+      { key: "c", text: "C" },
+    ]);
+    expect(l1?.item.correctAnswer).toBe("a");
+    expect(l1?.scriptMeta).toEqual({ scriptId: "s1", title: "Guion s1", audioSrc: "/audio/listening/s1.m4a" });
+    // 라이브에서 삭제된 l3도 동결 계약으로 그대로 유지.
+    expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l2", "l3"]);
+    expect(missingItemIds).toEqual([]);
+  });
+});
+
+describe("frozen contract completeness & relational validation", () => {
+  it("keeps a well-formed frozen session valid on reload", () => {
+    const session = createExamSession(blueprint, snapshotBlueprint(blueprint, collections), T0, "ok-1");
+    expect(sessionsAfterReload([session]).map((s) => s.id)).toEqual(["ok-1"]);
+  });
+
+  it("resets a snapshot whose contract array misses an itemId", () => {
+    const tampered = tamperFirstSection("partial-1", (sec) => ({
+      ...sec,
+      items: (sec.items ?? []).filter((c) => c.id !== "l2"),
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("resets a snapshot where items exist but scripts are missing (both-or-neither)", () => {
+    const tampered = tamperFirstSection("half-1", (sec) => ({
+      task: sec.task,
+      setId: sec.setId,
+      itemIds: sec.itemIds,
+      scriptIds: sec.scriptIds,
+      items: sec.items,
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("resets a snapshot with an extra item contract not present in itemIds", () => {
+    const tampered = tamperFirstSection("extra-1", (sec) => ({
+      ...sec,
+      items: [...(sec.items ?? []), { ...(sec.items ?? [])[0], id: "ghost-item" }],
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("resets a snapshot whose contract correctAnswer is not an option key", () => {
+    const tampered = tamperFirstSection("bad-answer-1", (sec) => ({
+      ...sec,
+      items: (sec.items ?? []).map((c, i) => (i === 0 ? { ...c, correctAnswer: "z" } : c)),
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("resets a snapshot whose listening item references a script outside the section", () => {
+    const tampered = tamperFirstSection("bad-script-1", (sec) => ({
+      ...sec,
+      items: (sec.items ?? []).map((c, i) => (i === 0 ? { ...c, scriptId: "ghost-script" } : c)),
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+});
+
+describe("session-level all-or-nothing", () => {
+  it("resets a session that mixes a frozen section with a legacy section", () => {
+    const session = createExamSession(blueprint, snapshotBlueprint(blueprint, collections), T0, "mixed-1");
+    const mixed: ExamSession = {
+      ...session,
+      // section[1]만 계약 제거 → 세션 안에서 frozen·legacy 혼합.
+      sections: session.sections.map((sec, index) =>
+        index === 1 ? { task: sec.task, setId: sec.setId, itemIds: sec.itemIds, scriptIds: sec.scriptIds } : sec,
+      ),
+    };
+    expect(sessionsAfterReload([mixed])).toEqual([]);
+  });
+
+  it("never live-backfills a legacy section when any section is frozen", () => {
+    const sections = snapshotBlueprint(blueprint, collections);
+    // section[1](l3) 계약만 제거 → 혼합. 세션 단위로 frozen이라 l3는 라이브로 채우지 않는다.
+    const mixed = sections.map((sec, index) =>
+      index === 1 ? { task: sec.task, setId: sec.setId, itemIds: sec.itemIds, scriptIds: sec.scriptIds } : sec,
+    );
+    const { resolved: found, missingItemIds } = resolveSections(mixed, collections);
+    expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l2"]);
+    expect(missingItemIds).toEqual(["l3"]);
   });
 });
 

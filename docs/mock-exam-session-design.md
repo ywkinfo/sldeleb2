@@ -43,12 +43,32 @@ interface ExamBlueprint {
 }
 
 // 세션 시작 시 고정되는 구성 스냅샷 — 이후 콘텐츠/블루프린트가 바뀌어도
-// 진행 중 세션은 자신의 스냅샷으로 복원한다.
+// 진행 중 세션은 자신의 스냅샷으로 채점·표시한다. 순서(itemIds/scriptIds)뿐
+// 아니라 문항·정답·음원 계약(items/scripts)까지 동결한다.
+interface ExamItemContract {
+  id: string;
+  skill: AutoGradedExamSkill;
+  kind: "mcq";
+  scriptId?: string;          // 듣기 문항만
+  prompt: string;
+  options: { key: string; text: string }[];
+  correctAnswer: string;
+  explanationKo: string;
+}
+
+interface ExamScriptContract {
+  scriptId: string;
+  title: string;
+  audioSrc: string;           // 경로 문자열만 동결(같은 경로 덮어쓰기는 미보호 — 후속 과제)
+}
+
 interface ExamSectionSnapshot {
   task: Task;
   setId: string;
-  itemIds: string[];
-  scriptIds: string[];
+  itemIds: string[];          // items[].id(mcq 문항)와 정확히 일치
+  scriptIds: string[];        // scripts[].scriptId와 정확히 일치
+  items?: ExamItemContract[];    // 선택: 없으면 옛(ID-only) 세션 → 로드 시 라이브 폴백
+  scripts?: ExamScriptContract[];
 }
 
 interface ExamResultItem {
@@ -94,6 +114,26 @@ type ExamSession =
 
 판별 union으로 "submitted인데 result 없음", "in-progress인데 submittedAt 있음"
 같은 상태를 타입 수준에서 배제한다.
+
+## 콘텐츠 동결과 검증 (all-or-nothing)
+
+- 세션 시작 시 `snapshotBlueprint`가 각 문항의 prompt·options·correctAnswer·
+  explanation과 음원 title·audioSrc를 계약으로 동결한다. `resolveSections`·
+  `finalizeSession`·결과 화면은 **동결 계약만** 읽는다. 계약이 없는 옛 세션
+  (items/scripts 부재)만 현재 콘텐츠로 폴백한다.
+- **all-or-nothing:** 한 세션의 모든 섹션은 함께 동결이거나 함께 옛 형식이어야
+  한다. `resolveSections`는 세션에 동결 섹션이 하나라도 있으면 전체를 동결로
+  취급해 어떤 섹션도 라이브를 읽지 않는다(혼합 세션 방어).
+- **저장 검증(`isExamSession`)**: `dele-b2:exam:v1` 스키마 버전은 유지(선택
+  필드 추가)하되, 동결 세션은 (1) items·scripts 동시 존재, (2) itemIds·
+  scriptIds와 계약 ID의 정확한 일치(누락·잉여·중복 금지), (3) correctAnswer가
+  선택지 키에 존재, (4) 듣기 문항 scriptId가 섹션 scriptIds에 포함을 모두
+  만족해야 한다. 하나라도 어기면 파싱 실패로 간주해 스냅샷 전체를 초기화한다
+  (손상·변조 방어). 정상 콘텐츠(`lib/validate.ts` 통과)로 생성한 세션은 항상
+  만족하므로 기존 이력은 초기화되지 않는다.
+- **후속 과제:** 불완전 세션 하나가 전체 이력 초기화를 유발하므로 세션별
+  격리 복구가 필요하고, `audioSrc` 문자열만 동결하므로 같은 경로 파일을
+  덮어쓰면 과거 세션 음원이 바뀐다(콘텐츠 해시 파일명으로 보강 필요).
 
 ## 상태 전이 — 단일 finalize
 
