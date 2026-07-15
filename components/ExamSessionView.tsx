@@ -26,14 +26,16 @@ import {
 import { getDefaultAttemptStore } from "@/lib/storage";
 import { formatRemainingTime, getTimerAnnouncement } from "@/lib/timer";
 import { sitePath } from "@/lib/url";
+import { EXAM_SKILL_COPY } from "@/lib/examCopy";
 import { practiceSets } from "@/data/practiceSets";
 import { practiceItems } from "@/data/practiceItems";
 import { listeningScripts } from "@/data/listeningScripts";
+import { readingTexts } from "@/data/readingTexts";
 import { ExamQuestion } from "./ExamQuestion";
 import { ExamAudioPlayer } from "./ExamAudioPlayer";
 import { StorageNotice } from "./StorageNotice";
 
-const content = { practiceSets, practiceItems, listeningScripts };
+const content = { practiceSets, practiceItems, listeningScripts, readingTexts };
 
 function taskLabel(task: string): string {
   return task.replace("tarea", "Tarea ");
@@ -214,6 +216,7 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
 
   const answeredCount = Object.keys(session.answers).length;
   const flaggedCount = session.flaggedItemIds.length;
+  const copy = EXAM_SKILL_COPY[blueprint.skill];
 
   const submit = () => {
     const unanswered = totalItems - answeredCount;
@@ -252,47 +255,87 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
                 .filter((entry) => section.itemIds.includes(entry.item.id))
                 .map((entry) => [entry.item.id, entry]),
             );
+            const question = (entry: ResolvedExamItem) => (
+              <ExamQuestion
+                key={entry.item.id}
+                item={entry.item}
+                number={numberByItemId.get(entry.item.id) ?? 0}
+                value={session.answers[entry.item.id]}
+                flagged={session.flaggedItemIds.includes(entry.item.id)}
+                disabled={false}
+                onSelect={(key) => mutate((current, at) => answerExamItem(current, entry.item.id, key, at))}
+                onToggleFlag={() => mutate((current, at) => toggleExamFlag(current, entry.item.id, at))}
+              />
+            );
             return (
               <article className="card" key={section.task} id={`exam-${section.task}`}>
-                <div className="eyebrow">Audición · {taskLabel(section.task)}</div>
-                <p className="badge warning">창작 문항 · 합성 음성(TTS) · 공식 기출 아님</p>
-                {section.scriptIds.map((scriptId) => {
-                  const scriptEntries = section.itemIds
-                    .map((itemId) => entryById.get(itemId))
-                    .filter((entry): entry is ResolvedExamItem =>
-                      entry !== undefined && entry.item.kind === "mcq" && entry.item.skill === "listening" && entry.item.scriptId === scriptId,
-                    );
-                  const scriptMeta = scriptEntries.find((entry) => entry.scriptMeta)?.scriptMeta;
-                  return (
-                    <div key={scriptId} className="exam-script-block">
-                      {scriptMeta ? (
-                        <ExamAudioPlayer
-                          title={scriptMeta.title}
-                          audioSrc={scriptMeta.audioSrc}
-                          playback={session.playbacks[scriptId] ?? { used: 0, active: false }}
-                          disabled={false}
-                          onReserve={() => mutate((current, at) => reservePlayback(current, scriptId, at))}
-                          onComplete={() => mutate((current, at) => completePlayback(current, scriptId, at))}
-                          onRefund={() => mutate((current, at) => refundPlayback(current, scriptId, at))}
-                        />
-                      ) : (
-                        <p className="storage-warning" role="alert">음원 정보를 불러올 수 없습니다(콘텐츠 변경).</p>
-                      )}
-                      {scriptEntries.map((entry) => (
-                        <ExamQuestion
-                          key={entry.item.id}
-                          item={entry.item}
-                          number={numberByItemId.get(entry.item.id) ?? 0}
-                          value={session.answers[entry.item.id]}
-                          flagged={session.flaggedItemIds.includes(entry.item.id)}
-                          disabled={false}
-                          onSelect={(key) => mutate((current, at) => answerExamItem(current, entry.item.id, key, at))}
-                          onToggleFlag={() => mutate((current, at) => toggleExamFlag(current, entry.item.id, at))}
-                        />
-                      ))}
-                    </div>
-                  );
-                })}
+                <div className="eyebrow">{copy.sectionEyebrow} · {taskLabel(section.task)}</div>
+                <p className="badge warning">{copy.contentBadge}</p>
+                {blueprint.skill === "reading"
+                  ? // 읽기: 문항의 textId를 첫 등장 순서로 묶는다(section.textIds에 의존하지 않아
+                    // 옛 세션도 동일하게 복원된다). 지문 → 문항 순으로 렌더.
+                    (() => {
+                      const order: string[] = [];
+                      const byText = new Map<string, ResolvedExamItem[]>();
+                      for (const itemId of section.itemIds) {
+                        const entry = entryById.get(itemId);
+                        if (!entry || entry.item.kind !== "mcq" || entry.item.skill !== "reading") continue;
+                        const textId = entry.item.textId;
+                        if (!byText.has(textId)) {
+                          order.push(textId);
+                          byText.set(textId, []);
+                        }
+                        byText.get(textId)!.push(entry);
+                      }
+                      return order.map((textId) => {
+                        const entries = byText.get(textId)!;
+                        const textMeta = entries.find((entry) => entry.textMeta)?.textMeta;
+                        const titleId = `exam-${section.task}-${textId}-title`;
+                        return (
+                          <section
+                            key={textId}
+                            className="exam-script-block"
+                            aria-labelledby={textMeta ? titleId : undefined}
+                          >
+                            {textMeta ? (
+                              <>
+                                <h2 lang="es" id={titleId}>{textMeta.title}</h2>
+                                <div className="passage" lang="es">{textMeta.passage}</div>
+                              </>
+                            ) : (
+                              <p className="storage-warning" role="alert">지문 정보를 불러올 수 없습니다(콘텐츠 변경).</p>
+                            )}
+                            {entries.map(question)}
+                          </section>
+                        );
+                      });
+                    })()
+                  : section.scriptIds.map((scriptId) => {
+                      const scriptEntries = section.itemIds
+                        .map((itemId) => entryById.get(itemId))
+                        .filter((entry): entry is ResolvedExamItem =>
+                          entry !== undefined && entry.item.kind === "mcq" && entry.item.skill === "listening" && entry.item.scriptId === scriptId,
+                        );
+                      const scriptMeta = scriptEntries.find((entry) => entry.scriptMeta)?.scriptMeta;
+                      return (
+                        <div key={scriptId} className="exam-script-block">
+                          {scriptMeta ? (
+                            <ExamAudioPlayer
+                              title={scriptMeta.title}
+                              audioSrc={scriptMeta.audioSrc}
+                              playback={session.playbacks[scriptId] ?? { used: 0, active: false }}
+                              disabled={false}
+                              onReserve={() => mutate((current, at) => reservePlayback(current, scriptId, at))}
+                              onComplete={() => mutate((current, at) => completePlayback(current, scriptId, at))}
+                              onRefund={() => mutate((current, at) => refundPlayback(current, scriptId, at))}
+                            />
+                          ) : (
+                            <p className="storage-warning" role="alert">음원 정보를 불러올 수 없습니다(콘텐츠 변경).</p>
+                          )}
+                          {scriptEntries.map(question)}
+                        </div>
+                      );
+                    })}
               </article>
             );
           })}
@@ -323,6 +366,7 @@ function ExamIntro({
 }) {
   const sections = snapshotBlueprint(blueprint, content);
   const totalItems = sections.reduce((sum, section) => sum + section.itemIds.length, 0);
+  const copy = EXAM_SKILL_COPY[blueprint.skill];
   const recent = sessions
     .filter((candidate): candidate is FinalizedExamSession => candidate.status !== "in-progress" && candidate.blueprintId === blueprint.id)
     .sort((a, b) => b.submittedAt - a.submittedAt)
@@ -332,11 +376,15 @@ function ExamIntro({
     <section className="page-section compact">
       <div className="site-shell practice-stack">
         <article className="card">
-          <div className="eyebrow">Simulacro · Comprensión auditiva</div>
+          <div className="eyebrow">Simulacro · {copy.areaLabel}</div>
           <h2>{blueprint.title}</h2>
           <p className="lead">{totalItems}문항 · {blueprint.timeLimitMin}분 · 제출 후 일괄 채점</p>
           <ul className="checklist">
-            <li>음원은 스크립트당 2회까지만 재생할 수 있고, 위치 이동(탐색)은 없습니다.</li>
+            {blueprint.skill === "listening" ? (
+              <li>음원은 스크립트당 2회까지만 재생할 수 있고, 위치 이동(탐색)은 없습니다.</li>
+            ) : (
+              <li>문항 수와 제한 시간은 공식 구성을 따르며, 지문 분량과 Tarea 2–4 풀이 형식은 학습용 객관식으로 근사합니다.</li>
+            )}
             <li>타이머는 멈출 수 없으며 시간이 끝나면 자동 제출됩니다.</li>
             <li>진행 상태는 이 브라우저에 저장되어 새로고침해도 이어집니다.</li>
             <li>제출하면 한 번에 채점되고 오답은 복습 큐로 이어집니다.</li>

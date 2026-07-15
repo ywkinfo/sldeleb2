@@ -9,6 +9,7 @@ import type {
   ExamSectionSnapshot,
   ExamSession,
   ExamSessionSnapshot,
+  ExamTextContract,
   FinalizedExamSession,
   InProgressExamSession,
   ListeningMCQItem,
@@ -17,6 +18,7 @@ import type {
   PracticeSet,
   ProgressSnapshot,
   ReadingMCQItem,
+  ReadingText,
   Task,
 } from "./types";
 import { orderItemsBySet } from "./sets";
@@ -37,31 +39,40 @@ export interface ResolvedExamItem {
   task: Task;
   /** 듣기 문항의 동결 음원 메타. 계약·라이브 모두에서 찾지 못하면 undefined. */
   scriptMeta?: ExamScriptContract;
+  /** 읽기 문항의 동결 지문 메타. 계약·라이브 모두에서 찾지 못하면 undefined. */
+  textMeta?: ExamTextContract;
 }
 
 export interface ExamContentCollections {
   practiceSets: readonly PracticeSet[];
   practiceItems: readonly PracticeItem[];
   listeningScripts: readonly ListeningScript[];
+  readingTexts: readonly ReadingText[];
 }
 
-/** 라이브 MCQ 아이템을 동결 계약으로 투영한다. */
+/** 라이브 MCQ 아이템을 동결 계약으로 투영한다(skill별 배타적 ID). */
 function toItemContract(item: ExamMcqItem): ExamItemContract {
-  return {
+  const base = {
     id: item.id,
-    skill: item.skill,
-    kind: "mcq",
-    scriptId: item.skill === "listening" ? item.scriptId : undefined,
+    kind: "mcq" as const,
     prompt: item.prompt,
     options: item.options.map((option) => ({ key: option.key, text: option.text })),
     correctAnswer: item.correctAnswer,
     explanationKo: item.explanationKo,
   };
+  return item.skill === "listening"
+    ? { ...base, skill: "listening", scriptId: item.scriptId }
+    : { ...base, skill: "reading", textId: item.textId };
 }
 
 /** 라이브 음원을 동결 음원 메타로 투영한다. */
 function toScriptContract(script: ListeningScript): ExamScriptContract {
   return { scriptId: script.id, title: script.title, audioSrc: script.audioSrc };
+}
+
+/** 라이브 지문을 동결 지문 메타로 투영한다(표시 필드만). */
+function toTextContract(text: ReadingText): ExamTextContract {
+  return { textId: text.id, title: text.title, passage: text.passage };
 }
 
 // ---- 구성 스냅샷과 해석 ----
@@ -76,17 +87,29 @@ export function snapshotBlueprint(
   collections: ExamContentCollections,
 ): ExamSectionSnapshot[] {
   const scriptById = new Map(collections.listeningScripts.map((script) => [script.id, script]));
+  const textById = new Map(collections.readingTexts.map((text) => [text.id, text]));
+  // 듣기 스냅샷은 기존 형태(textIds/texts 없음)를 그대로 유지하고, 읽기 섹션에만
+  // 지문 계약을 additive로 얼린다(하위호환 행렬).
+  const isReading = blueprint.skill === "reading";
   return blueprint.sections.map((section) => {
     const set = collections.practiceSets.find((candidate) => candidate.id === section.setId);
     const orderedItems = set ? orderItemsBySet(set, collections.practiceItems) : [];
     const mcqItems = orderedItems.filter((item): item is ExamMcqItem => item.kind === "mcq");
     const scriptIds: string[] = [];
     const scripts: ExamScriptContract[] = [];
+    const textIds: string[] = [];
+    const texts: ExamTextContract[] = [];
+    // scriptIds/textIds는 문항 첫 등장 순서로 수집한다.
     for (const item of mcqItems) {
       if (item.skill === "listening" && !scriptIds.includes(item.scriptId)) {
         scriptIds.push(item.scriptId);
         const script = scriptById.get(item.scriptId);
         if (script) scripts.push(toScriptContract(script));
+      }
+      if (item.skill === "reading" && !textIds.includes(item.textId)) {
+        textIds.push(item.textId);
+        const text = textById.get(item.textId);
+        if (text) texts.push(toTextContract(text));
       }
     }
     return {
@@ -98,6 +121,7 @@ export function snapshotBlueprint(
       scriptIds,
       items: mcqItems.map(toItemContract),
       scripts,
+      ...(isReading ? { textIds, texts } : {}),
     };
   });
 }
@@ -109,10 +133,11 @@ export function snapshotBlueprint(
  */
 export function resolveSections(
   sections: readonly ExamSectionSnapshot[],
-  collections: Pick<ExamContentCollections, "practiceItems" | "listeningScripts">,
+  collections: Pick<ExamContentCollections, "practiceItems" | "listeningScripts" | "readingTexts">,
 ): { resolved: ResolvedExamItem[]; missingItemIds: string[] } {
   const liveItemById = new Map(collections.practiceItems.map((item) => [item.id, item]));
   const liveScriptById = new Map(collections.listeningScripts.map((script) => [script.id, script]));
+  const liveTextById = new Map(collections.readingTexts.map((text) => [text.id, text]));
   const resolved: ResolvedExamItem[] = [];
   const missingItemIds: string[] = [];
 
@@ -123,6 +148,7 @@ export function resolveSections(
   for (const section of sections) {
     const contractById = new Map((section.items ?? []).map((contract) => [contract.id, contract]));
     const scriptContractById = new Map((section.scripts ?? []).map((script) => [script.scriptId, script]));
+    const textContractById = new Map((section.texts ?? []).map((text) => [text.textId, text]));
 
     for (const itemId of section.itemIds) {
       let contract = contractById.get(itemId);
@@ -140,13 +166,25 @@ export function resolveSections(
         contract = toItemContract(live);
       }
 
-      let scriptMeta = contract.scriptId ? scriptContractById.get(contract.scriptId) : undefined;
-      if (!scriptMeta && contract.scriptId && !frozen) {
-        const liveScript = liveScriptById.get(contract.scriptId);
-        if (liveScript) scriptMeta = toScriptContract(liveScript);
+      // 듣기=음원, 읽기=지문 메타를 동결 계약에서 찾고, 계약 없는 옛 세션만 라이브로
+      // 보충한다(frozen이면 backfill 금지).
+      let scriptMeta: ExamScriptContract | undefined;
+      let textMeta: ExamTextContract | undefined;
+      if (contract.skill === "listening") {
+        scriptMeta = scriptContractById.get(contract.scriptId);
+        if (!scriptMeta && !frozen) {
+          const liveScript = liveScriptById.get(contract.scriptId);
+          if (liveScript) scriptMeta = toScriptContract(liveScript);
+        }
+      } else {
+        textMeta = textContractById.get(contract.textId);
+        if (!textMeta && !frozen) {
+          const liveText = liveTextById.get(contract.textId);
+          if (liveText) textMeta = toTextContract(liveText);
+        }
       }
 
-      resolved.push({ item: contract, task: section.task, scriptMeta });
+      resolved.push({ item: contract, task: section.task, scriptMeta, textMeta });
     }
   }
   return { resolved, missingItemIds };
@@ -417,24 +455,29 @@ function hasDuplicates(ids: readonly string[]): boolean {
 }
 
 function isExamItemContract(value: unknown): value is ExamItemContract {
-  const contract = value as Partial<ExamItemContract>;
+  if (!value || typeof value !== "object") return false;
+  const c = value as Record<string, unknown>;
   if (
-    !value ||
-    typeof value !== "object" ||
-    typeof contract.id !== "string" ||
-    (contract.skill !== "reading" && contract.skill !== "listening") ||
-    contract.kind !== "mcq" ||
-    (contract.scriptId !== undefined && typeof contract.scriptId !== "string") ||
-    typeof contract.prompt !== "string" ||
-    !isMcqOptionArray(contract.options) ||
-    typeof contract.correctAnswer !== "string" ||
-    typeof contract.explanationKo !== "string"
+    typeof c.id !== "string" ||
+    c.kind !== "mcq" ||
+    typeof c.prompt !== "string" ||
+    !isMcqOptionArray(c.options) ||
+    typeof c.correctAnswer !== "string" ||
+    typeof c.explanationKo !== "string"
   ) {
     return false;
   }
+  // skill별 배타적 ID: 읽기=textId(only), 듣기=scriptId(only).
+  if (c.skill === "reading") {
+    if (typeof c.textId !== "string" || c.scriptId !== undefined) return false;
+  } else if (c.skill === "listening") {
+    if (typeof c.scriptId !== "string" || c.textId !== undefined) return false;
+  } else {
+    return false;
+  }
   // 옵션 키는 유일하고, 정답 키는 선택지에 존재해야 한다.
-  const optionKeys = contract.options.map((option) => option.key);
-  return !hasDuplicates(optionKeys) && optionKeys.includes(contract.correctAnswer);
+  const optionKeys = c.options.map((option) => option.key);
+  return !hasDuplicates(optionKeys) && optionKeys.includes(c.correctAnswer);
 }
 
 function isExamScriptContract(value: unknown): value is ExamScriptContract {
@@ -445,6 +488,17 @@ function isExamScriptContract(value: unknown): value is ExamScriptContract {
     typeof script.scriptId === "string" &&
     typeof script.title === "string" &&
     typeof script.audioSrc === "string"
+  );
+}
+
+function isExamTextContract(value: unknown): value is ExamTextContract {
+  const text = value as Partial<ExamTextContract>;
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof text.textId === "string" &&
+    typeof text.title === "string" &&
+    typeof text.passage === "string"
   );
 }
 
@@ -463,25 +517,39 @@ function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
     return false;
   }
 
-  // 동결 계약은 all-or-nothing. items·scripts는 함께 존재하거나 함께 없어야 한다.
+  // 동결 계약은 all-or-nothing. items·scripts, textIds·texts는 각각 함께 존재/부재.
   const hasItems = section.items !== undefined;
   const hasScripts = section.scripts !== undefined;
+  const hasTextIds = section.textIds !== undefined;
+  const hasTexts = section.texts !== undefined;
   if (hasItems !== hasScripts) return false;
-  if (!hasItems) return true; // 옛 세션(계약 없음) — 비파괴 통과.
+  if (hasTextIds !== hasTexts) return false; // 한쪽만 존재 거부.
+  if (!hasItems) {
+    // 옛(계약 없는) 세션 — 비파괴 통과하되, 지문 계약이 붙은 가상 frozen 읽기는 거부.
+    return !hasTextIds;
+  }
 
   // 형태 검증.
   if (!Array.isArray(section.items) || !section.items.every(isExamItemContract)) return false;
   if (!Array.isArray(section.scripts) || !section.scripts.every(isExamScriptContract)) return false;
+  if (hasTextIds) {
+    if (!Array.isArray(section.textIds) || !section.textIds.every((id) => typeof id === "string")) return false;
+    if (!Array.isArray(section.texts) || !section.texts.every(isExamTextContract)) return false;
+  }
 
   const contractItemIds = section.items.map((contract) => contract.id);
   const contractScriptIds = section.scripts.map((script) => script.scriptId);
+  const textIds = section.textIds ?? [];
+  const contractTextIds = (section.texts ?? []).map((text) => text.textId);
 
   // 중복 ID 금지.
   if (
     hasDuplicates(section.itemIds) ||
     hasDuplicates(section.scriptIds) ||
     hasDuplicates(contractItemIds) ||
-    hasDuplicates(contractScriptIds)
+    hasDuplicates(contractScriptIds) ||
+    hasDuplicates(textIds) ||
+    hasDuplicates(contractTextIds)
   ) {
     return false;
   }
@@ -489,6 +557,7 @@ function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
   // 계약 배열과 ID 목록이 정확히 일치해야 한다(누락·잉여 계약 모두 거부).
   const itemIdSet = new Set(section.itemIds);
   const scriptIdSet = new Set(section.scriptIds);
+  const textIdSet = new Set(textIds);
   if (contractItemIds.length !== section.itemIds.length || !contractItemIds.every((id) => itemIdSet.has(id))) {
     return false;
   }
@@ -498,13 +567,31 @@ function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
   ) {
     return false;
   }
+  if (contractTextIds.length !== textIds.length || !contractTextIds.every((id) => textIdSet.has(id))) {
+    return false;
+  }
 
-  // 문항–스크립트 관계: 듣기 문항은 섹션 스크립트에 포함(렌더 가능)돼야 하고,
-  // 읽기 문항은 scriptId를 갖지 않는다.
-  return section.items.every((contract) =>
-    contract.skill === "listening"
-      ? contract.scriptId !== undefined && scriptIdSet.has(contract.scriptId)
-      : contract.scriptId === undefined,
+  // 문항–계약 관계: 듣기 문항은 섹션 스크립트에, 읽기 문항은 섹션 지문에 포함(렌더 가능)돼야 한다.
+  if (
+    !section.items.every((contract) =>
+      contract.skill === "listening"
+        ? scriptIdSet.has(contract.scriptId)
+        : textIdSet.has(contract.textId),
+    )
+  ) {
+    return false;
+  }
+
+  // 참조되지 않는 계약 거부: 모든 스크립트·지문 계약은 어떤 문항이든 실제로 참조해야 한다.
+  const referencedScriptIds = new Set(
+    section.items.flatMap((contract) => (contract.skill === "listening" ? [contract.scriptId] : [])),
+  );
+  const referencedTextIds = new Set(
+    section.items.flatMap((contract) => (contract.skill === "reading" ? [contract.textId] : [])),
+  );
+  return (
+    contractScriptIds.every((id) => referencedScriptIds.has(id)) &&
+    contractTextIds.every((id) => referencedTextIds.has(id))
   );
 }
 

@@ -18,6 +18,20 @@ export const examBlueprints = [
       { task: 'tarea5', setId: 'set-listening-lecture' },
     ],
   },
+  {
+    id: 'exam-reading-b2',
+    version: 1,
+    title: '읽기 모의고사 · Tarea 1–4',
+    skill: 'reading',
+    timeLimitMin: 70,
+    // 공식 구성 6/10/6/14 = 36문항. T1은 기존 세트 재사용, T2~T4는 신규 세트.
+    sections: [
+      { task: 'tarea1', setId: 'set-reading-library' },
+      { task: 'tarea2', setId: 'set-reading-anio-fuera' },
+      { task: 'tarea3', setId: 'set-reading-semana-cuatro' },
+      { task: 'tarea4', setId: 'set-reading-podcast' },
+    ],
+  },
 ] satisfies ExamBlueprint[];
 
 export function getBlueprintById(blueprintId: string): ExamBlueprint | undefined {

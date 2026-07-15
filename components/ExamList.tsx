@@ -5,14 +5,15 @@
 
 import { useEffect, useState } from "react";
 import type { ExamSession, FinalizedExamSession } from "@/lib/types";
-import { findActiveSession, getDefaultExamSessionStore, snapshotBlueprint } from "@/lib/examSession";
+import { findActiveSession, getDefaultExamSessionStore } from "@/lib/examSession";
 import { examBlueprints } from "@/data/examBlueprints";
 import { practiceSets } from "@/data/practiceSets";
-import { practiceItems } from "@/data/practiceItems";
-import { listeningScripts } from "@/data/listeningScripts";
 import { sitePath } from "@/lib/url";
+import { EXAM_SKILL_COPY } from "@/lib/examCopy";
 
-const content = { practiceSets, practiceItems, listeningScripts };
+// 목록 카드는 세트 크기만 필요하다. snapshotBlueprint를 호출하면 읽기 지문 전문이
+// 목록 client bundle로 끌려오므로, itemIds 길이로만 문항 수를 계산한다.
+const setById = new Map(practiceSets.map((set) => [set.id, set]));
 
 export function ExamList() {
   const store = getDefaultExamSessionStore();
@@ -29,10 +30,11 @@ export function ExamList() {
   return (
     <div className="practice-stack">
       {examBlueprints.map((blueprint) => {
-        const totalItems = snapshotBlueprint(blueprint, content).reduce(
-          (sum, section) => sum + section.itemIds.length,
+        const totalItems = blueprint.sections.reduce(
+          (sum, section) => sum + (setById.get(section.setId)?.itemIds.length ?? 0),
           0,
         );
+        const copy = EXAM_SKILL_COPY[blueprint.skill];
         const active = hydrated ? findActiveSession(sessions, blueprint.id) : undefined;
         const recent = hydrated
           ? sessions
@@ -46,12 +48,12 @@ export function ExamList() {
 
         return (
           <article className="card" key={blueprint.id}>
-            <div className="eyebrow">Comprensión auditiva</div>
+            <div className="eyebrow">{copy.areaLabel}</div>
             <h2>
               {blueprint.title}
               {active && <span className="badge warning" style={{ marginLeft: ".6rem", verticalAlign: "middle" }}>진행 중</span>}
             </h2>
-            <p className="muted">{totalItems}문항 · {blueprint.timeLimitMin}분 · 제출 후 일괄 채점 · 음원 2회 재생</p>
+            <p className="muted">{totalItems}문항 · {blueprint.timeLimitMin}분 · {copy.formatNote}</p>
             <div className="question-actions" style={{ marginTop: "1rem" }}>
               <a className="button" href={sitePath(`/exam/${blueprint.id}`)}>
                 {active ? "이어하기" : "시작하기"}

@@ -2,8 +2,15 @@ import type { Page } from '@playwright/test';
 
 export const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 export const EXAM_URL = `${basePath}/exam/exam-listening-b2`;
+export const READING_EXAM_URL = `${basePath}/exam/exam-reading-b2`;
 export const EXAM_KEY = 'dele-b2:exam:v1';
 export const PROGRESS_KEY = 'dele-b2:v1';
+
+export async function startReadingExam(page: Page) {
+  await page.goto(READING_EXAM_URL);
+  await page.getByRole('button', { name: '시험 시작' }).click();
+  await page.locator('.question').first().waitFor();
+}
 
 /**
  * 오디오를 실제 파일 길이·코덱에 의존하지 않도록 media 메서드를 stub한다.

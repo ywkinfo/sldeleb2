@@ -183,9 +183,10 @@ function validateListeningItem(
   validateMCQOptions(item, issues);
 }
 
-/** 블루프린트 skill별 section당 기대 문항 수 (공식 청사진). */
-const EXPECTED_SECTION_ITEMS: Partial<Record<ExamBlueprint["skill"], number>> = {
-  listening: 6,
+/** 블루프린트 skill·task별 section당 기대 문항 수 (공식 청사진). */
+const EXPECTED_SECTION_ITEMS: Record<ExamBlueprint["skill"], Partial<Record<Task, number>>> = {
+  listening: { tarea1: 6, tarea2: 6, tarea3: 6, tarea4: 6, tarea5: 6 },
+  reading: { tarea1: 6, tarea2: 10, tarea3: 6, tarea4: 14 },
 };
 
 function validateExamBlueprints(
@@ -193,6 +194,7 @@ function validateExamBlueprints(
   setById: Map<string, PracticeSet>,
   itemById: Map<string, PracticeItem>,
   scriptById: Map<string, ListeningScript>,
+  textById: Map<string, ReadingText>,
   issues: ValidationIssue[],
 ): void {
   validateUniqueIds("examBlueprints", blueprints, issues);
@@ -226,11 +228,11 @@ function validateExamBlueprints(
       add(issues, "examBlueprints", blueprint.id, "sections", "Section set IDs must be unique");
     }
 
-    const expectedCount = EXPECTED_SECTION_ITEMS[blueprint.skill];
     const seenItemIds = new Set<string>();
 
     for (const section of blueprint.sections) {
       const field = `sections.${section.task}`;
+      const expectedCount = EXPECTED_SECTION_ITEMS[blueprint.skill]?.[section.task];
       const set = setById.get(section.setId);
       if (!set) {
         add(issues, "examBlueprints", blueprint.id, field, `Unknown practice set: ${section.setId}`);
@@ -285,6 +287,26 @@ function validateExamBlueprints(
                 blueprint.id,
                 field,
                 `Script ${script.id} is ${script.task}, section expects ${section.task}`,
+              );
+            }
+          }
+        }
+        if (item.skill === "reading") {
+          const text = textById.get(item.textId);
+          if (!text) {
+            add(issues, "examBlueprints", blueprint.id, field, `Unknown reading text: ${item.textId}`);
+          } else {
+            if (text.status !== "published") {
+              add(issues, "examBlueprints", blueprint.id, field, `Text is not published: ${text.id}`);
+            }
+            // 지문 task가 섹션 task와 달라야 하는 세트 교환(예: 동수인 T1/T3)을 거부한다.
+            if (text.task !== section.task) {
+              add(
+                issues,
+                "examBlueprints",
+                blueprint.id,
+                field,
+                `Text ${text.id} is ${text.task}, section expects ${section.task}`,
               );
             }
           }
@@ -420,9 +442,23 @@ export function validateContent(collections: ContentCollections): ValidationIssu
     }
   }
 
+  // 단일 소속: 한 문항은 최대 한 세트에만 속해야 한다(getSetIdForItem 가정). 같은 세트
+  // 내부 중복은 위의 "unique" 검사가 잡으므로 여기서는 서로 다른 세트 간 중복만 본다.
+  const itemOwner = new Map<string, string>();
+  for (const set of collections.practiceSets) {
+    for (const itemId of set.itemIds) {
+      const owner = itemOwner.get(itemId);
+      if (owner === undefined) {
+        itemOwner.set(itemId, set.id);
+      } else if (owner !== set.id) {
+        add(issues, "practiceSets", set.id, "itemIds", `Item ${itemId} already belongs to set ${owner}`);
+      }
+    }
+  }
+
   if (collections.examBlueprints) {
     const setById = new Map(collections.practiceSets.map((set) => [set.id, set]));
-    validateExamBlueprints(collections.examBlueprints, setById, itemById, scriptById, issues);
+    validateExamBlueprints(collections.examBlueprints, setById, itemById, scriptById, textById, issues);
   }
 
   return issues;

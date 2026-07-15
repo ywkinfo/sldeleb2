@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/url";
 
 export const metadata: Metadata = {
   title: "DELE B2 모의고사",
-  description: "실제 시험 시간과 음원 재생 제한으로 풀고 제출 후 한 번에 채점하는 듣기 모의고사. 결과는 이 기기에만 저장됩니다.",
+  description: "실제 시험 시간 안에서 풀고 제출 후 한 번에 채점하는 듣기·읽기 모의고사. 결과는 이 기기에만 저장됩니다.",
   alternates: { canonical: absoluteUrl("/exam") },
 };
 
@@ -15,7 +15,7 @@ export default function ExamPage() {
         <div className="site-shell">
           <p className="section-kicker">Simulacro</p>
           <h1>실전처럼, 모의고사</h1>
-          <p className="lead">실제 시험 시간과 재생 제한 안에서 풀고, 제출 후 한 번에 채점하세요. 오답은 복습 큐로 이어집니다.</p>
+          <p className="lead">실제 시험 시간 안에서 풀고, 제출 후 한 번에 채점하세요. 오답은 복습 큐로 이어집니다.</p>
         </div>
       </header>
       <section className="page-section compact">

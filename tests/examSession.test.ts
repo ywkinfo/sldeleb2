@@ -30,6 +30,8 @@ import type {
   ListeningScript,
   PracticeSet,
   ProgressSnapshot,
+  ReadingMCQItem,
+  ReadingText,
 } from "../lib/types";
 
 class FakeStorage {
@@ -108,7 +110,48 @@ const blueprint: ExamBlueprint = {
     { task: "tarea2", setId: "setB" },
   ],
 };
-const collections = { practiceSets: sets, practiceItems: items, listeningScripts: scripts };
+const collections = { practiceSets: sets, practiceItems: items, listeningScripts: scripts, readingTexts: [] };
+
+// ---- 읽기 픽스처 (지문 계약 경로 검증용) ----
+function rtext(id: string, task: ReadingText["task"]): ReadingText {
+  return { id, task, title: `Texto ${id}`, passage: `Pasaje ${id}.`, sourceNote: "창작 지문", ...review };
+}
+function rmcq(id: string, textId: string, correctAnswer: string): ReadingMCQItem {
+  return {
+    id,
+    skill: "reading",
+    kind: "mcq",
+    textId,
+    prompt: `Pregunta ${id}`,
+    options: [
+      { key: "a", text: "A" },
+      { key: "b", text: "B" },
+      { key: "c", text: "C" },
+    ],
+    correctAnswer,
+    explanationKo: "해설",
+    tags: ["detalle"],
+    ...review,
+  };
+}
+const rtexts = [rtext("rt1", "tarea1"), rtext("rt2", "tarea2")];
+const ritems = [rmcq("r1", "rt1", "a"), rmcq("r2", "rt1", "b"), rmcq("r3", "rt2", "c")];
+const rsets: PracticeSet[] = [
+  { id: "rsetA", title: "RT1", estimatedMin: 10, skill: "reading", itemIds: ["r1", "r2"], ...review },
+  { id: "rsetB", title: "RT2", estimatedMin: 10, skill: "reading", itemIds: ["r3"], ...review },
+];
+const readingBlueprint: ExamBlueprint = {
+  id: "bp-reading",
+  version: 1,
+  title: "읽기 테스트",
+  skill: "reading",
+  timeLimitMin: 70,
+  sections: [
+    { task: "tarea1", setId: "rsetA" },
+    { task: "tarea2", setId: "rsetB" },
+  ],
+};
+const rcollections = { practiceSets: rsets, practiceItems: ritems, listeningScripts: [], readingTexts: rtexts };
 
 const T0 = 1_000_000;
 const DEADLINE = T0 + 40 * 60_000;
@@ -195,6 +238,7 @@ describe("snapshotBlueprint / resolveSections", () => {
     const { resolved: found, missingItemIds } = resolveSections(sections, {
       practiceItems: items.filter((item) => item.id !== "l2"),
       listeningScripts: scripts,
+      readingTexts: [],
     });
     expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l2", "l3"]);
     expect(missingItemIds).toEqual([]);
@@ -204,6 +248,7 @@ describe("snapshotBlueprint / resolveSections", () => {
     const { resolved: found, missingItemIds } = resolveSections(legacySections(), {
       practiceItems: items.filter((item) => item.id !== "l2"),
       listeningScripts: scripts,
+      readingTexts: [],
     });
     expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l3"]);
     expect(missingItemIds).toEqual(["l2"]);
@@ -219,6 +264,7 @@ describe("snapshotBlueprint / resolveSections", () => {
       // 라이브에는 l2가 있지만 동결 세션은 이를 읽지 않아야 한다.
       practiceItems: items.map((it) => (it.id === "l2" ? { ...it, correctAnswer: "a" } : it)),
       listeningScripts: scripts,
+      readingTexts: [],
     });
     expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l3"]);
     expect(missingItemIds).toContain("l2");
@@ -229,6 +275,7 @@ describe("frozen content contract vs. live changes", () => {
   const changedContent = {
     practiceItems: items.map((item) => (item.id === "l1" ? { ...item, correctAnswer: "c" } : item)),
     listeningScripts: scripts,
+    readingTexts: [],
   };
 
   it("grades against the frozen answer even after a deploy changes the correct answer", () => {
@@ -268,6 +315,7 @@ describe("frozen content contract vs. live changes", () => {
             : it,
         ),
       listeningScripts: scripts.map((s) => (s.id === "s1" ? { ...s, title: "NUEVO", audioSrc: "/nuevo.m4a" } : s)),
+      readingTexts: [],
     });
     const l1 = found.find((entry) => entry.item.id === "l1");
     expect(l1?.item.prompt).toBe("Pregunta l1");
@@ -356,6 +404,150 @@ describe("session-level all-or-nothing", () => {
     const { resolved: found, missingItemIds } = resolveSections(mixed, collections);
     expect(found.map((entry) => entry.item.id)).toEqual(["l1", "l2"]);
     expect(missingItemIds).toEqual(["l3"]);
+  });
+});
+
+describe("reading exam: text contract snapshot, resolution & validation", () => {
+  const readingSnapshot = () => snapshotBlueprint(readingBlueprint, rcollections);
+  const legacyReadingSections = () =>
+    readingSnapshot().map((s) => ({ task: s.task, setId: s.setId, itemIds: s.itemIds, scriptIds: s.scriptIds }));
+  function tamperReading(
+    id: string,
+    mutate: (section: ReturnType<typeof snapshotBlueprint>[number]) => unknown,
+  ): ExamSession {
+    const session = createExamSession(readingBlueprint, readingSnapshot(), T0, id);
+    return { ...session, sections: session.sections.map((sec, i) => (i === 0 ? mutate(sec) : sec)) } as ExamSession;
+  }
+
+  it("freezes reading item textId and text contracts in first-appearance order", () => {
+    const sections = readingSnapshot();
+    expect(sections[0]).toMatchObject({ task: "tarea1", itemIds: ["r1", "r2"], scriptIds: [], textIds: ["rt1"] });
+    expect(sections[0].items).toEqual([
+      {
+        id: "r1",
+        skill: "reading",
+        kind: "mcq",
+        textId: "rt1",
+        prompt: "Pregunta r1",
+        options: [
+          { key: "a", text: "A" },
+          { key: "b", text: "B" },
+          { key: "c", text: "C" },
+        ],
+        correctAnswer: "a",
+        explanationKo: "해설",
+      },
+      expect.objectContaining({ id: "r2", textId: "rt1" }),
+    ]);
+    expect(sections[0].texts).toEqual([{ textId: "rt1", title: "Texto rt1", passage: "Pasaje rt1." }]);
+    expect(sections[0].scripts).toEqual([]);
+  });
+
+  it("keeps frozen title/passage even when live text mutates or is deleted", () => {
+    const { resolved: found } = resolveSections(readingSnapshot(), {
+      practiceItems: ritems,
+      listeningScripts: [],
+      readingTexts: rtexts
+        .filter((t) => t.id !== "rt2") // rt2 라이브 삭제
+        .map((t) => (t.id === "rt1" ? { ...t, title: "NUEVO", passage: "CAMBIADO" } : t)),
+    });
+    expect(found.find((e) => e.item.id === "r1")?.textMeta).toEqual({
+      textId: "rt1",
+      title: "Texto rt1",
+      passage: "Pasaje rt1.",
+    });
+    expect(found.find((e) => e.item.id === "r3")?.textMeta?.passage).toBe("Pasaje rt2.");
+  });
+
+  it("live-backfills text meta for an ID-only legacy reading session and survives reload", () => {
+    const legacy = createExamSession(readingBlueprint, legacyReadingSections(), T0, "r-legacy");
+    expect(sessionsAfterReload([legacy]).map((s) => s.id)).toEqual(["r-legacy"]);
+    const { resolved: found } = resolveSections(legacy.sections, rcollections);
+    expect(found.find((e) => e.item.id === "r1")?.textMeta?.passage).toBe("Pasaje rt1.");
+  });
+
+  it("does not live-backfill a frozen reading section missing its text contract", () => {
+    const tampered = readingSnapshot().map((s, i) => (i === 0 ? { ...s, texts: [] } : s));
+    const { resolved: found } = resolveSections(tampered, rcollections);
+    expect(found.find((e) => e.item.id === "r1")?.textMeta).toBeUndefined();
+  });
+
+  it("keeps a well-formed frozen reading session valid on reload", () => {
+    const session = createExamSession(readingBlueprint, readingSnapshot(), T0, "r-ok");
+    expect(sessionsAfterReload([session]).map((s) => s.id)).toEqual(["r-ok"]);
+  });
+
+  it("reloads a raw frozen listening session and a frozen reading session together", () => {
+    const listening = createExamSession(blueprint, snapshotBlueprint(blueprint, collections), T0, "l-ok");
+    const reading = createExamSession(readingBlueprint, readingSnapshot(), T0, "r-both");
+    expect(sessionsAfterReload([listening, reading]).map((s) => s.id).sort()).toEqual(["l-ok", "r-both"]);
+  });
+
+  it("rejects one-sided textIds/texts (texts present, textIds absent)", () => {
+    const tampered = tamperReading("r-onesided", (sec) => {
+      const clone = { ...sec };
+      delete clone.textIds;
+      return clone;
+    });
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("rejects a missing text contract (a textId with no matching text)", () => {
+    const tampered = tamperReading("r-missing", (sec) => ({ ...sec, texts: [] }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("rejects an extra text contract not referenced by any item", () => {
+    const tampered = tamperReading("r-extra", (sec) => ({
+      ...sec,
+      textIds: [...(sec.textIds ?? []), "ghost"],
+      texts: [...(sec.texts ?? []), { textId: "ghost", title: "G", passage: "G" }],
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("rejects a duplicate text contract", () => {
+    const tampered = tamperReading("r-dup", (sec) => ({
+      ...sec,
+      textIds: [...(sec.textIds ?? []), "rt1"],
+      texts: [...(sec.texts ?? []), { textId: "rt1", title: "Texto rt1", passage: "Pasaje rt1." }],
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("rejects a reading item whose textId is outside the section", () => {
+    const tampered = tamperReading("r-outside", (sec) => ({
+      ...sec,
+      items: (sec.items ?? []).map((c, i) => (i === 0 ? { ...c, textId: "ghost" } : c)),
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("rejects a reading item carrying a scriptId", () => {
+    const tampered = tamperReading("r-hasscript", (sec) => ({
+      ...sec,
+      items: (sec.items ?? []).map((c, i) => (i === 0 ? { ...c, scriptId: "s1" } : c)),
+    }));
+    expect(sessionsAfterReload([tampered])).toEqual([]);
+  });
+
+  it("tallies byTask per reading task and projects reading attempts", () => {
+    let session: ExamSession = createExamSession(readingBlueprint, readingSnapshot(), T0, "r-final");
+    session = answerExamItem(session, "r1", "a", T0 + 1); // 정답
+    session = answerExamItem(session, "r2", "a", T0 + 2); // 오답(정답 b)
+    session = answerExamItem(session, "r3", "c", T0 + 3); // 정답
+    const { resolved: found } = resolveSections(session.sections, rcollections);
+    const finalized = finalizeExamSession(session, found, {}, T0 + 10, "submit") as FinalizedExamSession;
+    expect(finalized.result.byTask).toEqual({
+      tarea1: { correct: 1, total: 2 },
+      tarea2: { correct: 1, total: 1 },
+    });
+    expect(finalized.result.correct).toBe(2);
+    const projection = finalized.progressProjection;
+    expect(projection.status).toBe("pending");
+    if (projection.status === "pending") {
+      expect(projection.attempts.every((a) => a.kind === "reading")).toBe(true);
+    }
   });
 });
 

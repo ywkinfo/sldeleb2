@@ -12,6 +12,13 @@ const listeningExpansionReview = {
   reviewedAt: '2026-07-12',
 };
 
+// 읽기 모의고사(exam-reading-b2)용 신규 세트의 검수 이력.
+const examReadingReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-15',
+};
+
 export const practiceSets = [
   {
     id: 'set-reading-library',
@@ -81,6 +88,56 @@ export const practiceSets = [
       'r-hospital-05',
     ],
     ...review,
+  },
+  {
+    id: 'set-reading-anio-fuera',
+    title: 'Tarea 2 · 모의고사 · 해외 생활 네 사람',
+    estimatedMin: 18,
+    skill: 'reading',
+    itemIds: [
+      'r-anio-01',
+      'r-anio-02',
+      'r-anio-03',
+      'r-anio-04',
+      'r-anio-05',
+      'r-anio-06',
+      'r-anio-07',
+      'r-anio-08',
+      'r-anio-09',
+      'r-anio-10',
+    ],
+    ...examReadingReview,
+  },
+  {
+    id: 'set-reading-semana-cuatro',
+    title: 'Tarea 3 · 모의고사 · 주 4일 근무 문장 삽입',
+    estimatedMin: 15,
+    skill: 'reading',
+    itemIds: ['r-sem4-01', 'r-sem4-02', 'r-sem4-03', 'r-sem4-04', 'r-sem4-05', 'r-sem4-06'],
+    ...examReadingReview,
+  },
+  {
+    id: 'set-reading-podcast',
+    title: 'Tarea 4 · 모의고사 · 팟캐스트 빈칸',
+    estimatedMin: 25,
+    skill: 'reading',
+    itemIds: [
+      'r-pod-01',
+      'r-pod-02',
+      'r-pod-03',
+      'r-pod-04',
+      'r-pod-05',
+      'r-pod-06',
+      'r-pod-07',
+      'r-pod-08',
+      'r-pod-09',
+      'r-pod-10',
+      'r-pod-11',
+      'r-pod-12',
+      'r-pod-13',
+      'r-pod-14',
+    ],
+    ...examReadingReview,
   },
   {
     id: 'set-listening-interview',

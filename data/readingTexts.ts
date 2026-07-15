@@ -6,6 +6,13 @@ const review = {
   reviewedAt: '2026-07-11',
 };
 
+// 읽기 모의고사(exam-reading-b2)용 신규 지문·문항의 검수 이력.
+const examReadingReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-15',
+};
+
 const sourceNote =
   'DELE B2 유형을 참고해 Spanish Lab이 새로 제작한 창작 지문이며 공식 기출이 아닙니다.';
 
@@ -111,5 +118,57 @@ Las normas son flexibles. Los participantes pueden incorporarse en cualquier mom
 Los voluntarios reciben una formación breve antes de participar. Pueden leer en voz alta con tal de que respeten el ritmo de cada paciente y eviten comentar diagnósticos. Aun cuando algunos participantes no terminan los libros, los organizadores consideran que el club cumple su función: durante una hora, la conversación gira en torno a una historia y no a la enfermedad.`,
     sourceNote,
     ...review,
+  },
+  {
+    id: 'reading-t2-anio-fuera',
+    task: 'tarea2',
+    title: 'Un año fuera: cuatro experiencias',
+    passage: `A. Marta
+Elegí Italia por su arte, aunque al principio me costó seguir las clases en italiano. Con el tiempo hice amigos en el coro de la universidad, y eso mejoró mi acento más que cualquier libro. Lo que más valoro es haber aprendido a organizarme sola, porque nadie me recordaba las fechas de los exámenes. Volví convencida de que estudiar fuera no es solo aprender un idioma, sino perder el miedo a equivocarse.
+
+B. Diego
+Me fui a Alemania por motivos económicos: allí encontré prácticas bien pagadas en una empresa de ingeniería. El invierno se me hizo eterno y echaba de menos la comida de casa, pero el ambiente de trabajo era muy respetuoso con los horarios. Aprendí que la puntualidad no es una manía, sino una forma de cuidar el tiempo de los demás. Ahora aplico esa costumbre incluso en mi vida personal.
+
+C. Lucía
+Nunca pensé en un idioma cuando decidí hacer un voluntariado en Perú; quería ayudar en una escuela rural. Lo difícil no fue el trabajo, sino acostumbrarme a la altura y a la falta de internet. Descubrí que se puede vivir con mucho menos de lo que creemos. Regresé con la idea de estudiar Educación, algo que jamás me había planteado antes de aquel viaje.
+
+D. Andrés
+Después de años en la misma oficina, pedí un año sabático y me marché a Japón sin un plan claro. Al principio me sentí perdido entre tantas normas sociales que no entendía. Poco a poco aprendí a observar antes de actuar, y esa paciencia me ha servido mucho al volver al trabajo. No cambié de profesión, pero sí mi manera de relacionarme con los compañeros.`,
+    sourceNote,
+    ...examReadingReview,
+  },
+  {
+    id: 'reading-t3-semana-cuatro',
+    task: 'tarea3',
+    title: '¿Menos horas, más vida?',
+    passage: `Cada vez más empresas europeas experimentan con la semana laboral de cuatro días. [1] Por eso, sus defensores insisten en que la clave está en la concentración, no en la cantidad de horas.
+
+Los primeros ensayos han dado resultados prometedores. En Islandia, por ejemplo, la productividad no bajó. [2] Muchos trabajadores afirmaron, además, que dormían mejor y discutían menos en casa.
+
+Aun así, el modelo no encaja igual en todos los sectores. [3] En esos casos, reducir la jornada exige contratar a más personas, lo que encarece el servicio.
+
+Los críticos señalan otro riesgo. [4] Si eso ocurriera, el supuesto avance se convertiría en una trampa para el empleado.
+
+Con todo, el debate deja una enseñanza que va más allá del horario. [5] En otras palabras, el problema no es el reloj, sino cómo aprovechamos el tiempo.
+
+[6] Solo así la semana de cuatro días dejará de ser una moda para convertirse en una forma distinta de entender el trabajo.`,
+    sourceNote,
+    ...examReadingReview,
+  },
+  {
+    id: 'reading-t4-podcast',
+    task: 'tarea4',
+    title: 'El regreso de escuchar historias',
+    passage: `Hace unos años, muchos pensaban que la radio tradicional estaba condenada a desaparecer. [1], la llegada de los pódcast ha demostrado justo lo contrario. Cada mes, millones de personas descargan programas [2] escucharlos cuando y donde quieren.
+
+El éxito de este formato no [3] únicamente a la comodidad. A diferencia de la televisión, el pódcast permite hacer otras cosas [4] se escucha: cocinar, pasear o conducir. Además, existen programas [5] tratan temas muy específicos, de modo que cada oyente encuentra algo adecuado [6] sus intereses.
+
+Los expertos señalan que, [7] producir un pódcast es relativamente barato, mantenerlo con calidad exige mucho tiempo. Por eso, muchos proyectos [8] con entusiasmo pero desaparecen en pocos meses. Los que sobreviven suelen [9] una comunidad fiel de seguidores.
+
+Algunas plataformas han empezado a pagar a los creadores [10] sigan publicando de forma regular. No está claro todavía si ese modelo [11] sostenible a largo plazo. Lo que sí parece seguro es que, [12] primera vez en décadas, escuchar se ha vuelto tan popular como leer o ver la pantalla.
+
+Quizá el secreto [13] en algo muy antiguo: a la gente siempre le ha gustado que le [14] una buena historia.`,
+    sourceNote,
+    ...examReadingReview,
   },
 ] satisfies ReadingText[];

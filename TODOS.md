@@ -36,9 +36,21 @@
 - 구현: `/exam` 목록 + `/exam/exam-listening-b2` 세션(30문항/40분, 이어하기,
   새로고침 복원, 만료 자동 제출, 결과 정오표, 복습 큐 반영). 단위 테스트
   `tests/examSession.test.ts`, E2E `tests/e2e/exam-*.spec.ts` 7종.
-- 다음 확장: 읽기 모의고사(36문항 청사진 콘텐츠 보강 후), 세션
-  export/import, Web Locks 단일 writer — `docs/mock-exam-session-design.md`
-  NOT in scope 절 참고.
+- 다음 확장: 세션 export/import, Web Locks 단일 writer —
+  `docs/mock-exam-session-design.md` NOT in scope 절 참고.
+
+## 2-b. 완료 — 모의고사 세션 읽기 (2026-07-15)
+
+- 엔진: `ExamItemContract` skill 판별 union(읽기 `textId`/듣기 `scriptId`),
+  음원과 대칭인 `ExamTextContract`·섹션 `textIds/texts` 동결, 하위호환 유지
+  (듣기 스냅샷 형태 불변, frozen 판정은 items 유무만). 검증기·resolver·UI 분기.
+- 콘텐츠: `exam-reading-b2`(70분, 36문항 = T1 6·T2 10·T3 6·T4 14). 신규 지문 3개
+  (해외 생활 매칭·주 4일 근무 문장삽입·팟캐스트 cloze) + 30문항. T1은
+  `set-reading-library` 재사용. 지문 10·문항 109·세트 23·블루프린트 2.
+- 검증: 단위(examSession 56·validate-content 22)·E2E `exam-reading.spec` 7종,
+  전체 파이프라인 통과. 50 읽기 세션 직렬화 ≈ 1.37 MiB(보존 상한 50 유지).
+- 후속: 실제 T2 매칭·T3 문장 삽입·T4 cloze 전용 상호작용 UI(현재는 단일 지문 +
+  객관식 근사). 기존 연습용 T4 지문의 정답 노출 정리도 후속.
 
 ## 3. (추후 장기 과제) AI 채점, 계정, 서버 동기화, 사용자 행동 분석
 - **Context**: 서버가 필요 없는 정적 환경(Static Export) 원칙을 벗어나는 대규모 아키텍처 변경입니다.

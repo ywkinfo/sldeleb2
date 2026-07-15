@@ -215,9 +215,21 @@ finalize 1회
 `set-listening-t2` → T3 `set-listening-t3-arte` → T4 `set-listening-t4` →
 T5 `set-listening-lecture`.
 
+## 읽기 확장 (2026-07-15 완료)
+
+`ExamItemContract`는 skill 판별 union(읽기 `textId` / 듣기 `scriptId`, 배타적)으로,
+음원 계약과 대칭인 `ExamTextContract{ textId,title,passage }`·섹션 `textIds/texts`를
+동결한다. 듣기 스냅샷 형태는 불변(읽기 섹션만 `textIds/texts` 방출, frozen 판정은
+`items` 유무만 사용). 검증기는 `texts/textIds` 한쪽만 존재·중복·누락·잉여·섹션 밖
+`textId`·교차 skill ID를 거부하고, 옛(계약 없는) 읽기 세션은 라이브 지문으로 폴백한다.
+`exam-reading-b2` (version 1, 70분): T1 `set-reading-library`(6) → T2
+`set-reading-anio-fuera`(10) → T3 `set-reading-semana-cuatro`(6) → T4
+`set-reading-podcast`(14) = 36문항. 실제 T2 매칭·T3 삽입·T4 cloze 상호작용은
+단일 지문 + 객관식으로 근사(문항 수·시간만 공식 구성).
+
 ## NOT in scope (v1)
 
-- 읽기 모의고사(36문항 청사진 콘텐츠 준비 후 확장)
+- 실제 T2 매칭·T3 문장 삽입·T4 cloze 전용 상호작용·중복 선택 방지 UI
 - 쓰기·말하기 시험 세션
 - 모의고사 세션 export/import, 계정·서버 동기화, 기기 간 이전
 - 공식 시험처럼 Tarea별 음원을 자동 순차 재생하는 단일 방송 트랙

@@ -198,18 +198,20 @@ export interface ExamBlueprint {
   sections: { task: Task; setId: string }[];
 }
 
-// 채점·표시에 필요한 최소 필드만 동결한 문항 계약. 라이브 아이템
-// (ReadingMCQItem|ListeningMCQItem)은 구조적으로 이 타입에 대입 가능하다.
-export interface ExamItemContract {
+// 채점·표시에 필요한 최소 필드만 동결한 문항 계약. skill 판별 union —
+// 읽기는 지문(textId), 듣기는 음원(scriptId)을 가지며 두 ID는 배타적이다.
+// 라이브 아이템(ReadingMCQItem|ListeningMCQItem)은 구조적으로 대입 가능하다.
+interface ExamItemContractBase {
   id: string;
-  skill: AutoGradedExamSkill;
   kind: "mcq";
-  scriptId?: string;
   prompt: string;
   options: { key: string; text: string }[];
   correctAnswer: string;
   explanationKo: string;
 }
+export type ExamItemContract =
+  | (ExamItemContractBase & { skill: "reading"; textId: string; scriptId?: never })
+  | (ExamItemContractBase & { skill: "listening"; scriptId: string; textId?: never });
 
 // 동결된 음원 메타 — 배포로 title·audioSrc가 바뀌어도 세션은 시작 시점 값을 쓴다.
 export interface ExamScriptContract {
@@ -218,16 +220,26 @@ export interface ExamScriptContract {
   audioSrc: string;
 }
 
+// 동결된 읽기 지문 메타 — 세션에서 실제로 표시하는 필드만 얼린다.
+// 미표시 필드(sourceNote 등)는 계약에서 제외한다.
+export interface ExamTextContract {
+  textId: string;
+  title: string;
+  passage: string;
+}
+
 // 세션 시작 시 고정되는 구성 스냅샷 — 배포로 콘텐츠가 바뀌어도 세션은 불변.
-// items·scripts는 하위 호환을 위해 선택 필드다. 계약이 없는 옛 세션은
-// 로드 시 라이브 콘텐츠로 폴백 해석된다(resolveSections 참고).
+// items·scripts·textIds·texts는 하위 호환을 위해 선택 필드다. 계약이 없는 옛
+// 세션은 로드 시 라이브 콘텐츠로 폴백 해석된다(resolveSections 참고).
 export interface ExamSectionSnapshot {
   task: Task;
   setId: string;
   itemIds: string[];
   scriptIds: string[];
+  textIds?: string[];
   items?: ExamItemContract[];
   scripts?: ExamScriptContract[];
+  texts?: ExamTextContract[];
 }
 
 export interface ExamResultItem {
