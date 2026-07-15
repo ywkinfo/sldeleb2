@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
   ContentCollections,
 } from "../lib/validate";
+import type { SpeakingTaskItem, WritingTaskItem } from "../lib/types";
 import { validateContent } from "../lib/validate";
 import { examBlueprints } from "../data/examBlueprints";
 import { listeningScripts } from "../data/listeningScripts";
@@ -193,7 +194,7 @@ describe("exam blueprint validation", () => {
     examBlueprints,
   };
 
-  it("accepts the shipped listening blueprint against real content", () => {
+  it("accepts the full shipped content graph (all real collections)", () => {
     expect(validateContent(realCollections)).toEqual([]);
   });
 
@@ -242,5 +243,103 @@ describe("exam blueprint validation", () => {
       ],
     });
     expect(issues.some((issue) => issue.message.includes("exactly 6 items"))).toBe(true);
+  });
+});
+
+describe("model answer (modelAnswerEs) validation", () => {
+  const review = {
+    status: "published" as const,
+    reviewedBy: "Spanish Lab",
+    reviewedAt: "2026-07-14",
+  };
+
+  function writingItem(overrides: Partial<WritingTaskItem> = {}): WritingTaskItem {
+    return {
+      id: "write-1",
+      skill: "writing",
+      kind: "open",
+      task: "tarea1",
+      prompt: "Escribe un correo.",
+      wordCount: [2, 3],
+      timeLimitMin: 40,
+      checklistKo: ["요건"],
+      modelOutlineKo: "개요",
+      modelAnswerEs: "Hola amigo",
+      tags: ["email"],
+      ...review,
+      ...overrides,
+    };
+  }
+
+  function oralItem(overrides: Partial<SpeakingTaskItem> = {}): SpeakingTaskItem {
+    return {
+      id: "oral-1",
+      skill: "speaking",
+      kind: "oral",
+      task: "tarea1",
+      prompt: "Haz una presentación.",
+      prepTimeMin: 3,
+      speakTimeMin: 3,
+      checklistKo: ["요건"],
+      modelOutlineKo: "개요",
+      modelAnswerEs: "Buenos días a todos",
+      tags: ["presentacion"],
+      ...review,
+      ...overrides,
+    };
+  }
+
+  // 다른 컬렉션과 무관하게 대상 문항만 검증한다. 세트 순서 가정을 건드리지 않는다.
+  function only(items: (WritingTaskItem | SpeakingTaskItem)[]): ContentCollections {
+    return {
+      officialResources: [],
+      readingTexts: [],
+      listeningScripts: [],
+      practiceItems: items,
+      practiceSets: [],
+    };
+  }
+
+  const modelAnswerIssues = (collections: ContentCollections) =>
+    validateContent(collections).filter((issue) => issue.field === "modelAnswerEs");
+
+  it("requires a non-empty Spanish model answer on writing items", () => {
+    const issues = modelAnswerIssues(only([writingItem({ modelAnswerEs: "   " })]));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ collection: "practiceItems", id: "write-1", field: "modelAnswerEs" });
+    expect(issues[0].message).toMatch(/required/i);
+  });
+
+  it("requires a non-empty Spanish model answer on speaking items", () => {
+    const issues = modelAnswerIssues(only([oralItem({ modelAnswerEs: "" })]));
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ collection: "practiceItems", id: "oral-1", field: "modelAnswerEs" });
+    expect(issues[0].message).toMatch(/required/i);
+  });
+
+  it("accepts writing answers at the exact word-count bounds", () => {
+    expect(modelAnswerIssues(only([writingItem({ modelAnswerEs: "Hola amigo" })]))).toEqual([]); // 2 = 하한
+    expect(modelAnswerIssues(only([writingItem({ modelAnswerEs: "Hola querido amigo" })]))).toEqual([]); // 3 = 상한
+  });
+
+  it("blocks writing answers outside the word-count range", () => {
+    const below = modelAnswerIssues(only([writingItem({ modelAnswerEs: "Hola" })])); // 1 < 2
+    expect(below).toHaveLength(1);
+    expect(below[0].message).toMatch(/got 1/);
+
+    const above = modelAnswerIssues(only([writingItem({ modelAnswerEs: "Hola querido buen amigo" })])); // 4 > 3
+    expect(above).toHaveLength(1);
+    expect(above[0].message).toMatch(/got 4/);
+  });
+
+  it("does not add a length issue on top of a missing-answer issue", () => {
+    const issues = modelAnswerIssues(only([writingItem({ modelAnswerEs: "" })]));
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toMatch(/required/i);
+  });
+
+  it("does not apply word-count checks to speaking answers", () => {
+    // 아주 짧은 말하기 답안도 길이 문제로 막지 않는다(낭독 검수로 확인).
+    expect(modelAnswerIssues(only([oralItem({ modelAnswerEs: "Hola" })]))).toEqual([]);
   });
 });

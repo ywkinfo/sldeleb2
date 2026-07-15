@@ -371,6 +371,28 @@ export function validateContent(collections: ContentCollections): ValidationIssu
     if (item.kind === "oral" && (item.prepTimeMin <= 0 || item.speakTimeMin <= 0)) {
       add(issues, "practiceItems", item.id, "timeLimit", "Speaking times must be positive");
     }
+
+    if (item.kind === "open" || item.kind === "oral") {
+      // 스페인어 모범답안은 모든 쓰기·말하기 문항에 필수다.
+      const answer = item.modelAnswerEs?.trim() ?? "";
+      if (!answer) {
+        add(issues, "practiceItems", item.id, "modelAnswerEs", "Spanish model answer is required");
+      } else if (item.kind === "open") {
+        // 쓰기 모범답안은 UI와 동일한 방식으로 세어 정확히 wordCount 범위 안이어야 한다.
+        // (말하기 길이는 사용자 낭독 검수로 확인하며 자동 검증하지 않는다.)
+        const words = answer.split(/\s+/).length;
+        const [min, max] = item.wordCount;
+        if (words < min || words > max) {
+          add(
+            issues,
+            "practiceItems",
+            item.id,
+            "modelAnswerEs",
+            `Model answer must be ${min}–${max} words, got ${words}`,
+          );
+        }
+      }
+    }
   }
 
   for (const set of collections.practiceSets) {

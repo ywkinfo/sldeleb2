@@ -83,6 +83,7 @@ export interface WritingTaskItem extends ContentReviewMetadata {
   timeLimitMin: number;
   checklistKo: string[];
   modelOutlineKo: string;
+  modelAnswerEs: string; // B2 수준 스페인어 모범 응답
   tags: string[];
 }
 
@@ -96,6 +97,7 @@ export interface SpeakingTaskItem extends ContentReviewMetadata {
   speakTimeMin: number;
   checklistKo: string[];
   modelOutlineKo: string;
+  modelAnswerEs: string; // B2 수준 스페인어 모범 응답
   tags: string[];
 }
 

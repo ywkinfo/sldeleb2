@@ -90,7 +90,7 @@ export function WritingTask({ item }: { item: WritingTaskItem }) {
     <p lang="es" className="lead">{item.prompt}</p>
     <Timer minutes={item.timeLimitMin} label="쓰기" />
     <div className="field" style={{ marginTop: "1rem" }}><label htmlFor={`${item.id}-draft`}>연습 답안 — 브라우저 로컬 저장소에 자동 저장됩니다</label><textarea id={`${item.id}-draft`} lang="es" value={draft} onChange={(e) => setLocalDraft(e.target.value)} onBlur={() => flush()} placeholder="Escribe aquí…" /><span className={`wordcount ${wcState === "ok" ? "ok" : wcState === "idle" ? "" : "out"}`} aria-live="polite">{count} palabras · {wcLabel}{saveStatus ? ` · ${saveStatus}` : ""}</span></div>
-    <div className="grid cols-2" style={{ marginTop: "1.2rem" }}><div><h3>B2 체크리스트</h3><ul className="checklist">{item.checklistKo.map((line) => <li key={line}>{line}</li>)}</ul></div><details><summary><strong>모범 개요 보기</strong></summary><div className="outline-box">{item.modelOutlineKo}</div></details></div>
+    <div className="grid cols-2" style={{ marginTop: "1.2rem" }}><div><h3>B2 체크리스트</h3><ul className="checklist">{item.checklistKo.map((line) => <li key={line}>{line}</li>)}</ul></div><div><details><summary><strong>모범 개요 보기</strong></summary><div className="outline-box">{item.modelOutlineKo}</div></details><details style={{ marginTop: ".6rem" }}><summary><strong>모범답안 · <span lang="es">español</span></strong></summary><div className="passage outline-box" lang="es">{item.modelAnswerEs}</div></details></div></div>
     <SelfAssessment itemId={item.id} skill="writing" />
   </article>;
 }

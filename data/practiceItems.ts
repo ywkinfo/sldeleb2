@@ -12,6 +12,13 @@ const listeningExpansionReview = {
   reviewedAt: '2026-07-12',
 };
 
+// 쓰기·말하기 스페인어 모범답안(modelAnswerEs) 추가와 함께 검수한 항목의 이력.
+const modelAnswerReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-14',
+};
+
 const listeningT2SpeakerOptions = [
   { key: 'a', text: 'El hombre' },
   { key: 'b', text: 'La mujer' },
@@ -899,8 +906,20 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '제목과 인사 → 연락 목적 및 인터뷰 요약 → 생활에 미친 영향과 구체적 사례 → 야간 순찰/소음 중재 창구 등 해결책 두 가지 → 주민 회의 참여 의사와 답변 요청 → 격식 있는 맺음말.',
+    modelAnswerEs: `Asunto: Propuestas para reducir el ruido nocturno en el barrio
+
+Estimados señores del Área de Participación Ciudadana:
+
+Les escribo tras escuchar la entrevista de la radio local sobre el ruido nocturno, un problema que afecta seriamente a nuestro barrio. Desde hace meses, el ruido de las terrazas y los locales impide descansar a muchos vecinos, lo que provoca cansancio e irritabilidad. En mi caso, vivo cerca de la plaza mayor y apenas consigo dormir entre semana, de modo que mi rendimiento en el trabajo ha bajado notablemente.
+
+Por ello, me gustaría proponer dos medidas realistas. En primer lugar, sería útil establecer un horario de cierre más estricto y reforzar las inspecciones nocturnas. En segundo lugar, podría crearse un buzón de quejas en línea para avisar rápidamente a la policía.
+
+Además, los ciudadanos podríamos colaborar participando en una reunión vecinal mensual para acordar soluciones conjuntas. Quedo a la espera de su respuesta y les agradezco de antemano su atención.
+
+Atentamente,
+Un vecino preocupado`,
     tags: ['격식 이메일', '도시생활', '제안'],
-    ...review,
+    ...modelAnswerReview,
   },
   {
     id: 'w-library-hours',
@@ -920,8 +939,19 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '주제 소개 → 연장 운영의 학습상 이점 → 비용·안전·직원 부담이라는 반대 근거 → 조건부 찬성 입장 → 좌석 예약, 일부 층만 연장, 수요 조사 등 절충안 → 결론.',
+    modelAnswerEs: `Asunto: La ampliación del horario de la biblioteca en época de exámenes
+
+Estimados miembros del consejo de estudiantes:
+
+He escuchado vuestro pódcast sobre la posible ampliación del horario de la biblioteca durante los exámenes y me gustaría dar mi opinión. Por un lado, abrir hasta más tarde beneficiaría a quienes trabajan por la mañana o se concentran mejor de noche, ya que dispondrían de un espacio tranquilo. Por otro lado, entiendo que esta medida supone más gastos, problemas de seguridad y una carga adicional para el personal.
+
+Personalmente, estoy a favor, pero solo bajo ciertas condiciones. Me parece razonable ampliar el horario únicamente durante las dos semanas de exámenes y en una sola planta, para reducir costes.
+
+Como alternativa, propongo un sistema de reserva de asientos y la contratación de estudiantes becarios que se turnen con el personal fijo. Así se atenderían las necesidades de los usuarios sin sobrecargar a los trabajadores. Muchas gracias por escuchar nuestras propuestas.
+
+Un saludo cordial`,
     tags: ['의견문', '교육', '대안'],
-    ...review,
+    ...modelAnswerReview,
   },
 
   // Audición · Tarea 1 — Aviso en la estación de tren
@@ -1309,8 +1339,15 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '인상적인 제목 → 장소와 개인적 연결 소개 → 과거 모습 → 변화 과정과 현재 모습 → 주민 생활에 미친 두 가지 영향 → 보존하거나 개선할 점 → 기억에 남는 마무리.',
+    modelAnswerEs: `El viejo mercado que volvió a latir
+
+Hace diez años, el mercado de la calle Mayor era un edificio triste y casi vacío. Muchos puestos habían cerrado y los vecinos preferían los grandes supermercados. Todo empezó a cambiar cuando un grupo de jóvenes decidió alquilar los locales abandonados y abrir cafeterías, librerías y puestos de productos locales.
+
+Hoy, el mercado se ha convertido en el corazón del barrio. Los sábados se llena de familias y los pequeños comerciantes han recuperado sus ingresos. Sin embargo, este éxito también tiene una cara negativa: los precios han subido y algunos vecinos mayores se sienten desplazados.
+
+En mi opinión, sería necesario mantener un equilibrio. El Ayuntamiento debería reservar algunos puestos para productos económicos y organizar actividades para todas las edades. Solo así el mercado seguirá siendo un lugar de encuentro y no únicamente un espacio de moda. Al fin y al cabo, un barrio vive de su gente.`,
     tags: ['기사', '지역사회', '묘사'],
-    ...review,
+    ...modelAnswerReview,
   },
   {
     id: 'w-digital-detox-blog',
@@ -1330,8 +1367,15 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '호기심을 끄는 도입 → 알림을 끈 계기와 규칙 → 첫날의 불편 → 집중·관계에서 나타난 예상 밖의 변화 → 한계와 예외 → 독자에게 제안할 현실적인 방법.',
+    modelAnswerEs: `Una semana sin notificaciones: lo que aprendí
+
+Hace un mes decidí apagar todas las notificaciones del móvil durante siete días. Lo hice porque vivía pendiente de la pantalla y me costaba concentrarme incluso mientras estudiaba español. Mi única regla era revisar los mensajes solo dos veces al día.
+
+Al principio fue más difícil de lo que esperaba. Los primeros días sentía una extraña ansiedad y comprobaba el teléfono por costumbre, aunque no sonara. Sin embargo, hacia el final de la semana ocurrió algo inesperado: leía más, dormía mejor y conversaba con mi familia sin distraerme.
+
+No creo que esta experiencia sirva para todo el mundo. Quien dependa del móvil por trabajo tendrá muchas dificultades. Aun así, se la recomendaría a cualquiera que sienta que las pantallas controlan su tiempo. Basta con empezar por un fin de semana y desactivar solo las aplicaciones menos importantes. Al final, lo importante no es la tecnología, sino cómo la usamos.`,
     tags: ['블로그', '경험담', '디지털 습관'],
-    ...review,
+    ...modelAnswerReview,
   },
 
   // Expresión e interacción orales
@@ -1353,8 +1397,17 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '주제 재진술 → 소음·공기질·보행 공간의 장점 → 거동 불편자·배달·상인의 우려 → 대중교통 증편과 허가 차량 같은 보완책 → 시범 운영 후 평가하자는 조건부 찬성 결론.',
+    modelAnswerEs: `Buenos días. Hoy voy a hablar sobre la propuesta de limitar el tráfico de coches en el centro de la ciudad todos los fines de semana. Primero explicaré las ventajas, después los posibles problemas y, por último, daré mi opinión.
+
+En cuanto a las ventajas, creo que son evidentes. Sin coches, el centro tendría menos ruido y menos contaminación, por lo que el aire sería más limpio. Además, las familias podrían pasear con tranquilidad, los niños jugarían con seguridad y los comercios con terraza atraerían a más clientes. En definitiva, la ciudad se volvería más humana.
+
+Sin embargo, también hay que tener en cuenta algunos problemas. Por ejemplo, las personas mayores o con movilidad reducida podrían tener dificultades para llegar a sus casas. Asimismo, los repartidores y los comerciantes que necesitan el coche para cargar mercancías se verían perjudicados. No podemos olvidar a quienes viven en el centro y dependen del vehículo.
+
+Entonces, ¿a quién beneficia y a quién afecta esta medida? Beneficiaría sobre todo a los peatones, a los ciclistas y al medio ambiente, mientras que perjudicaría a los conductores habituales y a ciertos negocios.
+
+En mi opinión, estoy a favor de la propuesta, pero con matices. Para que funcione, habría que reforzar el transporte público, permitir el acceso a los residentes y a los vehículos autorizados, y crear zonas de carga y descarga en horarios concretos. Yo propondría empezar con una prueba de algunos meses y evaluar después los resultados. Muchas gracias por su atención.`,
     tags: ['발표', '도시', '찬반'],
-    ...review,
+    ...modelAnswerReview,
   },
   {
     id: 's-photo-community',
@@ -1374,8 +1427,15 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '전체 장면 → 앞쪽과 뒤쪽 인물의 행동 → 표정과 관계 추측 → 모임을 준비한 과정과 이후 식사 예상 → 세대 간 지식 교환의 장점 → 비슷한 경험 또는 참여 의향.',
+    modelAnswerEs: `En esta fotografía se ve a un grupo de personas de distintas edades reunidas alrededor de una mesa grande, probablemente en una cocina comunitaria o en un centro de barrio. En primer plano, una mujer mayor está enseñando a dos jóvenes a preparar una masa, mientras que al fondo un hombre corta verduras y una niña pone los platos. Todos parecen contentos y concentrados en lo que hacen.
+
+Por sus gestos y sus sonrisas, imagino que se conocen bien y que existe una relación cercana, quizás de familia o de vecinos. Puede que la señora mayor sea quien dirige la actividad, porque los demás la escuchan con atención.
+
+En cuanto a lo que pudo ocurrir antes, supongo que se han reunido para cocinar juntos una receta tradicional. Antes de la foto habrán ido a comprar los ingredientes y, después, seguramente compartirán la comida y charlarán durante horas.
+
+En mi opinión, las actividades entre generaciones son muy valiosas. Los mayores transmiten su experiencia y sus recetas, y los jóvenes aportan energía y nuevas ideas. Además, este tipo de encuentros ayuda a combatir la soledad de las personas mayores. Personalmente, viví algo parecido cuando mi abuela me enseñó a cocinar, y por eso creo que deberíamos fomentar más estos espacios. Gracias.`,
     tags: ['사진 묘사', '추측', '세대'],
-    ...review,
+    ...modelAnswerReview,
   },
   {
     id: 's-survey-workplace',
@@ -1395,7 +1455,28 @@ export const practiceItems = [
     ],
     modelOutlineKo:
       '가장 높은 수치와 의외의 결과 비교 → 유연 근무 선호 원인 추측 → 교육 부족이 장기적으로 미칠 영향 → 면접관에게 우선순위 질문 → 단기 유연근무 지침과 중기 교육 예산을 조합 → 재조사 제안.',
+    modelAnswerEs: `ENTREVISTADORA: Aquí tiene los resultados de la encuesta de satisfacción laboral. ¿Qué le llama más la atención?
+
+CANDIDATO: Lo que más me sorprende es que un 62 % valore la flexibilidad horaria por encima de todo. Supongo que, después de los últimos años, mucha gente quiere conciliar mejor su vida personal y su trabajo.
+
+ENTREVISTADORA: Es un dato interesante. ¿Y cómo interpreta que un 48 % piense que faltan oportunidades de formación?
+
+CANDIDATO: Me parece preocupante. Puede que la empresa no esté invirtiendo lo suficiente en cursos y eso, a largo plazo, podría hacer que los empleados con más talento se marchen. ¿Usted está de acuerdo?
+
+ENTREVISTADORA: Sí, comparto su opinión. También me ha llamado la atención que un 35 % prefiera el buen ambiente de equipo antes que el salario.
+
+CANDIDATO: Exacto. Eso demuestra que el dinero no lo es todo y que las relaciones entre compañeros importan mucho. Quizás por eso convendría cuidar el clima laboral.
+
+ENTREVISTADORA: Entonces, ¿por dónde empezaría usted?
+
+CANDIDATO: Yo propondría priorizar dos medidas. A corto plazo, establecería unas normas claras de trabajo flexible, porque es lo más urgente. A medio plazo, dedicaría un presupuesto a la formación. ¿Le parece razonable ese orden?
+
+ENTREVISTADORA: Me parece muy sensato. ¿Y cómo evaluaría los resultados?
+
+CANDIDATO: Repetiría la encuesta dentro de seis meses para comprobar si la satisfacción ha mejorado. Así podríamos ajustar lo que no funcione.
+
+ENTREVISTADORA: Perfecto. Muchas gracias por sus propuestas.`,
     tags: ['상호작용', '자료 해석', '직장'],
-    ...review,
+    ...modelAnswerReview,
   },
 ] satisfies PracticeItem[];

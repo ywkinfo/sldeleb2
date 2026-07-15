@@ -45,7 +45,8 @@ body {
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 button, input, select, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+summary { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
@@ -184,7 +185,7 @@ h3 { margin: 0 0 .7rem; font-size: 1.35rem; }
 audio { width: 100%; }
 
 .transcript { margin-top: 1rem; border: 1px dashed var(--line); border-radius: 12px; padding: .8rem 1rem; }
-.transcript summary { cursor: pointer; font-weight: 700; }
+.transcript summary { font-weight: 700; }
 .transcript .passage { margin-top: .8rem; }
 
 .set-progress-bar {
