@@ -31,7 +31,7 @@ describe("absoluteUrl", () => {
       "https://ywkinfo.github.io/sldeleb2/og.png",
     );
     expect(absoluteUrl("/", "https://ywkinfo.github.io")).toBe(
-      "https://ywkinfo.github.io/sldeleb2",
+      "https://ywkinfo.github.io/sldeleb2/",
     );
   });
 
