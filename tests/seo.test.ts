@@ -1,8 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMetadata } from "../app/practice/set/[setId]/page";
 import { GET as getSitemap } from "../app/sitemap.xml/route";
 import { getPublishedSets } from "../lib/sets";
 import { absoluteUrl } from "../lib/url";
+
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/sldeleb2");
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://ywkinfo.github.io");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("practice set discovery metadata", () => {
   it("publishes an absolute canonical URL for every practice set", async () => {
@@ -18,18 +27,14 @@ describe("practice set discovery metadata", () => {
   });
 
   it("includes every published practice set in the sitemap", async () => {
-    const response = getSitemap(
-      new Request("https://dele.example/sitemap.xml", {
-        headers: { host: "dele.example" },
-      }),
-    );
+    const response = getSitemap();
     const sitemap = await response.text();
 
     expect(response.status).toBe(200);
     expect(getPublishedSets()).toHaveLength(23);
     for (const set of getPublishedSets()) {
       expect(sitemap).toContain(
-        `<loc>https://dele.example/practice/set/${set.id}</loc>`,
+        `<loc>https://ywkinfo.github.io/sldeleb2/practice/set/${set.id}</loc>`,
       );
     }
   });

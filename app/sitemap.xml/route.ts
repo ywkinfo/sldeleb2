@@ -16,8 +16,8 @@ const routes = [
   "/guide",
 ];
 
-export function GET(request: Request) {
-  const origin = requestOrigin(request);
+export function GET() {
+  const origin = requestOrigin();
   const entries = routes
     .map((path) => `<url><loc>${absoluteUrl(path, origin)}</loc><changefreq>${path === "/materials" ? "monthly" : "weekly"}</changefreq><priority>${path === "/" ? "1.0" : "0.8"}</priority></url>`)
     .join("");

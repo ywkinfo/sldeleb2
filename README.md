@@ -22,13 +22,18 @@ npm run build
 
 Node.js `>=22.13.0`이 필요합니다.
 
+`dev`와 `build`는 공개 경로 `/sldeleb2`를 사용하는 GitHub Pages 정적 export를
+기준으로 동작합니다. 배포 대상은 [GitHub Pages](https://ywkinfo.github.io/sldeleb2/) 하나이며,
+`main`에 반영되면 `.github/workflows/ci.yml`이 전체 검증을 통과한 동일 `out/`
+산출물을 배포합니다.
+
 ## 검증 명령
 
 - `npm run typecheck`: TypeScript 검사
 - `npm run lint`: ESLint 검사
 - `npm run validate:content`: 콘텐츠 참조·검수 상태·듣기 음원 존재 검사
 - `npm run check:links`: 공식 자료 링크 상태 검사
-- `npm test`: 단위 테스트, 프로덕션 빌드, 렌더링 테스트
+- `npm test`: 단위 테스트, Pages 정적 빌드, 산출물·SEO·내부 링크 검사
 - `npm run test:e2e:fresh`: Pages 정적 빌드·산출물 검사·브라우저 E2E 전체 실행
 
 ## 듣기 음원 생성
