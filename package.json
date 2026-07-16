@@ -6,22 +6,20 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "dev": "NEXT_PUBLIC_BASE_PATH=/sldeleb2 NEXT_PUBLIC_SITE_URL=https://ywkinfo.github.io next dev",
     "prebuild": "npm run validate:content",
-    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "build": "NEXT_PUBLIC_BASE_PATH=/sldeleb2 NEXT_PUBLIC_SITE_URL=https://ywkinfo.github.io next build",
+    "start": "npm run serve:pages",
     "validate:content": "node --experimental-strip-types scripts/validate-content.ts",
     "generate:audio": "node --experimental-strip-types scripts/generate-listening-audio.ts",
     "check:links": "node --experimental-strip-types scripts/check-links.ts",
     "typecheck": "tsc --noEmit",
-    "test": "npm run test:unit && npm run build && npm run test:render",
+    "test": "npm run test:unit && npm run build && npm run test:export",
     "test:unit": "vitest run",
-    "test:render": "node --test tests/rendered-html.test.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .serve_temp",
-    "build:pages": "npm run validate:content && NEXT_PUBLIC_BASE_PATH=/sldeleb2 NEXT_PUBLIC_SITE_URL=https://ywkinfo.github.io STATIC_EXPORT=1 next build",
+    "lint": "eslint . --ignore-pattern .next --ignore-pattern .serve_temp",
     "test:export": "node --experimental-strip-types scripts/test-export.ts",
     "test:e2e": "NEXT_PUBLIC_BASE_PATH=/sldeleb2 playwright test",
-    "test:e2e:fresh": "npm run build:pages && npm run test:export && npm run test:e2e",
+    "test:e2e:fresh": "npm run build && npm run test:export && npm run test:e2e",
     "serve:pages": "rm -rf .serve_temp && mkdir -p .serve_temp/sldeleb2 && cp -r out/* .serve_temp/sldeleb2/ && serve .serve_temp -l 3005"
   },
   "dependencies": {
@@ -30,24 +28,17 @@
     "react-dom": "19.2.6"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.2",
-    "@vitejs/plugin-rsc": "0.5.26",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
-    "react-server-dom-webpack": "19.2.6",
     "serve": "^14.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vinext": "0.0.50",
-    "vite": "8.0.13",
-    "vitest": "^3.2.7",
-    "wrangler": "4.92.0"
+    "vitest": "^3.2.7"
   },
   "overrides": {
     "postcss": "8.5.14"

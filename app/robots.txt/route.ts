@@ -2,8 +2,8 @@ import { requestOrigin, absoluteUrl } from "../../lib/url";
 
 export const dynamic = "force-static";
 
-export function GET(request: Request) {
-  const origin = requestOrigin(request);
+export function GET() {
+  const origin = requestOrigin();
   const sitemapUrl = absoluteUrl("/sitemap.xml", origin);
 
   return new Response(`User-agent: *\nAllow: /\nSitemap: ${sitemapUrl}\n`, {
