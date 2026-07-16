@@ -20,7 +20,7 @@ export const examBlueprints = [
   },
   {
     id: 'exam-reading-b2',
-    version: 1,
+    version: 2,
     title: '읽기 모의고사 · Tarea 1–4',
     skill: 'reading',
     timeLimitMin: 70,

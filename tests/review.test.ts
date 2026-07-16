@@ -185,4 +185,55 @@ describe("analyzeVulnerableTags / pickTodaysReview", () => {
     const todays = pickTodaysReview(entries, vulnerable);
     expect(todays.map((e) => e.attempt.itemId)).toEqual(["a", "c"]);
   });
+
+  it("fills recommendation tiers in priority order and sorts within a tier by oldest attempt", () => {
+    const attempts: Record<string, AttemptState> = {
+      "vulnerable-newer": mcq("vulnerable-newer", false, { lastAttemptedAt: 200 }),
+      "vulnerable-older": mcq("vulnerable-older", false, { lastAttemptedAt: 100 }),
+      "other-incorrect": mcq("other-incorrect", false, { lastAttemptedAt: 1 }),
+      low: open("low", {
+        selfScore: 2,
+        rubricScores: { adequacy: 1, coherence: 3, accuracy: 3, range: 3 },
+        lastAttemptedAt: 1,
+      }),
+    };
+    const metaById = new Map<string, ReviewItemMeta>([
+      ["vulnerable-newer", meta("vulnerable-newer", { tags: ["subjuntivo"] })],
+      ["vulnerable-older", meta("vulnerable-older", { tags: ["subjuntivo"] })],
+      ["other-incorrect", meta("other-incorrect")],
+      ["low", meta("low", { skill: "writing", kind: "open" })],
+    ]);
+
+    const result = pickTodaysReview(
+      buildAttemptEntries(attempts, metaById),
+      [{ tag: "subjuntivo", rate: 50 }],
+    );
+
+    expect(result.map((entry) => entry.attempt.itemId)).toEqual([
+      "vulnerable-older",
+      "vulnerable-newer",
+      "other-incorrect",
+    ]);
+  });
+
+  it("uses existing review reasons to fill low-assessment and flagged tiers without duplicates", () => {
+    const attempts: Record<string, AttemptState> = {
+      both: mcq("both", false, { flagged: true, lastAttemptedAt: 300 }),
+      low: open("low", {
+        selfScore: 2,
+        rubricScores: { adequacy: 1, coherence: 3, accuracy: 3, range: 3 },
+        lastAttemptedAt: 200,
+      }),
+      flagged: mcq("flagged", true, { flagged: true, lastAttemptedAt: 100 }),
+    };
+    const metaById = new Map<string, ReviewItemMeta>([
+      ["both", meta("both")],
+      ["low", meta("low", { skill: "writing", kind: "open" })],
+      ["flagged", meta("flagged")],
+    ]);
+
+    const result = pickTodaysReview(buildAttemptEntries(attempts, metaById), []);
+
+    expect(result.map((entry) => entry.attempt.itemId)).toEqual(["both", "low", "flagged"]);
+  });
 });

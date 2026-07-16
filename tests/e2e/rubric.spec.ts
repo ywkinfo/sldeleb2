@@ -12,6 +12,8 @@ test.describe('Multidimensional Rubrics & Review Board', () => {
 
     // Verify we are on a practice item page with SelfAssessment
     await expect(page.locator('h3:has-text("자가점검")')).toBeVisible();
+    await expect(page.locator('.rubric-scale-legend')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: '적합성 · 2점 · 대체로 부합' })).toBeVisible();
 
     // Check that the save button is disabled initially
     const saveButton = page.locator('button:has-text("평가 저장")');

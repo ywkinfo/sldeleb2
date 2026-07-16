@@ -44,6 +44,7 @@ for (const [path, expected] of [
   ["/materials", "공식 자료실"],
   ["/practice", "짧게, 제대로 연습"],
   ["/exam", "실전처럼, 모의고사"],
+  ["/exam/history", "모의고사 기록"],
   ["/exam/exam-listening-b2", "듣기 모의고사"],
   ["/review", "다시 보면, 내 것이 됩니다"],
   ["/guide", "B2 시험, 한국어로 한눈에"],
@@ -74,4 +75,15 @@ test("serves host-derived sitemap and robots metadata", async () => {
   const robots = await render("/robots.txt");
   assert.equal(robots.status, 200);
   assert.match(await robots.text(), /Sitemap: (http:\/\/localhost(:3000)?|https:\/\/ywkinfo\.github\.io)\/sitemap\.xml/);
+});
+
+test("guide links every skill to practice and both auto-graded skills to exams", async () => {
+  const response = await render("/guide");
+  const html = await response.text();
+
+  for (const skill of ["reading", "listening", "writing", "speaking"]) {
+    assert.match(html, new RegExp(`href="/practice\\?skill=${skill}"`));
+  }
+  assert.match(html, /href="\/exam\/exam-reading-b2"/);
+  assert.match(html, /href="\/exam\/exam-listening-b2"/);
 });

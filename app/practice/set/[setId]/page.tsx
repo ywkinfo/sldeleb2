@@ -11,6 +11,15 @@ import { SpeakingTask } from "@/components/SpeakingTask";
 import { SetSummary } from "@/components/SetSummary";
 import { SetProgressBar } from "@/components/SetProgressBar";
 import type { PracticeItem, ReadingMCQItem, ListeningMCQItem, WritingTaskItem, SpeakingTaskItem } from "@/lib/types";
+import { absoluteUrl, sitePath } from "@/lib/url";
+
+const skillLabels = {
+  reading: "읽기",
+  listening: "듣기",
+  writing: "쓰기",
+  speaking: "말하기",
+  mixed: "종합",
+} as const;
 
 export async function generateStaticParams() {
   const sets = getPublishedSets();
@@ -21,7 +30,11 @@ export async function generateMetadata(props: { params: Promise<{ setId: string 
   const params = await props.params;
   const set = getSetById(params.setId);
   if (!set) return { title: "Set Not Found" };
-  return { title: `${set.title} | 연습`, description: `${set.estimatedMin}분 분량의 DELE B2 ${set.skill} 영역 연습` };
+  return {
+    title: `${set.title} | 연습`,
+    description: `${set.estimatedMin}분 분량의 DELE B2 ${set.skill} 영역 연습`,
+    alternates: { canonical: absoluteUrl(`/practice/set/${set.id}`) },
+  };
 }
 
 export default async function PracticeSetPage(props: { params: Promise<{ setId: string }> }) {
@@ -41,6 +54,13 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
     <>
       <header className="page-hero">
         <div className="site-shell">
+          <nav className="breadcrumbs" aria-label="현재 위치">
+            <a href={sitePath(`/practice?skill=${set.skill}`)}>
+              {skillLabels[set.skill]} 연습
+            </a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{set.title}</span>
+          </nav>
           <p className="section-kicker">Práctica: {set.skill}</p>
           <h1>{set.title}</h1>
           <p className="lead">
@@ -58,7 +78,7 @@ export default async function PracticeSetPage(props: { params: Promise<{ setId: 
               {Array.from(new Set(reading.map((i) => i.textId))).map((textId) => {
                 const text = readingTexts.find((t) => t.id === textId);
                 if (!text) return null;
-                return <PracticeReading key={text.id} text={text} items={reading.filter((i) => i.textId === text.id)} numberByItemId={numberByItemId} />;
+                return <PracticeReading key={text.id} text={text} items={reading.filter((i) => i.textId === text.id)} numberByItemId={numberByItemId} presentation={set.presentation} />;
               })}
             </div>
           </div>

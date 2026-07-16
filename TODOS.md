@@ -1,10 +1,11 @@
 # Spanish Lab DELE B2 - 향후 구현 과제
 
-이 문서는 Phase A, B, C를 거치며 완료된 항목 외의 추가 과제 명세입니다.
+이 문서는 현재까지 완료된 구현과 local-first 범위 밖의 장기 과제를 기록합니다.
 
-## 현재 콘텐츠 현황 (2026-07-12 기준)
+## 현재 콘텐츠 현황 (2026-07-16 기준)
 
-- 게시된 세트 20개(읽기 7 · 듣기 6 · 쓰기 4 · 말하기 3), 총 79문항.
+- 게시된 세트 23개, 총 109문항. 읽기·듣기 모의고사 청사진과 읽기 Tarea
+  2 매칭·Tarea 3 문장 삽입·Tarea 4 cloze 전용 상호작용을 제공한다.
 - 듣기 Tarea 1·2·3·4·5는 모두 공식 청사진에 맞춘 6문항 세트를 최소 1개씩
   게시했다. Tarea 2는 남녀 대화 화자 판별, Tarea 4는 네 화자 매칭 형식으로
   재배치했으며 기존 콘텐츠 id는 유지했다.
@@ -36,8 +37,8 @@
 - 구현: `/exam` 목록 + `/exam/exam-listening-b2` 세션(30문항/40분, 이어하기,
   새로고침 복원, 만료 자동 제출, 결과 정오표, 복습 큐 반영). 단위 테스트
   `tests/examSession.test.ts`, E2E `tests/e2e/exam-*.spec.ts` 7종.
-- 다음 확장: 세션 export/import, Web Locks 단일 writer —
-  `docs/mock-exam-session-design.md` NOT in scope 절 참고.
+- 전체 백업은 완료·만료된 세션을 포함한다. Web Locks 단일 writer는 장기 과제로
+  남긴다.
 
 ## 2-b. 완료 — 모의고사 세션 읽기 (2026-07-15)
 
@@ -47,10 +48,11 @@
 - 콘텐츠: `exam-reading-b2`(70분, 36문항 = T1 6·T2 10·T3 6·T4 14). 신규 지문 3개
   (해외 생활 매칭·주 4일 근무 문장삽입·팟캐스트 cloze) + 30문항. T1은
   `set-reading-library` 재사용. 지문 10·문항 109·세트 23·블루프린트 2.
-- 검증: 단위(examSession 56·validate-content 22)·E2E `exam-reading.spec` 7종,
-  전체 파이프라인 통과. 50 읽기 세션 직렬화 ≈ 1.37 MiB(보존 상한 50 유지).
-- 후속: 실제 T2 매칭·T3 문장 삽입·T4 cloze 전용 상호작용 UI(현재는 단일 지문 +
-  객관식 근사). 기존 연습용 T4 지문의 정답 노출 정리도 후속.
+- 읽기 청사진 version 2에서 T1 MCQ·T2 reusable matching·T3 single-use
+  sentence insertion·T4 cloze presentation을 세션에 동결한다. 마커·slot·공유
+  선택지 계약 검증과 키보드·터치·모바일 지문 dialog를 구현했다.
+- 완료 세션 50개 직렬화는 약 1.37 MiB이며 terminal-only 전체 백업과 기록
+  재열람을 지원한다.
 
 ## 3. (추후 장기 과제) AI 채점, 계정, 서버 동기화, 사용자 행동 분석
 - **Context**: 서버가 필요 없는 정적 환경(Static Export) 원칙을 벗어나는 대규모 아키텍처 변경입니다.

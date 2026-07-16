@@ -124,10 +124,18 @@ export interface ImportStats {
   skipped: number;
 }
 
-export function importProgress(store: AttemptStore, jsonStr: string): ImportStats | null {
+export interface ImportProgressResult {
+  stats: ImportStats;
+  persistent: boolean;
+  /** 병합 직전 로컬 저장소의 손상 또는 접근 실패를 복구했는지 여부. */
+  localRecovered: boolean;
+}
+
+export function importProgress(store: AttemptStore, jsonStr: string): ImportProgressResult | null {
   const incoming = parseProgressSnapshot(jsonStr);
   if (!incoming) return null;
-  const current = store.load().snapshot;
+  const loaded = store.load();
+  const current = loaded.snapshot;
 
   const stats: ImportStats = { added: 0, updated: 0, skipped: 0 };
   for (const [itemId, attempt] of Object.entries(incoming.attempts)) {
@@ -137,8 +145,12 @@ export function importProgress(store: AttemptStore, jsonStr: string): ImportStat
     else stats.skipped += 1;
   }
 
-  store.save(mergeSnapshots(current, incoming));
-  return stats;
+  const saved = store.save(mergeSnapshots(current, incoming));
+  return {
+    stats,
+    persistent: saved.persistent,
+    localRecovered: loaded.recovered,
+  };
 }
 
 class MemoryStorage implements StorageLike {

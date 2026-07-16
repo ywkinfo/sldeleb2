@@ -8,10 +8,14 @@ import {
   completePlayback,
   createExamSession,
   createExamSessionStore,
+  deleteCompletedTerminalSessionsFromList,
+  deleteSessionFromList,
   EXAM_STORAGE_KEY,
   finalizeExamSession,
   findActiveSession,
+  findNextInProgressDeadline,
   MAX_TERMINAL_SESSIONS,
+  mergeTerminalSessions,
   pruneSessions,
   refundPlayback,
   reservePlayback,
@@ -96,8 +100,8 @@ function mcq(id: string, scriptId: string, correctAnswer: string): ListeningMCQI
 const scripts = [script("s1", "tarea1"), script("s2", "tarea2")];
 const items = [mcq("l1", "s1", "a"), mcq("l2", "s1", "b"), mcq("l3", "s2", "c")];
 const sets: PracticeSet[] = [
-  { id: "setA", title: "T1", estimatedMin: 10, skill: "listening", itemIds: ["l1", "l2"], ...review },
-  { id: "setB", title: "T2", estimatedMin: 10, skill: "listening", itemIds: ["l3"], ...review },
+  { id: "setA", title: "T1", estimatedMin: 10, skill: "listening", task: "tarea1", sequence: 1, mode: "guided", itemIds: ["l1", "l2"], ...review },
+  { id: "setB", title: "T2", estimatedMin: 10, skill: "listening", task: "tarea2", sequence: 1, mode: "guided", itemIds: ["l3"], ...review },
 ];
 const blueprint: ExamBlueprint = {
   id: "bp-test",
@@ -137,8 +141,8 @@ function rmcq(id: string, textId: string, correctAnswer: string): ReadingMCQItem
 const rtexts = [rtext("rt1", "tarea1"), rtext("rt2", "tarea2")];
 const ritems = [rmcq("r1", "rt1", "a"), rmcq("r2", "rt1", "b"), rmcq("r3", "rt2", "c")];
 const rsets: PracticeSet[] = [
-  { id: "rsetA", title: "RT1", estimatedMin: 10, skill: "reading", itemIds: ["r1", "r2"], ...review },
-  { id: "rsetB", title: "RT2", estimatedMin: 10, skill: "reading", itemIds: ["r3"], ...review },
+  { id: "rsetA", title: "RT1", estimatedMin: 10, skill: "reading", task: "tarea1", sequence: 1, mode: "guided", itemIds: ["r1", "r2"], ...review },
+  { id: "rsetB", title: "RT2", estimatedMin: 10, skill: "reading", task: "tarea2", sequence: 1, mode: "guided", itemIds: ["r3"], ...review },
 ];
 const readingBlueprint: ExamBlueprint = {
   id: "bp-reading",
@@ -443,6 +447,48 @@ describe("reading exam: text contract snapshot, resolution & validation", () => 
     expect(sections[0].scripts).toEqual([]);
   });
 
+  it("freezes a deep presentation copy for every new reading section and defaults to MCQ", () => {
+    const sharedOptions = [
+      { key: "a", text: "A" },
+      { key: "b", text: "B" },
+      { key: "c", text: "C" },
+    ];
+    const customSets: PracticeSet[] = rsets.map((set) =>
+      set.id === "rsetB"
+        ? {
+            ...set,
+            presentation: {
+              kind: "matching",
+              sharedOptions,
+              optionUse: "reusable",
+            },
+          }
+        : set,
+    );
+    const sections = snapshotBlueprint(readingBlueprint, {
+      ...rcollections,
+      practiceSets: customSets,
+    });
+
+    expect(sections[0].presentation).toEqual({ kind: "mcq" });
+    expect(sections[1].presentation).toEqual({
+      kind: "matching",
+      sharedOptions: [
+        { key: "a", text: "A" },
+        { key: "b", text: "B" },
+        { key: "c", text: "C" },
+      ],
+      optionUse: "reusable",
+    });
+    expect(sections[1].presentation).not.toBe(customSets[1].presentation);
+    sharedOptions[0].text = "MUTATED";
+    expect(
+      sections[1].presentation?.kind === "matching"
+        ? sections[1].presentation.sharedOptions[0]
+        : undefined,
+    ).toEqual({ key: "a", text: "A" });
+  });
+
   it("keeps frozen title/passage even when live text mutates or is deleted", () => {
     const { resolved: found } = resolveSections(readingSnapshot(), {
       practiceItems: ritems,
@@ -475,6 +521,82 @@ describe("reading exam: text contract snapshot, resolution & validation", () => 
   it("keeps a well-formed frozen reading session valid on reload", () => {
     const session = createExamSession(readingBlueprint, readingSnapshot(), T0, "r-ok");
     expect(sessionsAfterReload([session]).map((s) => s.id)).toEqual(["r-ok"]);
+  });
+
+  it("accepts legacy and frozen reading sessions when presentation is entirely absent", () => {
+    const frozenWithoutPresentation = readingSnapshot().map((section) => {
+      const clone = { ...section };
+      delete clone.presentation;
+      return clone;
+    });
+    const frozen = createExamSession(
+      readingBlueprint,
+      frozenWithoutPresentation,
+      T0,
+      "r-frozen-legacy",
+    );
+    const legacy = createExamSession(
+      readingBlueprint,
+      legacyReadingSections(),
+      T0,
+      "r-id-legacy",
+    );
+
+    expect(sessionsAfterReload([frozen, legacy]).map((session) => session.id)).toEqual([
+      "r-frozen-legacy",
+      "r-id-legacy",
+    ]);
+  });
+
+  it("rejects mixed reading presentation presence and presentation on listening sections", () => {
+    const mixed = createExamSession(
+      readingBlueprint,
+      readingSnapshot().map((section, index) => {
+        if (index !== 1) return section;
+        const clone = { ...section };
+        delete clone.presentation;
+        return clone;
+      }),
+      T0,
+      "r-mixed-presentation",
+    );
+    const listening = createExamSession(
+      blueprint,
+      snapshotBlueprint(blueprint, collections).map((section, index) =>
+        index === 0 ? { ...section, presentation: { kind: "mcq" as const } } : section,
+      ),
+      T0,
+      "l-presentation",
+    );
+
+    expect(sessionsAfterReload([mixed])).toEqual([]);
+    expect(sessionsAfterReload([listening])).toEqual([]);
+  });
+
+  it("rejects presentation attached to an ID-only legacy section", () => {
+    const legacyWithPresentation = createExamSession(
+      readingBlueprint,
+      legacyReadingSections().map((section, index) =>
+        index === 0 ? { ...section, presentation: { kind: "mcq" as const } } : section,
+      ),
+      T0,
+      "r-legacy-presentation",
+    );
+
+    expect(sessionsAfterReload([legacyWithPresentation])).toEqual([]);
+  });
+
+  it("rejects malformed presentation in a frozen reading section", () => {
+    const malformed = tamperReading("r-bad-presentation", (section) => ({
+      ...section,
+      presentation: {
+        kind: "matching",
+        sharedOptions: [{ key: "a", text: "A" }],
+        optionUse: "sometimes",
+      },
+    }));
+
+    expect(sessionsAfterReload([malformed])).toEqual([]);
   });
 
   it("reloads a raw frozen listening session and a frozen reading session together", () => {
@@ -750,6 +872,12 @@ function finalizedSession(id: string, projection: FinalizedExamSession["progress
 }
 
 describe("session list rules", () => {
+  const at = (
+    id: string,
+    submittedAt: number,
+    projection: FinalizedExamSession["progressProjection"] = { status: "complete" },
+  ): FinalizedExamSession => ({ ...finalizedSession(id, projection), submittedAt });
+
   it("refuses to downgrade a terminal session back to in-progress", () => {
     const terminal = finalizedSession("dup", { status: "complete" });
     const stale = createExamSession(blueprint, snapshotBlueprint(blueprint, collections), T0, "dup");
@@ -774,11 +902,132 @@ describe("session list rules", () => {
     expect(pruned.some((session) => session.id === "done-1")).toBe(false);
   });
 
+  it("prunes completed sessions by submittedAt rather than untrusted array order", () => {
+    const completed = Array.from({ length: MAX_TERMINAL_SESSIONS + 2 }, (_, index) =>
+      at(`dated-${index}`, index),
+    ).reverse();
+
+    const pruned = pruneSessions(completed) as FinalizedExamSession[];
+
+    expect(pruned.some((session) => session.id === "dated-0")).toBe(false);
+    expect(pruned.some((session) => session.id === "dated-1")).toBe(false);
+    expect(pruned.at(-1)?.id).toBe(`dated-${MAX_TERMINAL_SESSIONS + 1}`);
+    expect(pruned.map((session) => session.submittedAt)).toEqual(
+      [...pruned.map((session) => session.submittedAt)].sort((a, b) => a - b),
+    );
+  });
+
   it("finds the most recent in-progress session per blueprint", () => {
     const first = createExamSession(blueprint, [], T0, "one");
     const second = createExamSession(blueprint, [], T0 + 5, "two");
     expect(findActiveSession([first, second], blueprint.id)?.id).toBe("two");
     expect(findActiveSession([finalizedSession("done", { status: "complete" })], blueprint.id)).toBeUndefined();
+  });
+
+  it("finds the nearest future in-progress deadline only", () => {
+    const first = createExamSession(blueprint, [], T0, "first");
+    const second = { ...createExamSession(blueprint, [], T0, "second"), deadlineAt: T0 + 500 };
+    const expired = { ...createExamSession(blueprint, [], T0, "expired"), deadlineAt: T0 - 1 };
+    expect(findNextInProgressDeadline([first, second, expired], T0)).toBe(T0 + 500);
+    expect(
+      findNextInProgressDeadline(
+        [finalizedSession("done", { status: "complete" })],
+        T0,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("merges terminal imports while local terminal records win and terminal replaces local in-progress", () => {
+    const localTerminal = at("local-wins", 100);
+    const localActive = createExamSession(blueprint, [], T0, "becomes-terminal");
+    const untouchedActive = createExamSession(blueprint, [], T0, "stay-active");
+    const importedReplacement = at("becomes-terminal", 200);
+    const importedNew = at("new", 300);
+    const importedActive = createExamSession(blueprint, [], T0, "skip-active");
+
+    const result = mergeTerminalSessions(
+      [localTerminal, localActive, untouchedActive],
+      [at("local-wins", 999), importedReplacement, importedNew, importedActive],
+    );
+
+    expect(result.stats).toEqual({ added: 1, updated: 1, skipped: 2 });
+    expect(result.sessions.find((session) => session.id === "local-wins")).toBe(localTerminal);
+    expect(result.sessions.find((session) => session.id === "becomes-terminal")?.status).toBe("submitted");
+    expect(result.sessions.find((session) => session.id === "stay-active")?.status).toBe("in-progress");
+    expect(result.sessions.some((session) => session.id === "skip-active")).toBe(false);
+  });
+
+  it("protects pending terminals and keeps only the newest completed records in ascending order", () => {
+    const pending = [
+      at("pending-a", 1, { status: "pending", attempts: [payloadAttempt] }),
+      at("pending-b", 2, { status: "pending", attempts: [payloadAttempt] }),
+    ];
+    const completed = Array.from({ length: 51 }, (_, index) => at(`done-${index}`, 100 + index));
+
+    const result = mergeTerminalSessions([...pending, ...completed], []);
+    const retainedCompleted = result.sessions.filter(
+      (session): session is FinalizedExamSession =>
+        session.status !== "in-progress" && session.progressProjection.status === "complete",
+    );
+
+    expect(result.sessions.filter((session) => session.status !== "in-progress")).toHaveLength(50);
+    expect(result.sessions.some((session) => session.id === "pending-a")).toBe(true);
+    expect(result.sessions.some((session) => session.id === "pending-b")).toBe(true);
+    expect(retainedCompleted).toHaveLength(48);
+    expect(retainedCompleted.map((session) => session.submittedAt)).toEqual(
+      [...retainedCompleted.map((session) => session.submittedAt)].sort((a, b) => a - b),
+    );
+    expect(retainedCompleted[0].id).toBe("done-3");
+    expect(retainedCompleted.at(-1)?.id).toBe("done-50");
+  });
+
+  it("keeps all protected pending records even when they alone exceed the limit", () => {
+    const pending = Array.from({ length: MAX_TERMINAL_SESSIONS + 1 }, (_, index) =>
+      at(`pending-${index}`, index, { status: "pending", attempts: [payloadAttempt] }),
+    );
+    const result = mergeTerminalSessions(pending, [at("new-complete", 999)]);
+
+    expect(result.sessions).toHaveLength(MAX_TERMINAL_SESSIONS + 1);
+    expect(result.sessions.every((session) => session.status !== "in-progress" && session.progressProjection.status === "pending")).toBe(true);
+    expect(result.stats).toEqual({ added: 0, updated: 0, skipped: 1 });
+  });
+
+  it("reports only imported terminal records that survive retention", () => {
+    const local = Array.from({ length: MAX_TERMINAL_SESSIONS - 1 }, (_, index) =>
+      at(`local-${index}`, 100 + index),
+    );
+    const result = mergeTerminalSessions(local, [at("too-old", 1), at("newest", 1_000)]);
+
+    expect(result.sessions.some((session) => session.id === "too-old")).toBe(false);
+    expect(result.sessions.some((session) => session.id === "newest")).toBe(true);
+    expect(result.stats).toEqual({ added: 1, updated: 0, skipped: 1 });
+  });
+
+  it("deletes only projection-complete terminal sessions", () => {
+    const complete = at("complete", 1);
+    const pending = at("pending", 2, { status: "pending", attempts: [payloadAttempt] });
+    const active = createExamSession(blueprint, [], T0, "active");
+
+    expect(deleteSessionFromList([complete, pending, active], "pending").deleted).toBe(false);
+    expect(deleteSessionFromList([complete, pending, active], "active").deleted).toBe(false);
+    const one = deleteSessionFromList([complete, pending, active], "complete");
+    expect(one.deleted).toBe(true);
+    expect(one.sessions.map((session) => session.id)).toEqual(["pending", "active"]);
+
+    const all = deleteCompletedTerminalSessionsFromList([complete, pending, active]);
+    expect(all.deleted).toBe(1);
+    expect(all.sessions.map((session) => session.id)).toEqual(["pending", "active"]);
+  });
+
+  it("deletes exactly one matching complete record even under duplicate-ID corruption", () => {
+    const complete = at("collision", 1);
+    const pending = at("collision", 2, { status: "pending", attempts: [payloadAttempt] });
+    const active = createExamSession(blueprint, [], T0, "collision");
+
+    const result = deleteSessionFromList([complete, pending, active], "collision");
+
+    expect(result.deleted).toBe(true);
+    expect(result.sessions).toEqual([pending, active]);
   });
 });
 
@@ -818,6 +1067,28 @@ describe("ExamSessionStore", () => {
     const store = createExamSessionStore(new FakeStorage());
     const invalid = { schemaVersion: 1, sessions: [{ ...newSession(), status: "submitted" }] };
     expect(() => store.save(invalid as never)).toThrow(TypeError);
+  });
+
+  it("rejects a session snapshot containing duplicate session IDs", () => {
+    const duplicate = { ...newSession() };
+    const store = createExamSessionStore(new FakeStorage());
+
+    expect(() =>
+      store.save({ schemaVersion: 1, sessions: [newSession(), duplicate] }),
+    ).toThrow(TypeError);
+  });
+
+  it("exposes guarded single and bulk deletion APIs", () => {
+    const store = createExamSessionStore(new FakeStorage());
+    const complete = finalizedSession("complete", { status: "complete" });
+    const pending = finalizedSession("pending", { status: "pending", attempts: [payloadAttempt] });
+    const active = createExamSession(blueprint, [], T0, "active");
+    store.save({ schemaVersion: 1, sessions: [complete, pending, active] });
+
+    expect(store.deleteSession("pending")).toEqual({ deleted: false, persistent: true });
+    expect(store.deleteSession("complete")).toEqual({ deleted: true, persistent: true });
+    expect(store.deleteCompletedTerminalSessions()).toEqual({ deleted: 0, persistent: true });
+    expect(store.load().snapshot.sessions.map((session) => session.id)).toEqual(["pending", "active"]);
   });
 });
 
@@ -864,5 +1135,16 @@ describe("applyPendingProjection", () => {
     const result = applyPendingProjection(finalized, attemptStore, examStore);
     expect(result.applied).toBe(false);
     expect(result.session.progressProjection.status).toBe("pending");
+
+    // 실패한 payload는 메모리 fallback에 남아 두 번째 병합에서 changed=false가 된다.
+    // 영속 저장소가 여전히 없으면 그 경우에도 complete로 승격하면 안 된다.
+    const retry = applyPendingProjection(finalized, attemptStore, examStore);
+    expect(retry.applied).toBe(false);
+    expect(retry.session.progressProjection.status).toBe("pending");
+    const stored = examStore.load().snapshot.sessions[0];
+    expect(stored.status).not.toBe("in-progress");
+    if (stored.status !== "in-progress") {
+      expect(stored.progressProjection.status).toBe("pending");
+    }
   });
 });

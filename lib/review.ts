@@ -160,18 +160,32 @@ export function analyzeVulnerableTags(entries: AttemptEntry[]): VulnerableTag[] 
     .slice(0, 2);
 }
 
-/** 취약 태그 오답을 우선하고, 없으면 오답+낮은 자기평가를 오래된 순 3개까지 추천한다. */
+/** 취약 태그 오답부터 별표까지 티어를 순서대로 채워 오래된 항목 3개를 추천한다. */
 export function pickTodaysReview(entries: AttemptEntry[], vulnerableTags: VulnerableTag[]): AttemptEntry[] {
   const vulnerable = new Set(vulnerableTags.map((entry) => entry.tag));
-  const incorrect = entries.filter((entry) => entry.reasons.includes("incorrect"));
-  let recommended = incorrect.filter((entry) => entry.meta?.tags.some((tag) => vulnerable.has(tag)));
-  if (recommended.length === 0) {
-    const lowScores = entries.filter(
-      (entry) => entry.attempt.kind === "open" && entry.attempt.completed && entry.attempt.selfScore === 1,
-    );
-    recommended = [...incorrect, ...lowScores];
-  }
-  return recommended
-    .sort((a, b) => a.attempt.lastAttemptedAt - b.attempt.lastAttemptedAt)
-    .slice(0, 3);
+  const recommended: AttemptEntry[] = [];
+  const selected = new Set<string>();
+
+  const fillTier = (matches: (entry: AttemptEntry) => boolean) => {
+    const candidates = entries
+      .filter(matches)
+      .sort((a, b) => a.attempt.lastAttemptedAt - b.attempt.lastAttemptedAt);
+    for (const entry of candidates) {
+      if (recommended.length >= 3) return;
+      if (selected.has(entry.attempt.itemId)) continue;
+      selected.add(entry.attempt.itemId);
+      recommended.push(entry);
+    }
+  };
+
+  fillTier(
+    (entry) =>
+      entry.reasons.includes("incorrect") &&
+      Boolean(entry.meta?.tags.some((tag) => vulnerable.has(tag))),
+  );
+  fillTier((entry) => entry.reasons.includes("incorrect"));
+  fillTier((entry) => entry.reasons.includes("low-assessment"));
+  fillTier((entry) => entry.reasons.includes("flagged"));
+
+  return recommended;
 }

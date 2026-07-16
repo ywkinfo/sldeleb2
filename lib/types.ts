@@ -14,7 +14,7 @@ export interface OfficialResource {
   id: string;
   title: string;
   year: number | null;
-  skill: ExamSkill | "all";
+  skills: ExamSkill[];
   task?: Task;
   resourceType:
     | "booklet"
@@ -107,12 +107,39 @@ export type PracticeItem =
   | WritingTaskItem
   | SpeakingTaskItem;
 
+export interface PresentationSlot {
+  slot: number;
+  itemId: string;
+}
+
+export type ReadingPresentationContract =
+  | { kind: "mcq" }
+  | {
+      kind: "matching";
+      sharedOptions: { key: string; text: string }[];
+      optionUse: "single-use" | "reusable";
+    }
+  | {
+      kind: "sentence-insertion";
+      sharedOptions: { key: string; text: string }[];
+      optionUse: "single-use";
+      slots: PresentationSlot[];
+    }
+  | {
+      kind: "cloze";
+      slots: PresentationSlot[];
+    };
+
 export interface PracticeSet extends ContentReviewMetadata {
   id: string;
   title: string;
   estimatedMin: number;
   skill: PracticeSkill | "mixed";
+  task?: Task;
+  sequence: number;
+  mode: "guided" | "exam-prep";
   itemIds: string[];
+  presentation?: ReadingPresentationContract;
 }
 
 export interface GlossaryEntry {
@@ -240,6 +267,7 @@ export interface ExamSectionSnapshot {
   items?: ExamItemContract[];
   scripts?: ExamScriptContract[];
   texts?: ExamTextContract[];
+  presentation?: ReadingPresentationContract;
 }
 
 export interface ExamResultItem {

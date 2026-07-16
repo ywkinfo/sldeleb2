@@ -1,5 +1,7 @@
 import type { OfficialResource } from '../lib/types';
 
+const allSkills = ['reading', 'listening', 'writing', 'speaking'] as const;
+
 const modelPortal =
   'https://examenes.cervantes.es/es/dele/preparar-prueba/modelos-examen';
 const preparationPortal =
@@ -11,7 +13,7 @@ export const officialResources = [
     id: 'cvc-b2-interactive-model',
     title: 'CVC DELE B2 모델 시험',
     year: null,
-    skill: 'all',
+    skills: [...allSkills],
     resourceType: 'interactive',
     officialUrl: 'https://cvc.cervantes.es/ensenanza/dele/b2/index.htm',
     fallbackUrl: modelPortal,
@@ -22,7 +24,7 @@ export const officialResources = [
     id: 'dele-b2-model-portal',
     title: 'DELE B2 모델 시험 자료 모음',
     year: null,
-    skill: 'all',
+    skills: [...allSkills],
     resourceType: 'booklet',
     officialUrl: modelPortal,
     fallbackUrl: preparationPortal,
@@ -33,7 +35,7 @@ export const officialResources = [
     id: 'dele-b2-audio-resources',
     title: 'DELE B2 2013 시행 듣기 음원 (포털 안내)',
     year: 2013,
-    skill: 'listening',
+    skills: ['listening'],
     resourceType: 'audio',
     officialUrl: modelPortal,
     fallbackUrl: preparationPortal,
@@ -44,7 +46,7 @@ export const officialResources = [
     id: 'dele-b2-transcripts',
     title: 'DELE B2 2013 시행 듣기 전사 자료 (포털 안내)',
     year: 2013,
-    skill: 'listening',
+    skills: ['listening'],
     resourceType: 'transcript',
     officialUrl: modelPortal,
     fallbackUrl: preparationPortal,
@@ -55,7 +57,7 @@ export const officialResources = [
     id: 'dele-b2-answer-keys',
     title: 'DELE B2 2013 시행 정답 (포털 안내)',
     year: 2013,
-    skill: 'reading', // Note: Answers usually cover reading and listening.
+    skills: ['reading', 'listening'],
     resourceType: 'answers',
     officialUrl: modelPortal,
     fallbackUrl: preparationPortal,
@@ -66,7 +68,7 @@ export const officialResources = [
     id: 'dele-b2-exam-overview',
     title: 'DELE B2 시험 구성과 평가 안내',
     year: null,
-    skill: 'all',
+    skills: [...allSkills],
     resourceType: 'interactive',
     officialUrl: b2Overview,
     fallbackUrl: preparationPortal,

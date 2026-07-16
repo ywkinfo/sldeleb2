@@ -23,7 +23,7 @@ function validCollections(): ContentCollections {
         id: "official-1",
         title: "공식 모델 시험",
         year: null,
-        skill: "all",
+        skills: ["reading", "listening", "writing", "speaking"],
         resourceType: "interactive",
         officialUrl: "https://cvc.cervantes.es/ensenanza/dele/b2/",
         fallbackUrl: "https://examenes.cervantes.es/es/dele/preparar-prueba/modelos-examen",
@@ -92,6 +92,9 @@ function validCollections(): ContentCollections {
         title: "짧은 연습",
         estimatedMin: 10,
         skill: "reading",
+        task: "tarea1",
+        sequence: 1,
+        mode: "guided",
         itemIds: ["read-1"],
         ...review,
       },
@@ -100,6 +103,9 @@ function validCollections(): ContentCollections {
         title: "짧은 듣기",
         estimatedMin: 10,
         skill: "listening",
+        task: "tarea3",
+        sequence: 1,
+        mode: "guided",
         itemIds: ["listen-1"],
         ...review,
       },
@@ -160,12 +166,30 @@ describe("content validation", () => {
       officialResources: [
         {
           ...base.officialResources[0],
-          skill: "writing",
+          skills: ["writing"],
           task: "tarea5",
         },
       ],
     };
     expect(validateContent(data).some((issue) => issue.field === "task")).toBe(true);
+  });
+
+  it("requires at least one valid, unique skill on official resources", () => {
+    const base = validCollections();
+    const resource = base.officialResources[0];
+    const cases = [
+      { ...resource, skills: [] },
+      { ...resource, skills: ["reading", "reading"] },
+      { ...resource, skills: ["reading", "grammar"] },
+    ] as unknown as ContentCollections["officialResources"];
+
+    for (const invalidResource of cases) {
+      const issues = validateContent({
+        ...base,
+        officialResources: [invalidResource],
+      });
+      expect(issues.some((issue) => issue.field === "skills")).toBe(true);
+    }
   });
 
   it("blocks an unreviewed item from a published set", () => {
@@ -181,6 +205,32 @@ describe("content validation", () => {
           issue.message.includes("references draft item"),
       ),
     ).toBe(true);
+  });
+
+  it("rejects a set task that does not match its referenced item source", () => {
+    const base = validCollections();
+    const data: ContentCollections = {
+      ...base,
+      practiceSets: [{ ...base.practiceSets[0], task: "tarea2" }, base.practiceSets[1]],
+    };
+
+    expect(
+      validateContent(data).some(
+        (issue) => issue.collection === "practiceSets" && issue.field === "task",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects duplicate or non-contiguous sequence values within a catalog group", () => {
+    const base = validCollections();
+    const extra = {
+      ...base.practiceSets[0],
+      id: "set-3",
+      sequence: 3,
+    };
+    const issues = validateContent({ ...base, practiceSets: [...base.practiceSets, extra] });
+
+    expect(issues.some((issue) => issue.field === "sequence")).toBe(true);
   });
 });
 
@@ -398,6 +448,9 @@ describe("reading exam blueprint & content", () => {
           title: "중복 소속",
           estimatedMin: 5,
           skill: "reading",
+          task: "tarea2",
+          sequence: 2,
+          mode: "exam-prep",
           itemIds: ["r-anio-01"],
           status: "published",
           reviewedBy: "Spanish Lab",

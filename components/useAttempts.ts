@@ -12,16 +12,19 @@ export function useAttempts() {
   const initial: ProgressSnapshot = { schemaVersion: 1, attempts: {} };
   const [snapshot, setSnapshot] = useState<ProgressSnapshot>(initial);
   const [persistent, setPersistent] = useState(true);
+  const [recovered, setRecovered] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const loaded = store.load();
     setSnapshot(loaded.snapshot);
     setPersistent(loaded.persistent);
+    setRecovered(loaded.recovered);
     setHydrated(true);
     return store.subscribe((next) => {
       setSnapshot(next.snapshot);
       setPersistent(next.persistent);
+      setRecovered(next.recovered);
     });
   }, [store]);
 
@@ -42,5 +45,5 @@ export function useAttempts() {
     [store],
   );
 
-  return { attempts: snapshot.attempts, persistent, hydrated, update, remove };
+  return { attempts: snapshot.attempts, persistent, recovered, hydrated, update, remove };
 }

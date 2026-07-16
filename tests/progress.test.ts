@@ -117,6 +117,16 @@ describe('Progress Helpers', () => {
     it('returns undefined if current set is not found', () => {
       expect(pickNextSet('invalid', sets, {})).toBeUndefined();
     });
+
+    it('uses catalog metadata instead of the caller array order', () => {
+      const unordered = [
+        { id: 'r3', skill: 'reading', mode: 'guided', task: 'tarea2', sequence: 1, title: 'R3', estimatedMin: 10, itemIds: ['i3'], status: 'published' },
+        { id: 'r2', skill: 'reading', mode: 'guided', task: 'tarea1', sequence: 2, title: 'R2', estimatedMin: 10, itemIds: ['i2'], status: 'published' },
+        { id: 'r1', skill: 'reading', mode: 'guided', task: 'tarea1', sequence: 1, title: 'R1', estimatedMin: 10, itemIds: ['i1'], status: 'published' },
+      ] as PracticeSet[];
+
+      expect(pickNextSet('r1', unordered, {})?.id).toBe('r2');
+    });
   });
 });
 

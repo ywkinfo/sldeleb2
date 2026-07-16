@@ -26,7 +26,7 @@ export default async function ExamBlueprintPage(props: { params: Promise<{ bluep
 
   return (
     <>
-      <header className="page-hero">
+      <header className="page-hero exam-page-hero">
         <div className="site-shell">
           <p className="section-kicker">Simulacro: {blueprint.skill}</p>
           <h1>{blueprint.title}</h1>

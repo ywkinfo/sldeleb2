@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { NavLinks } from "@/components/NavLinks";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 import { requestOrigin, absoluteUrl, sitePath } from "@/lib/url";
@@ -36,30 +35,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const nav = [
-  ["공식 자료", "/materials"],
-  ["연습", "/practice"],
-  ["모의고사", "/exam"],
-  ["복습", "/review"],
-  ["시험 가이드", "/guide"],
-] as const;
-
-function Header() {
-  return <header className="site-header">
-    <div className="site-shell header-row">
-      <a className="brand" href={sitePath("/")} aria-label="Spanish Lab DELE B2 홈">
-        <span className="brand-mark" aria-hidden="true">S</span>
-        <span className="brand-copy"><strong>Spanish Lab · DELE B2</strong><span>스페인어 연구소</span></span>
-      </a>
-      <nav className="site-nav desktop-nav" aria-label="주요 메뉴">
-        <NavLinks items={nav} />
-      </nav>
-      <ThemeToggle />
-    </div>
-    <nav className="mobile-nav" aria-label="모바일 메뉴"><div className="site-shell"><NavLinks items={nav} /></div></nav>
-  </header>;
-}
-
 function Footer() {
   return <footer className="site-footer"><div className="site-shell footer-grid">
     <div><a className="brand" href={sitePath("/")}><span className="brand-mark" aria-hidden="true">S</span><span className="brand-copy"><strong>Spanish Lab</strong><span>DELE B2 연구 노트</span></span></a>
@@ -76,5 +51,5 @@ function Footer() {
 const themeScript = `(function(){try{var v=localStorage.getItem('dele-b2:theme:v1');var t=v==='dark'||v==='light'?v:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><a className="skip-link" href="#main-content">본문으로 건너뛰기</a><Header /><main id="main-content">{children}</main><Footer /></body></html>;
+  return <html lang="ko" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><a className="skip-link" href="#main-content">본문으로 건너뛰기</a><SiteHeader /><main id="main-content">{children}</main><Footer /></body></html>;
 }

@@ -7,7 +7,7 @@ import { StorageNotice } from "./StorageNotice";
 import { McqQuestion } from "./McqQuestion";
 
 export function PracticeListening({ script, items, numberByItemId }: { script: ListeningScript; items: ListeningMCQItem[]; numberByItemId: Record<string, number> }) {
-  const { persistent } = useAttempts();
+  const { persistent, recovered } = useAttempts();
 
   return <article className="card" id={script.id}>
     <div className="eyebrow">Audición · {script.task.replace("tarea", "Tarea ")}</div>
@@ -21,6 +21,6 @@ export function PracticeListening({ script, items, numberByItemId }: { script: L
     {items.map((item) => (
       <McqQuestion key={item.id} item={item} number={numberByItemId[item.id]} />
     ))}
-    <StorageNotice persistent={persistent} />
+    <StorageNotice persistent={persistent} recovered={recovered} />
   </article>;
 }

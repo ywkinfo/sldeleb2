@@ -30,7 +30,7 @@ jobs:
           node-version: 22
       - run: npm ci
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Build and Export
         run: |
           export NEXT_PUBLIC_BASE_PATH=/sldeleb2
