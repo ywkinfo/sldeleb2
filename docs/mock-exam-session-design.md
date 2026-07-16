@@ -1,7 +1,8 @@
 # DELE B2 모의고사 세션 설계 (확정본)
 
-확정일: 2026-07-13. 초안(work/mock-exam-session-design.md, 비추적)을 엔지니어링 리뷰
-결과로 대체한다. TODOS.md 2번 과제의 산출물이다.
+확정일: 2026-07-13, 읽기 presentation·전체 백업 반영: 2026-07-16.
+초안(work/mock-exam-session-design.md, 비추적)을 엔지니어링 리뷰 결과로 대체한다.
+TODOS.md 2번 과제의 산출물이다.
 
 ## 목적과 현재 범위
 
@@ -235,7 +236,7 @@ T5 `set-listening-lecture`.
 T3 single-use sentence insertion, T4 cloze 계약을 모두 동결한다. 구세션은
 presentation이 전혀 없을 때 MCQ로 해석한다.
 
-## NOT in scope (v1)
+## NOT in scope
 
 - 쓰기·말하기 시험 세션
 - 계정·서버 동기화
