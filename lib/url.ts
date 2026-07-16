@@ -16,8 +16,10 @@ export function absoluteUrl(path: string, base?: string): string {
   const baseUrl = base || process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
   const origin = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   const pathWithBase = sitePath(path);
+  const isSiteRoot = path === "/" || path === "";
 
-  return `${origin}${pathWithBase === "/" ? "/" : pathWithBase}`;
+  if (pathWithBase === "/") return `${origin}/`;
+  return `${origin}${pathWithBase}${isSiteRoot ? "/" : ""}`;
 }
 
 export function requestOrigin(): string {

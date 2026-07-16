@@ -105,6 +105,7 @@ function checkExport() {
     { file: path.join("exam", "index.html"), label: "canonical (/exam)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/?"`) },
     { file: path.join("exam", "history", "index.html"), label: "canonical (/exam/history)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/history/?"`) },
     { file: path.join("exam", "exam-reading-b2", "index.html"), label: "canonical (읽기 모의고사)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/exam-reading-b2/?"`) },
+    { file: "sitemap.xml", label: "sitemap <loc> (home)", pattern: new RegExp(`<loc>${publicBase}/</loc>`) },
     { file: "sitemap.xml", label: "sitemap <loc>", pattern: new RegExp(`<loc>${publicBase}/practice</loc>`) },
     { file: "sitemap.xml", label: "sitemap <loc> (연습 세트)", pattern: new RegExp(`<loc>${publicBase}/practice/set/set-reading-town</loc>`) },
     { file: "sitemap.xml", label: "sitemap <loc> (/exam)", pattern: new RegExp(`<loc>${publicBase}/exam</loc>`) },

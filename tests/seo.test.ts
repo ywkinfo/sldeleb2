@@ -31,6 +31,9 @@ describe("practice set discovery metadata", () => {
     const sitemap = await response.text();
 
     expect(response.status).toBe(200);
+    expect(sitemap).toContain(
+      "<loc>https://ywkinfo.github.io/sldeleb2/</loc>",
+    );
     expect(getPublishedSets()).toHaveLength(23);
     for (const set of getPublishedSets()) {
       expect(sitemap).toContain(
