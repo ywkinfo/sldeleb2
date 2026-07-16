@@ -7,8 +7,14 @@ import { useAttempts } from "./useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { DIMENSIONS_WRITING, DIMENSIONS_SPEAKING, DIMENSION_LABELS, type RubricScore, type RubricScores } from "@/lib/rubric";
 
+const SCORE_MEANINGS: Record<RubricScore, string> = {
+  1: "다시 연습 필요",
+  2: "대체로 부합",
+  3: "자신 있게 수행",
+};
+
 export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writing" | "speaking" }) {
-  const { attempts, persistent, update, hydrated } = useAttempts();
+  const { attempts, persistent, recovered, update, hydrated } = useAttempts();
   const current = attempts[itemId]?.kind === "open" ? attempts[itemId] as OpenAttempt : undefined;
   
   const dimensions = skill === "writing" ? DIMENSIONS_WRITING : DIMENSIONS_SPEAKING;
@@ -37,21 +43,33 @@ export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writ
   return <div>
     <h3>자가점검</h3>
     <p className="muted" style={{ marginBottom: "1rem" }}>공식 점수나 합격 예측이 아닌, 다음 복습을 위한 나만의 기록입니다.</p>
+
+    <div className="rubric-scale-legend" aria-label="자가점검 점수 기준">
+      {([1, 2, 3] as RubricScore[]).map((score) => (
+        <span key={score}>
+          <strong>{score}</strong>
+          <span>{SCORE_MEANINGS[score]}</span>
+        </span>
+      ))}
+    </div>
     
     <div className="rubric-grid">
       {dimensions.map(dim => (
         <fieldset key={dim} className="rubric-row">
           <legend><strong>{DIMENSION_LABELS[dim] ?? dim}</strong></legend>
           <div className="score-group">
-            <button className="score-button" type="button" aria-pressed={selections[dim] === 1} onClick={() => handleScore(dim, 1)}>
-              <strong>1</strong><br />다시 연습 필요
-            </button>
-            <button className="score-button" type="button" aria-pressed={selections[dim] === 2} onClick={() => handleScore(dim, 2)}>
-              <strong>2</strong><br />대체로 부합
-            </button>
-            <button className="score-button" type="button" aria-pressed={selections[dim] === 3} onClick={() => handleScore(dim, 3)}>
-              <strong>3</strong><br />자신 있게 수행
-            </button>
+            {([1, 2, 3] as RubricScore[]).map((score) => (
+              <button
+                key={score}
+                className="score-button"
+                type="button"
+                aria-label={`${DIMENSION_LABELS[dim] ?? dim} · ${score}점 · ${SCORE_MEANINGS[score]}`}
+                aria-pressed={selections[dim] === score}
+                onClick={() => handleScore(dim, score)}
+              >
+                <strong aria-hidden="true">{score}</strong>
+              </button>
+            ))}
           </div>
         </fieldset>
       ))}
@@ -69,6 +87,6 @@ export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writ
     </div>
 
     {current && <p style={{ marginTop: "1.2rem" }}><button className="button secondary small" type="button" aria-pressed={current.flagged} onClick={() => update(setAttemptFlag(current, !current.flagged))}>{current.flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}</button></p>}
-    <StorageNotice persistent={persistent} />
+    <StorageNotice persistent={persistent} recovered={recovered} />
   </div>;
 }

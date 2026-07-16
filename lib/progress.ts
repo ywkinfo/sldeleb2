@@ -1,4 +1,5 @@
 import type { PracticeSet, AttemptState } from "./types";
+import { sortPracticeSets } from "./sets";
 
 export interface SetProgress {
   total: number;
@@ -78,32 +79,33 @@ export function summarizeRate(correct: number, total: number): RateSummary {
 }
 
 export function pickNextSet(currentSetId: string, sets: PracticeSet[], attempts: Record<string, AttemptState>): PracticeSet | undefined {
-  const currentSetIndex = sets.findIndex(s => s.id === currentSetId);
+  const orderedSets = sortPracticeSets(sets);
+  const currentSetIndex = orderedSets.findIndex(s => s.id === currentSetId);
   if (currentSetIndex === -1) return undefined;
 
-  const currentSet = sets[currentSetIndex];
+  const currentSet = orderedSets[currentSetIndex];
   
   // 1. Same skill, next to end
-  for (let i = currentSetIndex + 1; i < sets.length; i++) {
-    if (sets[i].skill === currentSet.skill) {
-      const prog = summarizeSetProgress(sets[i], attempts);
-      if (prog.status !== "done") return sets[i];
+  for (let i = currentSetIndex + 1; i < orderedSets.length; i++) {
+    if (orderedSets[i].skill === currentSet.skill) {
+      const prog = summarizeSetProgress(orderedSets[i], attempts);
+      if (prog.status !== "done") return orderedSets[i];
     }
   }
 
   // 2. Same skill, start to current
   for (let i = 0; i < currentSetIndex; i++) {
-    if (sets[i].skill === currentSet.skill) {
-      const prog = summarizeSetProgress(sets[i], attempts);
-      if (prog.status !== "done") return sets[i];
+    if (orderedSets[i].skill === currentSet.skill) {
+      const prog = summarizeSetProgress(orderedSets[i], attempts);
+      if (prog.status !== "done") return orderedSets[i];
     }
   }
 
   // 3. Different skill, start to end
-  for (let i = 0; i < sets.length; i++) {
-    if (sets[i].skill !== currentSet.skill) {
-      const prog = summarizeSetProgress(sets[i], attempts);
-      if (prog.status !== "done") return sets[i];
+  for (let i = 0; i < orderedSets.length; i++) {
+    if (orderedSets[i].skill !== currentSet.skill) {
+      const prog = summarizeSetProgress(orderedSets[i], attempts);
+      if (prog.status !== "done") return orderedSets[i];
     }
   }
 

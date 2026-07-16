@@ -1,5 +1,6 @@
 import { requestOrigin, absoluteUrl } from "../../lib/url";
 import { examBlueprints } from "../../data/examBlueprints";
+import { getPublishedSets } from "../../lib/sets";
 
 export const dynamic = "force-static";
 
@@ -7,7 +8,9 @@ const routes = [
   "/",
   "/materials",
   "/practice",
+  ...getPublishedSets().map((set) => `/practice/set/${set.id}`),
   "/exam",
+  "/exam/history",
   ...examBlueprints.map((blueprint) => `/exam/${blueprint.id}`),
   "/review",
   "/guide",

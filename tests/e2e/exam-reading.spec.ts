@@ -51,7 +51,7 @@ test('submitting grades all 36 with Tarea denominators 6/10/6/14', async ({ page
   await startReadingExam(page);
   // 몇 문항만 응답하고 제출(미응답은 오답으로 집계, 분모는 그대로).
   await page.locator('.question').nth(0).locator('.option').first().click();
-  await page.locator('.question').nth(10).locator('.option').first().click();
+  await page.locator('.question').nth(10).getByRole('radio').first().click();
 
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: '답안 제출' }).first().click();
@@ -108,7 +108,8 @@ test('no horizontal overflow on a 375px dark viewport', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.setViewportSize({ width: 375, height: 800 });
   await startReadingExam(page);
-  await expect(page.locator('.passage[lang="es"]').first()).toBeVisible();
+  const workspace = page.locator('.reading-workspace').first();
+  await expect(workspace.getByRole('button', { name: '지문 보기' })).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

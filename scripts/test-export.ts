@@ -16,8 +16,10 @@ function checkExport() {
     "robots.txt",
     "sitemap.xml",
     path.join("exam", "index.html"),
+    path.join("exam", "history", "index.html"),
     path.join("exam", "exam-listening-b2", "index.html"),
     path.join("exam", "exam-reading-b2", "index.html"),
+    path.join("practice", "set", "set-reading-town", "index.html"),
   ];
 
   let hasError = false;
@@ -50,10 +52,14 @@ function checkExport() {
     { file: "index.html", label: "canonical (home)", pattern: new RegExp(`rel="canonical" href="${publicBase}/?"`) },
     { file: "index.html", label: "og:image", pattern: new RegExp(`property="og:image" content="${publicBase}/og\\.png"`) },
     { file: path.join("practice", "index.html"), label: "canonical (/practice)", pattern: new RegExp(`rel="canonical" href="${publicBase}/practice/?"`) },
+    { file: path.join("practice", "set", "set-reading-town", "index.html"), label: "canonical (연습 세트)", pattern: new RegExp(`rel="canonical" href="${publicBase}/practice/set/set-reading-town/?"`) },
     { file: path.join("exam", "index.html"), label: "canonical (/exam)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/?"`) },
+    { file: path.join("exam", "history", "index.html"), label: "canonical (/exam/history)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/history/?"`) },
     { file: path.join("exam", "exam-reading-b2", "index.html"), label: "canonical (읽기 모의고사)", pattern: new RegExp(`rel="canonical" href="${publicBase}/exam/exam-reading-b2/?"`) },
     { file: "sitemap.xml", label: "sitemap <loc>", pattern: new RegExp(`<loc>${publicBase}/practice</loc>`) },
+    { file: "sitemap.xml", label: "sitemap <loc> (연습 세트)", pattern: new RegExp(`<loc>${publicBase}/practice/set/set-reading-town</loc>`) },
     { file: "sitemap.xml", label: "sitemap <loc> (/exam)", pattern: new RegExp(`<loc>${publicBase}/exam</loc>`) },
+    { file: "sitemap.xml", label: "sitemap <loc> (/exam/history)", pattern: new RegExp(`<loc>${publicBase}/exam/history</loc>`) },
     { file: "sitemap.xml", label: "sitemap <loc> (읽기 모의고사)", pattern: new RegExp(`<loc>${publicBase}/exam/exam-reading-b2</loc>`) },
     { file: "robots.txt", label: "robots Sitemap", pattern: new RegExp(`Sitemap: ${publicBase}/sitemap\\.xml`) },
   ];

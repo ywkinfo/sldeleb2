@@ -141,17 +141,17 @@ Después de años en la misma oficina, pedí un año sabático y me marché a Ja
     id: 'reading-t3-semana-cuatro',
     task: 'tarea3',
     title: '¿Menos horas, más vida?',
-    passage: `Cada vez más empresas europeas experimentan con la semana laboral de cuatro días. [1] Por eso, sus defensores insisten en que la clave está en la concentración, no en la cantidad de horas.
+    passage: `Cada vez más empresas europeas experimentan con la semana laboral de cuatro días. [[slot:1]] Por eso, sus defensores insisten en que la clave está en la concentración, no en la cantidad de horas.
 
-Los primeros ensayos han dado resultados prometedores. En Islandia, por ejemplo, la productividad no bajó. [2] Muchos trabajadores afirmaron, además, que dormían mejor y discutían menos en casa.
+Los primeros ensayos han dado resultados prometedores. En Islandia, por ejemplo, la productividad no bajó. [[slot:2]] Muchos trabajadores afirmaron, además, que dormían mejor y discutían menos en casa.
 
-Aun así, el modelo no encaja igual en todos los sectores. [3] En esos casos, reducir la jornada exige contratar a más personas, lo que encarece el servicio.
+Aun así, el modelo no encaja igual en todos los sectores. [[slot:3]] En esos casos, reducir la jornada exige contratar a más personas, lo que encarece el servicio.
 
-Los críticos señalan otro riesgo. [4] Si eso ocurriera, el supuesto avance se convertiría en una trampa para el empleado.
+Los críticos señalan otro riesgo. [[slot:4]] Si eso ocurriera, el supuesto avance se convertiría en una trampa para el empleado.
 
-Con todo, el debate deja una enseñanza que va más allá del horario. [5] En otras palabras, el problema no es el reloj, sino cómo aprovechamos el tiempo.
+Con todo, el debate deja una enseñanza que va más allá del horario. [[slot:5]] En otras palabras, el problema no es el reloj, sino cómo aprovechamos el tiempo.
 
-[6] Solo así la semana de cuatro días dejará de ser una moda para convertirse en una forma distinta de entender el trabajo.`,
+[[slot:6]] Solo así la semana de cuatro días dejará de ser una moda para convertirse en una forma distinta de entender el trabajo.`,
     sourceNote,
     ...examReadingReview,
   },
@@ -159,15 +159,15 @@ Con todo, el debate deja una enseñanza que va más allá del horario. [5] En ot
     id: 'reading-t4-podcast',
     task: 'tarea4',
     title: 'El regreso de escuchar historias',
-    passage: `Hace unos años, muchos pensaban que la radio tradicional estaba condenada a desaparecer. [1], la llegada de los pódcast ha demostrado justo lo contrario. Cada mes, millones de personas descargan programas [2] escucharlos cuando y donde quieren.
+    passage: `Hace unos años, muchos pensaban que la radio tradicional estaba condenada a desaparecer. [[slot:1]], la llegada de los pódcast ha demostrado justo lo contrario. Cada mes, millones de personas descargan programas [[slot:2]] escucharlos cuando y donde quieren.
 
-El éxito de este formato no [3] únicamente a la comodidad. A diferencia de la televisión, el pódcast permite hacer otras cosas [4] se escucha: cocinar, pasear o conducir. Además, existen programas [5] tratan temas muy específicos, de modo que cada oyente encuentra algo adecuado [6] sus intereses.
+El éxito de este formato no [[slot:3]] únicamente a la comodidad. A diferencia de la televisión, el pódcast permite hacer otras cosas [[slot:4]] se escucha: cocinar, pasear o conducir. Además, existen programas [[slot:5]] tratan temas muy específicos, de modo que cada oyente encuentra algo adecuado [[slot:6]] sus intereses.
 
-Los expertos señalan que, [7] producir un pódcast es relativamente barato, mantenerlo con calidad exige mucho tiempo. Por eso, muchos proyectos [8] con entusiasmo pero desaparecen en pocos meses. Los que sobreviven suelen [9] una comunidad fiel de seguidores.
+Los expertos señalan que, [[slot:7]] producir un pódcast es relativamente barato, mantenerlo con calidad exige mucho tiempo. Por eso, muchos proyectos [[slot:8]] con entusiasmo pero desaparecen en pocos meses. Los que sobreviven suelen [[slot:9]] una comunidad fiel de seguidores.
 
-Algunas plataformas han empezado a pagar a los creadores [10] sigan publicando de forma regular. No está claro todavía si ese modelo [11] sostenible a largo plazo. Lo que sí parece seguro es que, [12] primera vez en décadas, escuchar se ha vuelto tan popular como leer o ver la pantalla.
+Algunas plataformas han empezado a pagar a los creadores [[slot:10]] sigan publicando de forma regular. No está claro todavía si ese modelo [[slot:11]] sostenible a largo plazo. Lo que sí parece seguro es que, [[slot:12]] primera vez en décadas, escuchar se ha vuelto tan popular como leer o ver la pantalla.
 
-Quizá el secreto [13] en algo muy antiguo: a la gente siempre le ha gustado que le [14] una buena historia.`,
+Quizá el secreto [[slot:13]] en algo muy antiguo: a la gente siempre le ha gustado que le [[slot:14]] una buena historia.`,
     sourceNote,
     ...examReadingReview,
   },

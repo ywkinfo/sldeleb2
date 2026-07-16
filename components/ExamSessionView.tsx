@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ExamBlueprint, ExamItemContract, ExamSession, FinalizedExamSession } from "@/lib/types";
+import type { ExamBlueprint, ExamSession, FinalizedExamSession } from "@/lib/types";
 import {
   answerExamItem,
   applyPendingProjection,
@@ -24,7 +24,7 @@ import {
   type ResolvedExamItem,
 } from "@/lib/examSession";
 import { getDefaultAttemptStore } from "@/lib/storage";
-import { formatRemainingTime, getTimerAnnouncement } from "@/lib/timer";
+import { getTimerAnnouncement } from "@/lib/timer";
 import { sitePath } from "@/lib/url";
 import { EXAM_SKILL_COPY } from "@/lib/examCopy";
 import { practiceSets } from "@/data/practiceSets";
@@ -33,30 +33,17 @@ import { listeningScripts } from "@/data/listeningScripts";
 import { readingTexts } from "@/data/readingTexts";
 import { ExamQuestion } from "./ExamQuestion";
 import { ExamAudioPlayer } from "./ExamAudioPlayer";
+import { ExamQuestionPalette, type ExamQuestionPaletteHandle } from "./ExamQuestionPalette";
+import { ExamResultView } from "./ExamResultView";
+import { ExamToolbar } from "./ExamToolbar";
+import { ReadingPresentation } from "./ReadingPresentation";
+import { ReadingWorkspace } from "./ReadingWorkspace";
 import { StorageNotice } from "./StorageNotice";
 
 const content = { practiceSets, practiceItems, listeningScripts, readingTexts };
 
 function taskLabel(task: string): string {
   return task.replace("tarea", "Tarea ");
-}
-
-function StickyBar({ children }: { children: React.ReactNode }) {
-  const [top, setTop] = useState(0);
-  useEffect(() => {
-    const header = document.querySelector<HTMLElement>(".site-header");
-    if (!header || typeof ResizeObserver === "undefined") return;
-    const update = () => setTop(header.offsetHeight);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(header);
-    return () => observer.disconnect();
-  }, []);
-  return (
-    <div className="set-progress-bar" style={{ top }}>
-      <div className="site-shell set-progress-row">{children}</div>
-    </div>
-  );
 }
 
 export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
@@ -66,20 +53,24 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
   const [hydrated, setHydrated] = useState(false);
   const [sessions, setSessions] = useState<readonly ExamSession[]>([]);
   const [persistent, setPersistent] = useState(true);
+  const [recovered, setRecovered] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [announcement, setAnnouncement] = useState("");
   const [projectionWarning, setProjectionWarning] = useState(false);
   const prevRemaining = useRef<number | null>(null);
+  const paletteRef = useRef<ExamQuestionPaletteHandle>(null);
 
   useEffect(() => {
     const unsubscribe = examStore.subscribe((next) => {
       setSessions(next.snapshot.sessions);
       setPersistent(next.persistent);
+      setRecovered(next.recovered);
     });
     const loaded = examStore.load();
     setSessions(loaded.snapshot.sessions);
     setPersistent(loaded.persistent);
+    setRecovered(loaded.recovered);
 
     // 이어하기: 진행 중 세션이 있으면 복원하고 active 재생 슬롯을 닫는다.
     const active = findActiveSession(loaded.snapshot.sessions, blueprint.id);
@@ -134,6 +125,15 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
   // deadlineAt이 유일한 진실 — interval은 표시용이고, 포커스·가시성 변화 때도 재검사한다.
   const inProgress = session?.status === "in-progress";
   const deadlineAt = session?.deadlineAt;
+  useEffect(() => {
+    const root = document.documentElement;
+    if (inProgress) root.dataset.examActive = "true";
+    else delete root.dataset.examActive;
+    return () => {
+      delete root.dataset.examActive;
+    };
+  }, [inProgress]);
+
   useEffect(() => {
     if (!inProgress) return;
     const check = () => {
@@ -196,21 +196,32 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
   }
 
   if (!session) {
-    return <ExamIntro blueprint={blueprint} sessions={sessions} onStart={start} persistent={persistent} />;
+    return (
+      <ExamIntro
+        blueprint={blueprint}
+        sessions={sessions}
+        onStart={start}
+        persistent={persistent}
+        recovered={recovered}
+      />
+    );
   }
 
   if (session.status !== "in-progress") {
     return (
-      <ExamResult
-        session={session}
-        numberByItemId={numberByItemId}
-        projectionWarning={projectionWarning}
-        onRetryProjection={() => {
-          const { applied } = applyPendingProjection(session, attemptStore, examStore);
-          setProjectionWarning(!applied);
-        }}
-        onRestart={start}
-      />
+      <section className="page-section compact">
+        <div className="site-shell">
+          <ExamResultView
+            session={session}
+            projectionWarning={projectionWarning}
+            onRetryProjection={() => {
+              const { applied } = applyPendingProjection(session, attemptStore, examStore);
+              setProjectionWarning(!applied);
+            }}
+            onRestart={start}
+          />
+        </div>
+      </section>
     );
   }
 
@@ -230,26 +241,25 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
 
   return (
     <>
-      <StickyBar>
-        <span className={`exam-bar-timer ${remaining !== null && remaining <= 5 * 60_000 ? "low" : ""}`} aria-label="남은 시간">
-          {formatRemainingTime(remaining ?? 0)}
-        </span>
-        <span className="set-progress-count"><strong>{answeredCount}</strong> / {totalItems} 응답{flaggedCount > 0 ? ` · ★ ${flaggedCount}` : ""}</span>
-        <div className="progress set-progress-track" aria-hidden="true">
-          <span style={{ width: `${totalItems ? Math.round((answeredCount / totalItems) * 100) : 0}%` }} />
-        </div>
-        <button className="button small" type="button" onClick={submit}>답안 제출</button>
-      </StickyBar>
+      <ExamToolbar
+        remaining={remaining ?? 0}
+        answered={answeredCount}
+        total={totalItems}
+        persistent={persistent}
+        onOpenPalette={(opener) => paletteRef.current?.open(opener)}
+        onSubmit={submit}
+      />
       <span className="sr-only" aria-live="polite">{announcement}</span>
 
-      <section className="page-section compact">
-        <div className="site-shell practice-stack">
-          {resolution && resolution.missingItemIds.length > 0 && (
-            <p className="storage-warning" role="alert">
-              콘텐츠 변경으로 {resolution.missingItemIds.length}개 문항을 불러올 수 없어 미응답으로 처리됩니다.
-            </p>
-          )}
-          {session.sections.map((section) => {
+      <section className="page-section compact exam-active-content">
+        <div className="site-shell exam-session-layout">
+          <div className="practice-stack exam-session-main">
+            {resolution && resolution.missingItemIds.length > 0 && (
+              <p className="storage-warning" role="alert">
+                콘텐츠 변경으로 {resolution.missingItemIds.length}개 문항을 불러올 수 없어 미응답으로 처리됩니다.
+              </p>
+            )}
+            {session.sections.map((section) => {
             const entryById = new Map(
               (resolution?.resolved ?? [])
                 .filter((entry) => section.itemIds.includes(entry.item.id))
@@ -298,14 +308,53 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
                             aria-labelledby={textMeta ? titleId : undefined}
                           >
                             {textMeta ? (
-                              <>
-                                <h2 lang="es" id={titleId}>{textMeta.title}</h2>
-                                <div className="passage" lang="es">{textMeta.passage}</div>
-                              </>
+                              section.presentation && section.presentation.kind !== "mcq" ? (
+                                <ReadingPresentation
+                                  presentation={section.presentation}
+                                  title={textMeta.title}
+                                  titleId={titleId}
+                                  passage={textMeta.passage}
+                                  items={entries.map((entry) => entry.item)}
+                                  numberForItem={(itemId) => numberByItemId.get(itemId) ?? 0}
+                                  stateByItemId={Object.fromEntries(
+                                    entries.map((entry) => [
+                                      entry.item.id,
+                                      { value: session.answers[entry.item.id], disabled: false },
+                                    ]),
+                                  )}
+                                  onSelect={(itemId, key) =>
+                                    mutate((current, at) => answerExamItem(current, itemId, key, at))
+                                  }
+                                  renderItemSupplement={(item) => {
+                                    const flagged = session.flaggedItemIds.includes(item.id);
+                                    return (
+                                      <div className="question-actions">
+                                        <button
+                                          className="button secondary small"
+                                          type="button"
+                                          aria-pressed={flagged}
+                                          onClick={() =>
+                                            mutate((current, at) => toggleExamFlag(current, item.id, at))
+                                          }
+                                        >
+                                          {flagged ? "★ 검토 표시 해제" : "☆ 검토 표시"}
+                                        </button>
+                                      </div>
+                                    );
+                                  }}
+                                />
+                              ) : (
+                                <ReadingWorkspace
+                                  title={textMeta.title}
+                                  titleId={titleId}
+                                  passage={textMeta.passage}
+                                >
+                                  {entries.map(question)}
+                                </ReadingWorkspace>
+                              )
                             ) : (
                               <p className="storage-warning" role="alert">지문 정보를 불러올 수 없습니다(콘텐츠 변경).</p>
                             )}
-                            {entries.map(question)}
                           </section>
                         );
                       });
@@ -338,15 +387,23 @@ export function ExamSessionView({ blueprint }: { blueprint: ExamBlueprint }) {
                     })}
               </article>
             );
-          })}
-          <div className="card flat">
-            <h2>제출</h2>
-            <p className="muted">제출하면 전체 문항이 한 번에 채점되고, 오답은 복습 큐에 반영됩니다. 제한 시간이 끝나면 자동 제출됩니다.</p>
-            <div className="question-actions">
-              <button className="button" type="button" onClick={submit}>답안 제출</button>
+            })}
+            <div className="card flat">
+              <h2>제출</h2>
+              <p className="muted">제출하면 전체 문항이 한 번에 채점되고, 오답은 복습 큐에 반영됩니다. 제한 시간이 끝나면 자동 제출됩니다.</p>
+              <div className="question-actions">
+                <button className="button" type="button" onClick={submit}>답안 제출</button>
+              </div>
             </div>
+            <StorageNotice persistent={persistent} recovered={recovered} />
           </div>
-          <StorageNotice persistent={persistent} />
+          <ExamQuestionPalette
+            ref={paletteRef}
+            sections={session.sections}
+            answers={session.answers}
+            flaggedItemIds={session.flaggedItemIds}
+            numberByItemId={numberByItemId}
+          />
         </div>
       </section>
     </>
@@ -358,11 +415,13 @@ function ExamIntro({
   sessions,
   onStart,
   persistent,
+  recovered,
 }: {
   blueprint: ExamBlueprint;
   sessions: readonly ExamSession[];
   onStart: () => void;
   persistent: boolean;
+  recovered: boolean;
 }) {
   const sections = snapshotBlueprint(blueprint, content);
   const totalItems = sections.reduce((sum, section) => sum + section.itemIds.length, 0);
@@ -383,17 +442,18 @@ function ExamIntro({
             {blueprint.skill === "listening" ? (
               <li>음원은 스크립트당 2회까지만 재생할 수 있고, 위치 이동(탐색)은 없습니다.</li>
             ) : (
-              <li>문항 수와 제한 시간은 공식 구성을 따르며, 지문 분량과 Tarea 2–4 풀이 형식은 학습용 객관식으로 근사합니다.</li>
+              <li>문항 수와 제한 시간, Tarea 2 매칭·Tarea 3 문장 삽입·Tarea 4 빈칸 형식을 반영한 창작 모의고사입니다.</li>
             )}
             <li>타이머는 멈출 수 없으며 시간이 끝나면 자동 제출됩니다.</li>
             <li>진행 상태는 이 브라우저에 저장되어 새로고침해도 이어집니다.</li>
             <li>제출하면 한 번에 채점되고 오답은 복습 큐로 이어집니다.</li>
-            <li>기록은 이 기기에만 남으며 최근 {MAX_TERMINAL_SESSIONS}회까지 보관됩니다. 진도 내보내기(백업)에는 포함되지 않습니다.</li>
+            <li>종료된 시험 기록은 일반적으로 최근 {MAX_TERMINAL_SESSIONS}회까지 보관되며, 복습 반영 대기 기록은 완료될 때까지 보호됩니다. 진도 백업에도 함께 포함됩니다.</li>
           </ul>
           <p className="badge warning">창작 문항 모의고사 · 공식 시험 점수가 아닙니다</p>
           <div className="question-actions" style={{ marginTop: "1rem" }}>
             <button className="button" type="button" onClick={onStart}>시험 시작</button>
             <a className="button secondary" href={sitePath("/exam")}>모의고사 목록</a>
+            <a className="button secondary" href={sitePath("/exam/history")}>시험 기록</a>
           </div>
         </article>
         {recent.length > 0 && (
@@ -401,109 +461,24 @@ function ExamIntro({
             <h2>최근 결과</h2>
             <div className="review-list">
               {recent.map((finished) => (
-                <div className="review-row" key={finished.id}>
+                <a
+                  className="review-row block-link"
+                  key={finished.id}
+                  href={sitePath(`/exam/history?session=${encodeURIComponent(finished.id)}`)}
+                >
                   <div>
                     <strong>{finished.result.correct} / {finished.result.total} 정답</strong>
                     <div className="muted">
                       {new Date(finished.submittedAt).toLocaleDateString("ko-KR")} · {finished.status === "expired" ? "시간 만료 자동 제출" : "제출 완료"}
                     </div>
                   </div>
-                </div>
+                  <span aria-hidden="true">결과 보기 →</span>
+                </a>
               ))}
             </div>
           </article>
         )}
-        <StorageNotice persistent={persistent} />
-      </div>
-    </section>
-  );
-}
-
-function ExamResult({
-  session,
-  numberByItemId,
-  projectionWarning,
-  onRetryProjection,
-  onRestart,
-}: {
-  session: FinalizedExamSession;
-  numberByItemId: Map<string, number>;
-  projectionWarning: boolean;
-  onRetryProjection: () => void;
-  onRestart: () => void;
-}) {
-  // 결과 표시도 세션에 동결된 계약을 우선 사용해 배포와 무관하게 한다.
-  // 계약이 없는 옛 세션만 라이브 콘텐츠로 폴백한다.
-  const contractById = useMemo(() => {
-    const map = new Map<string, ExamItemContract>();
-    for (const section of session.sections) {
-      for (const contract of section.items ?? []) map.set(contract.id, contract);
-    }
-    return map;
-  }, [session]);
-  const liveItemById = useMemo(() => new Map(practiceItems.map((item) => [item.id, item])), []);
-  const pending = projectionWarning || session.progressProjection.status === "pending";
-  const tasks = session.sections.map((section) => section.task);
-
-  return (
-    <section className="page-section compact">
-      <div className="site-shell practice-stack">
-        <article className="card" id="exam-result">
-          <div className="eyebrow">{session.status === "expired" ? "시간 만료로 자동 제출" : "제출 완료"}</div>
-          <h2>정답 {session.result.correct} / {session.result.total}</h2>
-          <p className="badge warning">창작 문항 모의고사 결과 · 공식 DELE 점수가 아닙니다</p>
-          <div className="exam-bytask">
-            {tasks.map((task) => {
-              const tally = session.result.byTask[task];
-              return (
-                <div className="stat" key={task}>
-                  <span className="eyebrow">{taskLabel(task)}</span>
-                  <strong>{tally ? `${tally.correct}/${tally.total}` : "–"}</strong>
-                </div>
-              );
-            })}
-          </div>
-          {pending && (
-            <p className="storage-warning" role="alert" style={{ marginTop: "1rem" }}>
-              복습 큐 반영이 아직 완료되지 않았습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.{" "}
-              <button className="button secondary small" type="button" onClick={onRetryProjection}>다시 반영</button>
-            </p>
-          )}
-          <div className="question-actions" style={{ marginTop: "1.2rem" }}>
-            <button className="button" type="button" onClick={onRestart}>다시 응시하기</button>
-            <a className="button secondary" href={sitePath("/review")}>복습 큐로 가기</a>
-            <a className="button secondary" href={sitePath("/exam")}>모의고사 목록</a>
-          </div>
-        </article>
-
-        <article className="card flat">
-          <h2>문항별 결과</h2>
-          <div className="review-list">
-            {session.result.items.map((entry) => {
-              const contract = contractById.get(entry.itemId);
-              const live = liveItemById.get(entry.itemId);
-              const liveMcq = live && live.kind === "mcq" ? live : undefined;
-              const prompt = contract?.prompt ?? liveMcq?.prompt ?? entry.itemId;
-              const explanation = contract?.explanationKo ?? liveMcq?.explanationKo;
-              return (
-                <div className="review-row" key={entry.itemId}>
-                  <div>
-                    <strong>
-                      <span className={entry.correct ? "option-state is-correct" : "option-state is-wrong"}>
-                        {entry.correct ? "✓" : "✕"}
-                      </span>{" "}
-                      {numberByItemId.get(entry.itemId) ?? "–"}. <span lang="es">{prompt}</span>
-                    </strong>
-                    <div className="muted">
-                      내 답 {entry.selectedAnswer ? entry.selectedAnswer.toUpperCase() : "미응답"} · 정답 {entry.correctAnswer.toUpperCase()}
-                      {explanation ? ` — ${explanation}` : ""}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </article>
+        <StorageNotice persistent={persistent} recovered={recovered} />
       </div>
     </section>
   );

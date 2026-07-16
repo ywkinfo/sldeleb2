@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { REVIEW_URL, seedReview } from './review-helpers';
 
-test('filters the queue by skill and reason, and resets when empty', async ({ page }) => {
+test('@mobile-smoke filters the queue by skill and reason, and resets when empty', async ({ page }) => {
   await seedReview(page);
   await page.goto(REVIEW_URL);
 

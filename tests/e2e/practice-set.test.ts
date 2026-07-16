@@ -15,6 +15,8 @@ test.describe('Practice Set Flow', () => {
     await setLink.click();
 
     await expect(page.locator('h1')).toContainText('공유 도서관');
+    await expect(page.getByRole('navigation', { name: '현재 위치' }).getByRole('link', { name: '읽기 연습' }))
+      .toHaveAttribute('href', `${basePath}/practice?skill=reading`);
 
     // Select wrong answer for first question (option A, which is incorrect)
     const firstOption = page.locator('.options').first().locator('button[role="radio"]').nth(0);

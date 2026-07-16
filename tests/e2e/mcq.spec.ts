@@ -76,5 +76,15 @@ test.describe('MCQ Component & Materials Smoke', () => {
   test('Materials Filter smoke test', async ({ page }) => {
     await page.goto(`${basePath}/materials`);
     await expect(page.locator('label:has-text("과제")')).toBeHidden();
+
+    const skillFilter = page.locator('#filter-skill');
+    const answerKey = page.locator('.resource-card', { hasText: 'DELE B2 2013 시행 정답' });
+
+    await skillFilter.selectOption('reading');
+    await expect(answerKey).toBeVisible();
+    await skillFilter.selectOption('listening');
+    await expect(answerKey).toBeVisible();
+    await skillFilter.selectOption('writing');
+    await expect(answerKey).toBeHidden();
   });
 });

@@ -3,19 +3,18 @@
 확정일: 2026-07-13. 초안(work/mock-exam-session-design.md, 비추적)을 엔지니어링 리뷰
 결과로 대체한다. TODOS.md 2번 과제의 산출물이다.
 
-## 목적과 v1 범위
+## 목적과 현재 범위
 
 실제 시험 환경(제한 시간·일괄 채점·재생 제한)을 재현하는 모의고사 세션.
 
-- **v1은 듣기 영역만.** 현재 콘텐츠 중 듣기만 공식 청사진(Tarea 1~5 × 6문항
-  = 30문항 / 40분)과 정확히 일치한다.
+- 듣기(Tarea 1~5 × 6문항 = 30문항 / 40분)와 읽기(Tarea 1~4 = 36문항 /
+  70분) 모의고사를 제공한다.
 - 블루프린트는 세트 ID를 명시적 순서로 나열한다. Tarea 3 세트가 두 개
   (`set-listening-t3-arte`, `set-listening-interview`) 존재하므로 순서·구성은
   항상 블루프린트가 결정하고, 추론하지 않는다.
-- 읽기는 공식 36문항 대비 콘텐츠가 부족(약 21~23문항)하므로 콘텐츠 보강 후
-  확장한다. 데이터 모델은 `AutoGradedExamSkill = "reading" | "listening"`
-  까지만 일반화한다(쓰기·말하기는 `answers: Record<string, string>` 계약과
-  맞지 않으므로 범위 밖).
+- 데이터 모델은 `AutoGradedExamSkill = "reading" | "listening"`까지만
+  일반화한다. 쓰기·말하기는 `answers: Record<string, string>` 자동 채점 계약과
+  맞지 않으므로 범위 밖이다.
 
 ## 저장 아키텍처 — 별도 키, `dele-b2:v1` 불변
 
@@ -25,8 +24,8 @@
   근거: 기존 클라이언트는 같은 키의 파싱 실패 시 빈 스냅샷으로 리셋한다
   (lib/storage.ts). 같은 키에서 스키마를 올리면 배포 후 열려 있는 구버전
   탭이 진도를 초기화할 수 있다. 별도 키는 구버전이 무시하므로 안전하다.
-- 진도 export/import(v1)에는 세션이 포함되지 않는다. 세션 export/import는
-  범위 밖(후속 과제).
+- 전체 백업 envelope(`dele-b2-backup`, exportVersion 1)는 진도와 terminal
+  시험 세션을 함께 다루며, 기존 ProgressSnapshot 단독 파일도 가져올 수 있다.
 
 ## 데이터 모델
 
@@ -69,6 +68,7 @@ interface ExamSectionSnapshot {
   scriptIds: string[];        // scripts[].scriptId와 정확히 일치
   items?: ExamItemContract[];    // 선택: 없으면 옛(ID-only) 세션 → 로드 시 라이브 폴백
   scripts?: ExamScriptContract[];
+  presentation?: ReadingPresentationContract; // 동결 읽기 섹션만
 }
 
 interface ExamResultItem {
@@ -197,7 +197,14 @@ finalize 1회
 
 - terminal 세션은 최근 **50개**만 유지한다. in-progress와 projection pending
   세션은 절대 삭제하지 않는다. pruning은 projection complete 시에만 실행한다.
-- 세션 export/import는 지원하지 않으며, 이 보존 한도를 UI 안내에 명시한다.
+- 전체 백업(`dele-b2-backup`, exportVersion 1)은 terminal 세션만 포함한다.
+  export 사본에서는 pending projection을 진도 사본에 먼저 반영하고 세션의
+  projection을 complete로 정규화하며, 실제 로컬 저장 상태는 변경하지 않는다.
+- import는 진도를 먼저 병합한 뒤 terminal 시험 기록을 별도로 병합한다. 같은 ID의
+  로컬 terminal은 유지하고, 같은 ID의 로컬 in-progress와 가져온 terminal이
+  충돌하면 terminal을 우선한다. 두 저장 영역의 영속 여부는 독립적으로 보고한다.
+- 삭제는 projection complete인 terminal에만 허용한다. 진행 중·pending 세션은
+  단건 삭제와 전체 삭제 모두에서 보호한다.
 
 ## 블루프린트 검증 (lib/validate.ts)
 
@@ -222,16 +229,16 @@ T5 `set-listening-lecture`.
 동결한다. 듣기 스냅샷 형태는 불변(읽기 섹션만 `textIds/texts` 방출, frozen 판정은
 `items` 유무만 사용). 검증기는 `texts/textIds` 한쪽만 존재·중복·누락·잉여·섹션 밖
 `textId`·교차 skill ID를 거부하고, 옛(계약 없는) 읽기 세션은 라이브 지문으로 폴백한다.
-`exam-reading-b2` (version 1, 70분): T1 `set-reading-library`(6) → T2
+`exam-reading-b2` (version 2, 70분): T1 `set-reading-library`(6) → T2
 `set-reading-anio-fuera`(10) → T3 `set-reading-semana-cuatro`(6) → T4
-`set-reading-podcast`(14) = 36문항. 실제 T2 매칭·T3 삽입·T4 cloze 상호작용은
-단일 지문 + 객관식으로 근사(문항 수·시간만 공식 구성).
+`set-reading-podcast`(14) = 36문항. 새 세션은 T1 MCQ, T2 reusable matching,
+T3 single-use sentence insertion, T4 cloze 계약을 모두 동결한다. 구세션은
+presentation이 전혀 없을 때 MCQ로 해석한다.
 
 ## NOT in scope (v1)
 
-- 실제 T2 매칭·T3 문장 삽입·T4 cloze 전용 상호작용·중복 선택 방지 UI
 - 쓰기·말하기 시험 세션
-- 모의고사 세션 export/import, 계정·서버 동기화, 기기 간 이전
+- 계정·서버 동기화
 - 공식 시험처럼 Tarea별 음원을 자동 순차 재생하는 단일 방송 트랙
 - 부정행위 방지(개발자 도구·페이지 복제 차단 등)
 - Web Locks 기반 멀티탭 단일 writer

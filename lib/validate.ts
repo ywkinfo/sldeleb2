@@ -1,5 +1,6 @@
 import type {
   ContentReviewMetadata,
+  ExamSkill,
   ExamBlueprint,
   ListeningMCQItem,
   ListeningScript,
@@ -10,6 +11,8 @@ import type {
   ReadingText,
   Task,
 } from "./types";
+// @ts-expect-error Node's type-stripping runtime requires explicit .ts extensions.
+import { validateReadingPresentationContent } from "./readingPresentation.ts";
 
 export interface ContentCollections {
   officialResources: readonly OfficialResource[];
@@ -38,6 +41,13 @@ const SKILL_TASKS: Record<string, readonly Task[]> = {
   writing: ["tarea1", "tarea2"],
   speaking: ["tarea1", "tarea2", "tarea3"],
 };
+
+const EXAM_SKILLS: readonly ExamSkill[] = [
+  "reading",
+  "listening",
+  "writing",
+  "speaking",
+];
 
 function add(
   issues: ValidationIssue[],
@@ -336,10 +346,40 @@ export function validateContent(collections: ContentCollections): ValidationIssu
     if (!resource.rightsNote.trim()) add(issues, "officialResources", resource.id, "rightsNote", "Rights note is required");
     validateOfficialUrl(resource, "officialUrl", issues);
     validateOfficialUrl(resource, "fallbackUrl", issues);
-    if (resource.skill === "all" && resource.task !== undefined) {
-      add(issues, "officialResources", resource.id, "task", "An all-skill resource cannot target one task");
-    } else if (resource.skill !== "all" && !validTaskForSkill(resource.skill, resource.task)) {
-      add(issues, "officialResources", resource.id, "task", `Invalid task for ${resource.skill}`);
+    const skills = Array.isArray(resource.skills) ? resource.skills : [];
+    if (skills.length === 0) {
+      add(issues, "officialResources", resource.id, "skills", "At least one skill is required");
+    }
+    if (new Set(skills).size !== skills.length) {
+      add(issues, "officialResources", resource.id, "skills", "Skills must be unique");
+    }
+    const invalidSkills = skills.filter(
+      (skill) => !EXAM_SKILLS.includes(skill as ExamSkill),
+    );
+    if (invalidSkills.length > 0) {
+      add(
+        issues,
+        "officialResources",
+        resource.id,
+        "skills",
+        `Invalid skills: ${invalidSkills.join(", ")}`,
+      );
+    }
+    if (
+      resource.task !== undefined &&
+      skills.some(
+        (skill) =>
+          EXAM_SKILLS.includes(skill as ExamSkill) &&
+          !validTaskForSkill(skill, resource.task),
+      )
+    ) {
+      add(
+        issues,
+        "officialResources",
+        resource.id,
+        "task",
+        `Invalid task for skills: ${skills.join(", ")}`,
+      );
     }
   }
 
@@ -427,6 +467,48 @@ export function validateContent(collections: ContentCollections): ValidationIssu
     if (new Set(set.itemIds).size !== set.itemIds.length) {
       add(issues, "practiceSets", set.id, "itemIds", "Set item IDs must be unique");
     }
+    if (set.mode !== "guided" && set.mode !== "exam-prep") {
+      add(issues, "practiceSets", set.id, "mode", "Mode must be guided or exam-prep");
+    }
+    if (!Number.isInteger(set.sequence) || set.sequence < 1) {
+      add(issues, "practiceSets", set.id, "sequence", "Sequence must be a positive integer");
+    }
+    if (!validTaskForSkill(set.skill, set.task)) {
+      add(issues, "practiceSets", set.id, "task", `${set.task} is not valid for ${set.skill}`);
+    }
+
+    if (set.presentation !== undefined) {
+      if (set.skill !== "reading") {
+        add(
+          issues,
+          "practiceSets",
+          set.id,
+          "presentation",
+          "Reading presentation is allowed only on reading sets",
+        );
+      } else {
+        const readingItems = set.itemIds.flatMap((itemId) => {
+          const item = itemById.get(itemId);
+          return item?.kind === "mcq" && item.skill === "reading" ? [item] : [];
+        });
+        const referencedTextIds = [
+          ...new Set(readingItems.map((item) => item.textId)),
+        ];
+        const passages = referencedTextIds.flatMap((textId) => {
+          const text = textById.get(textId);
+          return text ? [text.passage] : [];
+        });
+        for (const issue of validateReadingPresentationContent({
+          presentation: set.presentation,
+          itemIds: set.itemIds,
+          items: readingItems,
+          passages,
+        })) {
+          add(issues, "practiceSets", set.id, issue.field, issue.message);
+        }
+      }
+    }
+
     for (const itemId of set.itemIds) {
       const item = itemById.get(itemId);
       if (!item) {
@@ -439,7 +521,54 @@ export function validateContent(collections: ContentCollections): ValidationIssu
       if (set.skill !== "mixed" && item.skill !== set.skill) {
         add(issues, "practiceSets", set.id, "skill", `${itemId} does not match set skill ${set.skill}`);
       }
+      const itemTask =
+        item.kind !== "mcq"
+          ? item.task
+          : item.skill === "reading"
+            ? textById.get(item.textId)?.task
+            : scriptById.get(item.scriptId)?.task;
+      if (set.task !== undefined && itemTask !== undefined && itemTask !== set.task) {
+        add(
+          issues,
+          "practiceSets",
+          set.id,
+          "task",
+          `${itemId} is ${itemTask}, set expects ${set.task}`,
+        );
+      }
     }
+  }
+
+  // 같은 영역·모드·Tarea 안의 순서는 1부터 빠짐없이 이어져야 목록 순서가
+  // 원본 배열 배치에 의존하지 않는다.
+  const sequenceGroups = new Map<string, PracticeSet[]>();
+  for (const set of collections.practiceSets) {
+    if (
+      (set.mode !== "guided" && set.mode !== "exam-prep") ||
+      !Number.isInteger(set.sequence) ||
+      set.sequence < 1
+    ) {
+      continue;
+    }
+    const key = `${set.skill}:${set.mode}:${set.task ?? "none"}`;
+    const group = sequenceGroups.get(key) ?? [];
+    group.push(set);
+    sequenceGroups.set(key, group);
+  }
+  for (const group of sequenceGroups.values()) {
+    const ordered = [...group].sort((a, b) => a.sequence - b.sequence || a.id.localeCompare(b.id));
+    ordered.forEach((set, index) => {
+      const expected = index + 1;
+      if (set.sequence !== expected) {
+        add(
+          issues,
+          "practiceSets",
+          set.id,
+          "sequence",
+          `Sequence must be contiguous from 1 within its catalog group; expected ${expected}, got ${set.sequence}`,
+        );
+      }
+    });
   }
 
   // 단일 소속: 한 문항은 최대 한 세트에만 속해야 한다(getSetIdForItem 가정). 같은 세트

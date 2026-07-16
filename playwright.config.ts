@@ -7,7 +7,7 @@ try {
     const match = line.match(/^([^#=]+)=(.*)$/);
     if (match) process.env[match[1].trim()] = match[2].trim();
   }
-} catch (e) {
+} catch {
   // Ignore missing .env.local
 }
 export default defineConfig({
@@ -32,6 +32,22 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile-chromium',
+      grep: /@mobile-smoke/,
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 390, height: 844 },
+      },
+    },
+    {
+      name: 'mobile-webkit',
+      grep: /@mobile-smoke/,
+      use: {
+        ...devices['iPhone 13'],
+        viewport: { width: 390, height: 844 },
+      },
     },
   ],
 });

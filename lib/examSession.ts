@@ -18,11 +18,16 @@ import type {
   PracticeSet,
   ProgressSnapshot,
   ReadingMCQItem,
+  ReadingPresentationContract,
   ReadingText,
   Task,
 } from "./types";
 import { orderItemsBySet } from "./sets";
 import { gradeMcqAttempt } from "./grading";
+import {
+  cloneReadingPresentationContract,
+  validateReadingPresentationContent,
+} from "./readingPresentation";
 import { isAttemptState, type AttemptStore, type StorageLike } from "./storage";
 
 export const EXAM_STORAGE_KEY = "dele-b2:exam:v1";
@@ -112,6 +117,9 @@ export function snapshotBlueprint(
         if (text) texts.push(toTextContract(text));
       }
     }
+    const presentation: ReadingPresentationContract = cloneReadingPresentationContract(
+      set?.presentation ?? { kind: "mcq" },
+    );
     return {
       task: section.task,
       // itemIds는 mcq 문항으로 한정해 계약(items)과 1:1 정합을 보장한다 —
@@ -121,7 +129,7 @@ export function snapshotBlueprint(
       scriptIds,
       items: mcqItems.map(toItemContract),
       scripts,
-      ...(isReading ? { textIds, texts } : {}),
+      ...(isReading ? { textIds, texts, presentation } : {}),
     };
   });
 }
@@ -526,7 +534,7 @@ function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
   if (hasTextIds !== hasTexts) return false; // 한쪽만 존재 거부.
   if (!hasItems) {
     // 옛(계약 없는) 세션 — 비파괴 통과하되, 지문 계약이 붙은 가상 frozen 읽기는 거부.
-    return !hasTextIds;
+    return !hasTextIds && section.presentation === undefined;
   }
 
   // 형태 검증.
@@ -589,10 +597,32 @@ function isExamSectionSnapshot(value: unknown): value is ExamSectionSnapshot {
   const referencedTextIds = new Set(
     section.items.flatMap((contract) => (contract.skill === "reading" ? [contract.textId] : [])),
   );
-  return (
+  const referencesAreComplete =
     contractScriptIds.every((id) => referencedScriptIds.has(id)) &&
-    contractTextIds.every((id) => referencedTextIds.has(id))
-  );
+    contractTextIds.every((id) => referencedTextIds.has(id));
+  if (!referencesAreComplete) return false;
+
+  if (section.presentation !== undefined) {
+    // presentation은 문항·지문까지 동결된 읽기 섹션에서만 유효하다.
+    if (
+      !hasTextIds ||
+      !section.items.every((contract) => contract.skill === "reading")
+    ) {
+      return false;
+    }
+    if (
+      validateReadingPresentationContent({
+        presentation: section.presentation,
+        itemIds: section.itemIds,
+        items: section.items,
+        passages: (section.texts ?? []).map((text) => text.passage),
+      }).length > 0
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function isExamResult(value: unknown): value is ExamResult {
@@ -638,6 +668,18 @@ export function isExamSession(value: unknown): value is ExamSession {
   // 세션 단위 all-or-nothing — 섹션은 모두 동결이거나 모두 옛(계약 없음)이어야 한다.
   const frozenFlags = (session.sections as ExamSectionSnapshot[]).map((s) => s.items !== undefined);
   if (frozenFlags.some(Boolean) && !frozenFlags.every(Boolean)) return false;
+  const readingSections = (session.sections as ExamSectionSnapshot[]).filter(
+    (section) => section.textIds !== undefined,
+  );
+  const hasAnyPresentation = readingSections.some(
+    (section) => section.presentation !== undefined,
+  );
+  if (
+    hasAnyPresentation &&
+    readingSections.some((section) => section.presentation === undefined)
+  ) {
+    return false;
+  }
 
   if (session.status === "in-progress") {
     return session.result === undefined && session.submittedAt === undefined;
@@ -658,11 +700,14 @@ export function isExamSession(value: unknown): value is ExamSession {
 export function isExamSessionSnapshot(value: unknown): value is ExamSessionSnapshot {
   if (!value || typeof value !== "object") return false;
   const snapshot = value as Record<string, unknown>;
-  return (
-    snapshot.schemaVersion === EXAM_SCHEMA_VERSION &&
-    Array.isArray(snapshot.sessions) &&
-    snapshot.sessions.every(isExamSession)
-  );
+  if (
+    snapshot.schemaVersion !== EXAM_SCHEMA_VERSION ||
+    !Array.isArray(snapshot.sessions) ||
+    !snapshot.sessions.every(isExamSession)
+  ) {
+    return false;
+  }
+  return !hasDuplicates(snapshot.sessions.map((session) => session.id));
 }
 
 export function parseExamSessionSnapshot(raw: string): ExamSessionSnapshot | null {
@@ -685,6 +730,16 @@ export function findActiveSession(
     if (session.status === "in-progress" && session.blueprintId === blueprintId) return session;
   }
   return undefined;
+}
+
+export function findNextInProgressDeadline(
+  sessions: readonly Pick<ExamSession, "status" | "deadlineAt">[],
+  now: number,
+): number | undefined {
+  const future = sessions
+    .filter((session) => session.status === "in-progress" && session.deadlineAt > now)
+    .map((session) => session.deadlineAt);
+  return future.length > 0 ? Math.min(...future) : undefined;
 }
 
 export function findPendingProjectionSessions(sessions: readonly ExamSession[]): FinalizedExamSession[] {
@@ -714,21 +769,126 @@ export function upsertSessionInList(sessions: readonly ExamSession[], incoming: 
  * terminal 세션을 MAX_TERMINAL_SESSIONS개까지만 유지한다. in-progress와
  * projection pending 세션은 절대 삭제하지 않는다.
  */
+function retainSessionHistory(sessions: readonly ExamSession[]): ExamSession[] {
+  const inProgress = sessions.filter((session) => session.status === "in-progress");
+  const pending = sessions.filter(
+    (session): session is FinalizedExamSession =>
+      session.status !== "in-progress" && session.progressProjection.status === "pending",
+  );
+  const completed = sessions
+    .filter(
+      (session): session is FinalizedExamSession =>
+        session.status !== "in-progress" && session.progressProjection.status === "complete",
+    )
+    .sort(
+      (a, b) =>
+        a.submittedAt - b.submittedAt ||
+        a.startedAt - b.startedAt ||
+        a.id.localeCompare(b.id),
+    );
+  const completeCapacity = Math.max(0, MAX_TERMINAL_SESSIONS - pending.length);
+  const retainedCompleted = completeCapacity === 0 ? [] : completed.slice(-completeCapacity);
+  return [...inProgress, ...pending, ...retainedCompleted];
+}
+
 export function pruneSessions(sessions: readonly ExamSession[]): ExamSession[] {
-  const terminalCount = sessions.filter((session) => session.status !== "in-progress").length;
-  let toRemove = terminalCount - MAX_TERMINAL_SESSIONS;
-  if (toRemove <= 0) return [...sessions];
-  const result: ExamSession[] = [];
-  for (const session of sessions) {
-    const removable =
-      toRemove > 0 && session.status !== "in-progress" && session.progressProjection.status === "complete";
-    if (removable) {
-      toRemove -= 1;
+  return retainSessionHistory(sessions);
+}
+
+export interface SessionMergeStats {
+  added: number;
+  updated: number;
+  skipped: number;
+}
+
+export interface TerminalSessionMergeResult {
+  sessions: ExamSession[];
+  stats: SessionMergeStats;
+  changed: boolean;
+}
+
+/**
+ * 백업에서 가져온 terminal 기록만 병합한다.
+ * 로컬 terminal은 항상 이기고, 같은 ID의 로컬 in-progress만 terminal로 승격한다.
+ * pending과 in-progress는 보호하며 complete terminal만 제출 시각 기준으로 정리한다.
+ */
+export function mergeTerminalSessions(
+  localSessions: readonly ExamSession[],
+  incomingSessions: readonly ExamSession[],
+): TerminalSessionMergeResult {
+  const working = [...localSessions];
+  const originalById = new Map(localSessions.map((session) => [session.id, session]));
+  const seenIncomingIds = new Set<string>();
+  const candidates: { id: string; kind: "added" | "updated" }[] = [];
+  let skipped = 0;
+
+  for (const incoming of incomingSessions) {
+    if (incoming.status === "in-progress" || seenIncomingIds.has(incoming.id)) {
+      skipped += 1;
       continue;
     }
-    result.push(session);
+    seenIncomingIds.add(incoming.id);
+
+    const local = originalById.get(incoming.id);
+    if (local?.status !== undefined && local.status !== "in-progress") {
+      skipped += 1;
+      continue;
+    }
+    if (local?.status === "in-progress") {
+      const index = working.findIndex((session) => session.id === incoming.id);
+      if (index !== -1) working[index] = incoming;
+      candidates.push({ id: incoming.id, kind: "updated" });
+      continue;
+    }
+
+    working.push(incoming);
+    candidates.push({ id: incoming.id, kind: "added" });
   }
-  return result;
+
+  const sessions = retainSessionHistory(working);
+  const retainedIds = new Set(sessions.map((session) => session.id));
+  const stats: SessionMergeStats = { added: 0, updated: 0, skipped };
+  for (const candidate of candidates) {
+    if (!retainedIds.has(candidate.id)) {
+      stats.skipped += 1;
+    } else {
+      stats[candidate.kind] += 1;
+    }
+  }
+
+  const changed =
+    sessions.length !== localSessions.length ||
+    sessions.some((session, index) => session !== localSessions[index]);
+  return { sessions, stats, changed };
+}
+
+function isDeletableSession(session: ExamSession): session is FinalizedExamSession {
+  return session.status !== "in-progress" && session.progressProjection.status === "complete";
+}
+
+export function deleteSessionFromList(
+  sessions: readonly ExamSession[],
+  sessionId: string,
+): { sessions: ExamSession[]; deleted: boolean } {
+  const targetIndex = sessions.findIndex(
+    (session) => session.id === sessionId && isDeletableSession(session),
+  );
+  if (targetIndex === -1) {
+    return { sessions: [...sessions], deleted: false };
+  }
+  const retained = [...sessions];
+  retained.splice(targetIndex, 1);
+  return {
+    sessions: retained,
+    deleted: true,
+  };
+}
+
+export function deleteCompletedTerminalSessionsFromList(
+  sessions: readonly ExamSession[],
+): { sessions: ExamSession[]; deleted: number } {
+  const retained = sessions.filter((session) => !isDeletableSession(session));
+  return { sessions: retained, deleted: sessions.length - retained.length };
 }
 
 // ---- 저장소 (AttemptStore 패턴, 별도 키) ----
@@ -859,14 +1019,31 @@ export class ExamSessionStore {
     return { persistent: false };
   }
 
-  /** terminal 우선 병합으로 upsert하고, complete terminal 저장 시에만 prune한다. */
+  /** terminal 우선 병합으로 upsert한 뒤 공통 보존 규칙을 적용한다. */
   upsertSession(session: ExamSession): { persistent: boolean } {
     const { snapshot } = this.load();
-    let sessions = upsertSessionInList(snapshot.sessions, session);
-    if (session.status !== "in-progress" && session.progressProjection.status === "complete") {
-      sessions = pruneSessions(sessions);
-    }
+    const sessions = pruneSessions(upsertSessionInList(snapshot.sessions, session));
     return this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions });
+  }
+
+  deleteSession(sessionId: string): { deleted: boolean; persistent: boolean } {
+    const loaded = this.load();
+    const result = deleteSessionFromList(loaded.snapshot.sessions, sessionId);
+    if (!result.deleted) {
+      return { deleted: false, persistent: loaded.persistent };
+    }
+    const saved = this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions: result.sessions });
+    return { deleted: true, persistent: saved.persistent };
+  }
+
+  deleteCompletedTerminalSessions(): { deleted: number; persistent: boolean } {
+    const loaded = this.load();
+    const result = deleteCompletedTerminalSessionsFromList(loaded.snapshot.sessions);
+    if (result.deleted === 0) {
+      return { deleted: 0, persistent: loaded.persistent };
+    }
+    const saved = this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions: result.sessions });
+    return { deleted: result.deleted, persistent: saved.persistent };
   }
 
   subscribe(listener: ExamStoreListener): () => void {
@@ -904,9 +1081,9 @@ export function applyPendingProjection(
   if (session.progressProjection.status !== "pending") {
     return { applied: true, session };
   }
-  const { snapshot } = attemptStore.load();
+  const loaded = attemptStore.load();
   const { snapshot: merged, changed } = applyProjectionToSnapshot(
-    snapshot,
+    loaded.snapshot,
     session.progressProjection.attempts,
   );
   if (changed) {
@@ -914,6 +1091,10 @@ export function applyPendingProjection(
     if (!saved.persistent) {
       return { applied: false, session };
     }
+  } else if (!loaded.persistent) {
+    // 직전 저장 실패가 메모리 fallback에는 payload를 남길 수 있다. 그 상태를
+    // "이미 반영됨"으로 오인해 complete로 바꾸면 브라우저 종료 시 진도가 사라진다.
+    return { applied: false, session };
   }
   const completed: FinalizedExamSession = { ...session, progressProjection: { status: "complete" } };
   examStore.upsertSession(completed);

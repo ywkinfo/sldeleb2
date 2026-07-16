@@ -21,7 +21,7 @@ import { SyncProgress } from "./SyncProgress";
 const SUMMARY_CARDS = ["읽기", "듣기", "쓰기·말하기", "다시 볼 항목"];
 
 export function ReviewBoard({ items }: { items: ReviewItemMeta[] }) {
-  const { attempts, persistent, hydrated, remove } = useAttempts();
+  const { attempts, persistent, recovered, hydrated, remove } = useAttempts();
   const metaById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const entries = useMemo(() => buildAttemptEntries(attempts, metaById), [attempts, metaById]);
 
@@ -52,7 +52,7 @@ export function ReviewBoard({ items }: { items: ReviewItemMeta[] }) {
   const hasMcq = reading.length + listening.length > 0;
 
   return <>
-    <StorageNotice persistent={persistent} />
+    <StorageNotice persistent={persistent} recovered={recovered} />
     <div className="review-summary">
       <div className="card flat"><span className="eyebrow">읽기</span><h3>{readingRate.text}</h3><span className="muted">{readingRate.kind === "percent" ? "최근 시도 기준 정답률" : `최근 시도 기준 (${RATE_MIN_ATTEMPTS}문항부터 %)`}</span><div className="progress"><span style={{ width: `${readingRate.pct}%` }} /></div></div>
       <div className="card flat"><span className="eyebrow">듣기</span><h3>{listeningRate.text}</h3><span className="muted">{listeningRate.kind === "percent" ? "최근 시도 기준 정답률" : `최근 시도 기준 (${RATE_MIN_ATTEMPTS}문항부터 %)`}</span><div className="progress"><span style={{ width: `${listeningRate.pct}%` }} /></div></div>

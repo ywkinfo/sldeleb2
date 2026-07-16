@@ -180,7 +180,11 @@ describe("importProgress & mergeSnapshots", () => {
       }
     });
     
-    expect(importProgress(store, jsonStr)).toEqual({ added: 0, updated: 1, skipped: 0 });
+    expect(importProgress(store, jsonStr)).toEqual({
+      stats: { added: 0, updated: 1, skipped: 0 },
+      persistent: true,
+      localRecovered: false,
+    });
     expect(store.load().snapshot.attempts["reading-1"].attemptCount).toBe(5);
   });
 
@@ -202,7 +206,11 @@ describe("importProgress & mergeSnapshots", () => {
       },
     });
 
-    expect(importProgress(store, incoming)).toEqual({ added: 1, updated: 1, skipped: 1 });
+    expect(importProgress(store, incoming)).toEqual({
+      stats: { added: 1, updated: 1, skipped: 1 },
+      persistent: true,
+      localRecovered: false,
+    });
     const merged = store.load().snapshot.attempts;
     expect(merged["keep-newer"].attemptCount).toBe(3);
     expect(merged["replace-older"].attemptCount).toBe(2);
@@ -213,5 +221,31 @@ describe("importProgress & mergeSnapshots", () => {
     const store = createAttemptStore(new FakeStorage());
     expect(importProgress(store, "not json")).toBeNull();
     expect(importProgress(store, JSON.stringify({ schemaVersion: 99, attempts: {} }))).toBeNull();
+  });
+
+  it("reports when an imported snapshot only persists in memory", () => {
+    const storage = new FakeStorage();
+    storage.throwOnSet = true;
+    const store = createAttemptStore(storage);
+
+    expect(importProgress(store, JSON.stringify(snapshot))).toEqual({
+      stats: { added: 2, updated: 0, skipped: 0 },
+      persistent: false,
+      localRecovered: false,
+    });
+    expect(store.load().snapshot).toEqual(snapshot);
+  });
+
+  it("reports when malformed local progress was recovered before the import", () => {
+    const storage = new FakeStorage();
+    storage.values.set(PROGRESS_STORAGE_KEY, "{oops");
+    const store = createAttemptStore(storage);
+
+    expect(importProgress(store, JSON.stringify(snapshot))).toEqual({
+      stats: { added: 2, updated: 0, skipped: 0 },
+      persistent: true,
+      localRecovered: true,
+    });
+    expect(store.load().snapshot).toEqual(snapshot);
   });
 });
