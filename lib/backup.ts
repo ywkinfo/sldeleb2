@@ -6,6 +6,7 @@ import {
   mergeTerminalSessions,
 } from "./examSession";
 import {
+  coerceProgressSnapshot,
   type AttemptStore,
   type ImportProgressResult,
   type ImportStats,
@@ -58,11 +59,31 @@ export function isUserDataExportV1(value: unknown): value is UserDataExportV1 {
 export function parseUserDataFile(raw: string): ParsedUserDataFile | null {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (isProgressSnapshot(parsed)) {
-      return { format: "legacy-progress", data: parsed };
+    const legacyProgress = coerceProgressSnapshot(parsed);
+    if (legacyProgress) {
+      return { format: "legacy-progress", data: legacyProgress };
     }
-    if (isUserDataExportV1(parsed)) {
-      return { format: "backup-v1", data: parsed };
+    if (!parsed || typeof parsed !== "object") return null;
+    const candidate = parsed as Record<string, unknown>;
+    const progress = coerceProgressSnapshot(candidate.progress);
+    if (
+      candidate.kind === "dele-b2-backup" &&
+      candidate.exportVersion === 1 &&
+      typeof candidate.exportedAt === "string" &&
+      !Number.isNaN(Date.parse(candidate.exportedAt)) &&
+      progress &&
+      isExamSessionSnapshot(candidate.exams)
+    ) {
+      return {
+        format: "backup-v1",
+        data: {
+          kind: "dele-b2-backup",
+          exportVersion: 1,
+          exportedAt: candidate.exportedAt,
+          progress,
+          exams: candidate.exams,
+        },
+      };
     }
     return null;
   } catch {

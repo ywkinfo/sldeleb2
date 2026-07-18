@@ -141,6 +141,104 @@ describe("AttemptStore", () => {
   });
 });
 
+describe("pendingFlags (제출 전 별표)", () => {
+  it("stores a pending flag for an unanswered item and removes it on unflag", () => {
+    const store = createAttemptStore(new FakeStorage());
+    expect(store.setPendingFlag("r-new-01", true, 500).persistent).toBe(true);
+    expect(store.load().snapshot.pendingFlags).toEqual({ "r-new-01": 500 });
+
+    store.setPendingFlag("r-new-01", false);
+    // 빈 맵은 필드 자체를 생략한다.
+    expect(store.load().snapshot.pendingFlags).toBeUndefined();
+  });
+
+  it("delegates to the attempt flag when an attempt already exists", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.save(snapshot);
+    store.setPendingFlag("reading-1", true);
+    const loaded = store.load().snapshot;
+    expect(loaded.attempts["reading-1"].flagged).toBe(true);
+    expect(loaded.pendingFlags).toBeUndefined();
+
+    store.setPendingFlag("reading-1", false);
+    expect(store.load().snapshot.attempts["reading-1"].flagged).toBe(false);
+  });
+
+  it("absorbs a pending flag into the first saved attempt (draft autosave included)", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.setPendingFlag("w-draft-01", true, 500);
+    store.updateAttempt({
+      kind: "open",
+      itemId: "w-draft-01",
+      completed: false,
+      draft: "borrador",
+      flagged: false,
+      attemptCount: 1,
+      lastAttemptedAt: 900,
+    });
+    const loaded = store.load().snapshot;
+    expect(loaded.attempts["w-draft-01"].flagged).toBe(true);
+    expect(loaded.pendingFlags).toBeUndefined();
+  });
+
+  it("clears the pending flag when a review row is removed", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.setPendingFlag("r-only-star", true, 500);
+    store.removeAttempt("r-only-star");
+    expect(store.load().snapshot.pendingFlags).toBeUndefined();
+  });
+
+  it("drops only corrupted pendingFlags entries and keeps attempts intact", () => {
+    const storage = new FakeStorage();
+    storage.values.set(
+      PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        ...snapshot,
+        pendingFlags: { good: 700, bad: "not-a-number", negative: -1, fractional: 1.5 },
+      }),
+    );
+    const result = createAttemptStore(storage).load();
+    expect(result.recovered).toBe(false);
+    expect(result.snapshot.attempts).toEqual(snapshot.attempts);
+    expect(result.snapshot.pendingFlags).toEqual({ good: 700 });
+  });
+
+  it("strips a wholly malformed pendingFlags field without resetting attempts", () => {
+    const storage = new FakeStorage();
+    storage.values.set(
+      PROGRESS_STORAGE_KEY,
+      JSON.stringify({ ...snapshot, pendingFlags: ["r-1"] }),
+    );
+    const result = createAttemptStore(storage).load();
+    expect(result.recovered).toBe(false);
+    expect(result.snapshot.attempts).toEqual(snapshot.attempts);
+    expect(result.snapshot.pendingFlags).toBeUndefined();
+  });
+
+  it("normalizes an attempt/pending overlap at load time (no duplicate review rows)", () => {
+    const storage = new FakeStorage();
+    storage.values.set(
+      PROGRESS_STORAGE_KEY,
+      JSON.stringify({ ...snapshot, pendingFlags: { "reading-1": 700, "other-item": 800 } }),
+    );
+    const loaded = createAttemptStore(storage).load().snapshot;
+    expect(loaded.attempts["reading-1"].flagged).toBe(true);
+    expect(loaded.pendingFlags).toEqual({ "other-item": 800 });
+  });
+
+  it("loads a legacy snapshot without pendingFlags unchanged", () => {
+    const storage = new FakeStorage();
+    storage.values.set(PROGRESS_STORAGE_KEY, JSON.stringify(snapshot));
+    expect(createAttemptStore(storage).load().snapshot).toEqual(snapshot);
+  });
+
+  it("rejects saving a snapshot whose pendingFlags values are not timestamps", () => {
+    const store = createAttemptStore(new FakeStorage());
+    const bad = { ...snapshot, pendingFlags: { x: Number.NaN } };
+    expect(() => store.save(bad as unknown as ProgressSnapshot)).toThrow(TypeError);
+  });
+});
+
 import { mergeSnapshots, importProgress } from "../lib/storage";
 
 describe("importProgress & mergeSnapshots", () => {
@@ -181,7 +279,7 @@ describe("importProgress & mergeSnapshots", () => {
     });
     
     expect(importProgress(store, jsonStr)).toEqual({
-      stats: { added: 0, updated: 1, skipped: 0 },
+      stats: { added: 0, updated: 1, skipped: 0, flagsChanged: 0 },
       persistent: true,
       localRecovered: false,
     });
@@ -207,7 +305,7 @@ describe("importProgress & mergeSnapshots", () => {
     });
 
     expect(importProgress(store, incoming)).toEqual({
-      stats: { added: 1, updated: 1, skipped: 1 },
+      stats: { added: 1, updated: 1, skipped: 1, flagsChanged: 0 },
       persistent: true,
       localRecovered: false,
     });
@@ -229,7 +327,7 @@ describe("importProgress & mergeSnapshots", () => {
     const store = createAttemptStore(storage);
 
     expect(importProgress(store, JSON.stringify(snapshot))).toEqual({
-      stats: { added: 2, updated: 0, skipped: 0 },
+      stats: { added: 2, updated: 0, skipped: 0, flagsChanged: 1 },
       persistent: false,
       localRecovered: false,
     });
@@ -242,10 +340,96 @@ describe("importProgress & mergeSnapshots", () => {
     const store = createAttemptStore(storage);
 
     expect(importProgress(store, JSON.stringify(snapshot))).toEqual({
-      stats: { added: 2, updated: 0, skipped: 0 },
+      stats: { added: 2, updated: 0, skipped: 0, flagsChanged: 1 },
       persistent: true,
       localRecovered: true,
     });
     expect(store.load().snapshot).toEqual(snapshot);
+  });
+
+  it("merges pendingFlags by newest timestamp and omits the field when empty", () => {
+    const current: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { shared: 100, local: 300 },
+    };
+    const incoming: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { shared: 200, imported: 400 },
+    };
+    expect(mergeSnapshots(current, incoming).pendingFlags).toEqual({
+      shared: 200,
+      local: 300,
+      imported: 400,
+    });
+    expect(mergeSnapshots({ schemaVersion: 1, attempts: {} }, { schemaVersion: 1, attempts: {} }).pendingFlags).toBeUndefined();
+  });
+
+  it("absorbs a pending flag when the merged snapshot has an attempt for the item", () => {
+    const current: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { "reading-1": 700 },
+    };
+    const merged = mergeSnapshots(current, snapshot);
+    expect(merged.attempts["reading-1"].flagged).toBe(true);
+    expect(merged.pendingFlags).toBeUndefined();
+  });
+
+  it("does not let an older pending flag re-flag a newer unflagged attempt", () => {
+    const current: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {
+        "reading-1": { ...snapshot.attempts["reading-1"], lastAttemptedAt: 900, flagged: false },
+      },
+    };
+    const staleBackup: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { "reading-1": 700 },
+    };
+    const merged = mergeSnapshots(current, staleBackup);
+    expect(merged.attempts["reading-1"].flagged).toBe(false);
+    expect(merged.pendingFlags).toBeUndefined();
+  });
+
+  it("preserves the local flag on an otherwise identical equal-timestamp import", () => {
+    const store = createAttemptStore(new FakeStorage());
+    store.save({
+      schemaVersion: 1,
+      attempts: {
+        "reading-1": { ...snapshot.attempts["reading-1"], flagged: false },
+      },
+    });
+    const incoming = JSON.stringify({
+      schemaVersion: 1,
+      attempts: {
+        "reading-1": { ...snapshot.attempts["reading-1"], flagged: true },
+      },
+    });
+
+    expect(importProgress(store, incoming)?.stats).toEqual({
+      added: 0,
+      updated: 0,
+      skipped: 1,
+      flagsChanged: 0,
+    });
+    expect(store.load().snapshot.attempts["reading-1"].flagged).toBe(false);
+  });
+
+  it("reports a flag-only import as a visible change", () => {
+    const store = createAttemptStore(new FakeStorage());
+    const result = importProgress(store, JSON.stringify({
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { "star-only": 500 },
+    }));
+    expect(result?.stats).toEqual({
+      added: 0,
+      updated: 0,
+      skipped: 0,
+      flagsChanged: 1,
+    });
   });
 });

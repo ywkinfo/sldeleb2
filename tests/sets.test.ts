@@ -63,7 +63,7 @@ describe("practice set catalog order", () => {
 
   it("ships all sets with explicit catalog metadata and only three exam-prep sets", () => {
     const sets = getPublishedSets();
-    expect(sets).toHaveLength(23);
+    expect(sets).toHaveLength(28);
     expect(sets.filter((set) => set.mode === "exam-prep").map((set) => set.id)).toEqual([
       "set-reading-anio-fuera",
       "set-reading-semana-cuatro",
@@ -79,5 +79,31 @@ describe("practice set catalog order", () => {
     for (const sequences of groups.values()) {
       expect(sequences).toEqual(Array.from({ length: sequences.length }, (_, index) => index + 1));
     }
+  });
+
+  it("publishes the five Task 5 sets with their intended item and sequence", () => {
+    const setsById = new Map(getPublishedSets().map((set) => [set.id, set]));
+    expect(
+      [
+        "set-writing-claim",
+        "set-writing-tourism",
+        "set-speaking-teletrabajo",
+        "set-speaking-photo-mudanza",
+        "set-speaking-survey-ocio",
+      ].map((id) => {
+        const set = setsById.get(id);
+        return set && {
+          id: set.id,
+          itemIds: set.itemIds,
+          sequence: set.sequence,
+        };
+      }),
+    ).toEqual([
+      { id: "set-writing-claim", itemIds: ["w-flight-claim"], sequence: 3 },
+      { id: "set-writing-tourism", itemIds: ["w-tourism-opinion"], sequence: 3 },
+      { id: "set-speaking-teletrabajo", itemIds: ["s-remote-work-debate"], sequence: 2 },
+      { id: "set-speaking-photo-mudanza", itemIds: ["s-photo-mudanza"], sequence: 2 },
+      { id: "set-speaking-survey-ocio", itemIds: ["s-survey-tiempo-libre"], sequence: 2 },
+    ]);
   });
 });

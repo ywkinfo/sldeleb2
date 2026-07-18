@@ -21,6 +21,13 @@ const examReadingReview = {
   reviewedAt: '2026-07-15',
 };
 
+// 쓰기·말하기 커버리지 확장(Tarea당 세트 추가) 신규 세트의 검수 이력.
+const openExpansionReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-18',
+};
+
 export const practiceSets = [
   {
     id: 'set-reading-library',
@@ -314,6 +321,61 @@ export const practiceSets = [
     mode: 'guided',
     itemIds: ['s-survey-workplace'],
     ...review,
+  },
+  {
+    id: 'set-writing-claim',
+    title: '쓰기 Tarea 1 · 항공사 항의 이메일',
+    estimatedMin: 40,
+    skill: 'writing',
+    task: 'tarea1',
+    sequence: 3,
+    mode: 'guided',
+    itemIds: ['w-flight-claim'],
+    ...openExpansionReview,
+  },
+  {
+    id: 'set-writing-tourism',
+    title: '쓰기 Tarea 2 · 관광 붐 의견 기사',
+    estimatedMin: 40,
+    skill: 'writing',
+    task: 'tarea2',
+    sequence: 3,
+    mode: 'guided',
+    itemIds: ['w-tourism-opinion'],
+    ...openExpansionReview,
+  },
+  {
+    id: 'set-speaking-teletrabajo',
+    title: '말하기 Tarea 1 · 재택근무 의무화 발표',
+    estimatedMin: 9,
+    skill: 'speaking',
+    task: 'tarea1',
+    sequence: 2,
+    mode: 'guided',
+    itemIds: ['s-remote-work-debate'],
+    ...openExpansionReview,
+  },
+  {
+    id: 'set-speaking-photo-mudanza',
+    title: '말하기 Tarea 2 · 이삿날의 이웃들',
+    estimatedMin: 6,
+    skill: 'speaking',
+    task: 'tarea2',
+    sequence: 2,
+    mode: 'guided',
+    itemIds: ['s-photo-mudanza'],
+    ...openExpansionReview,
+  },
+  {
+    id: 'set-speaking-survey-ocio',
+    title: '말하기 Tarea 3 · 여가 설문 협의',
+    estimatedMin: 6,
+    skill: 'speaking',
+    task: 'tarea3',
+    sequence: 2,
+    mode: 'guided',
+    itemIds: ['s-survey-tiempo-libre'],
+    ...openExpansionReview,
   },
   {
     id: 'set-listening-t1',

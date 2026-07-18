@@ -21,9 +21,12 @@ import { SyncProgress } from "./SyncProgress";
 const SUMMARY_CARDS = ["읽기", "듣기", "쓰기·말하기", "다시 볼 항목"];
 
 export function ReviewBoard({ items }: { items: ReviewItemMeta[] }) {
-  const { attempts, persistent, recovered, hydrated, remove } = useAttempts();
+  const { attempts, pendingFlags, persistent, recovered, hydrated, remove } = useAttempts();
   const metaById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
-  const entries = useMemo(() => buildAttemptEntries(attempts, metaById), [attempts, metaById]);
+  const entries = useMemo(
+    () => buildAttemptEntries(attempts, metaById, pendingFlags),
+    [attempts, metaById, pendingFlags],
+  );
 
   // 하이드레이션 전에는 로컬 기록을 못 읽으므로, 개인화 영역 전체에 안정적 로딩 상태를 보여준다.
   if (!hydrated) {
@@ -71,7 +74,7 @@ export function ReviewBoard({ items }: { items: ReviewItemMeta[] }) {
           </p>
         )}
         <div className="review-list">{todaysReview.map((entry) => {
-          const itemId = entry.attempt.itemId;
+          const itemId = entry.itemId;
           const setId = getSetIdForItem(itemId);
           const targetUrl = setId ? sitePath(`/practice/set/${setId}#${itemId}`) : sitePath("/practice");
           return <div className="review-row" key={itemId}><div><strong>{entry.meta?.label ?? "알 수 없는 문항"}</strong></div><div className="question-actions"><a className="button small" href={targetUrl}>우선 복습하기</a></div></div>;

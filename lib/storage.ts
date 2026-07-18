@@ -1,4 +1,5 @@
-import type { AttemptState, ProgressSnapshot } from "./types";
+import type { AttemptState, ProgressSnapshot, RubricScores } from "./types";
+import { setAttemptFlag } from "./grading";
 import { isValidRubric } from "./rubric";
 
 export const PROGRESS_STORAGE_KEY = "dele-b2:v1";
@@ -25,6 +26,16 @@ export type AttemptStoreListener = (result: StorageLoadResult) => void;
 
 function emptySnapshot(): ProgressSnapshot {
   return { schemaVersion: PROGRESS_SCHEMA_VERSION, attempts: {} };
+}
+
+/** 빈 pendingFlags는 필드 자체를 생략해 저장 형태를 정규화한다. */
+function buildSnapshot(
+  attempts: Record<string, AttemptState>,
+  pendingFlags?: Record<string, number>,
+): ProgressSnapshot {
+  return pendingFlags && Object.keys(pendingFlags).length > 0
+    ? { schemaVersion: PROGRESS_SCHEMA_VERSION, attempts, pendingFlags }
+    : { schemaVersion: PROGRESS_SCHEMA_VERSION, attempts };
 }
 
 function isFiniteNonNegativeInteger(value: unknown): value is number {
@@ -88,16 +99,127 @@ export function isProgressSnapshot(value: unknown): value is ProgressSnapshot {
     return false;
   }
 
+  if (snapshot.pendingFlags !== undefined && !isPendingFlagsMap(snapshot.pendingFlags)) {
+    return false;
+  }
+
   return Object.entries(snapshot.attempts as Record<string, unknown>).every(
     ([itemId, attempt]) =>
       isAttemptState(attempt) && (attempt as AttemptState).itemId === itemId,
   );
 }
 
+function isPendingFlagsMap(value: unknown): value is Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.entries(value as Record<string, unknown>).every(
+    ([itemId, flaggedAt]) => itemId.length > 0 && isFiniteNonNegativeInteger(flaggedAt),
+  );
+}
+
+/** 손상된 엔트리만 버리고 정상 엔트리는 보존한다. 남는 게 없으면 undefined. */
+function sanitizePendingFlags(value: unknown): Record<string, number> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const result: Record<string, number> = {};
+  for (const [itemId, flaggedAt] of Object.entries(value as Record<string, unknown>)) {
+    if (itemId.length > 0 && isFiniteNonNegativeInteger(flaggedAt)) {
+      result[itemId] = flaggedAt;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function sameRubricScores(a: RubricScores | undefined, b: RubricScores | undefined): boolean {
+  if (a === undefined || b === undefined) return a === b;
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return Array.from(keys).every(
+    (key) =>
+      (a as unknown as Record<string, number>)[key] ===
+      (b as unknown as Record<string, number>)[key],
+  );
+}
+
+/** 같은 시각의 백업·projection이 사용자가 나중에 바꾼 flag만 되돌리지 않게 비교한다. */
+export function sameAttemptIgnoringFlag(a: AttemptState, b: AttemptState): boolean {
+  if (a.kind !== b.kind || a.itemId !== b.itemId) return false;
+  if (a.attemptCount !== b.attemptCount || a.lastAttemptedAt !== b.lastAttemptedAt) return false;
+  if (a.kind === "reading" && b.kind === "reading") {
+    return a.selectedAnswer === b.selectedAnswer && a.correct === b.correct;
+  }
+  if (a.kind === "listening" && b.kind === "listening") {
+    return a.selectedAnswer === b.selectedAnswer && a.correct === b.correct;
+  }
+  if (a.kind === "open" && b.kind === "open") {
+    return (
+      a.completed === b.completed &&
+      a.draft === b.draft &&
+      a.selfScore === b.selfScore &&
+      sameRubricScores(a.rubricScores, b.rubricScores)
+    );
+  }
+  return false;
+}
+
+function shouldReplaceAttempt(existing: AttemptState | undefined, incoming: AttemptState): boolean {
+  if (!existing || incoming.lastAttemptedAt > existing.lastAttemptedAt) return true;
+  return (
+    incoming.lastAttemptedAt === existing.lastAttemptedAt &&
+    !sameAttemptIgnoringFlag(existing, incoming)
+  );
+}
+
+/**
+ * attempt가 존재하는 문항의 대기 별표를 흡수하고 엔트리를 제거한다(복습
+ * 대기열 중복 방지). 복구·백업 병합에서는 별표 시각이 attempt보다 최신일
+ * 때만 승격해 오래된 백업이 해제 상태를 되살리지 않는다. 같은 작업에서
+ * 첫 attempt를 만드는 호출자는 forcePromoteItemIds로 명시해 제출 전 별표를
+ * 보존한다. changed는 엔트리 제거 또는 승격이 있었음을 뜻한다.
+ */
+export function consumePendingFlags(
+  attempts: Record<string, AttemptState>,
+  pendingFlags: Record<string, number> | undefined,
+  forcePromoteItemIds?: ReadonlySet<string>,
+): { attempts: Record<string, AttemptState>; pendingFlags?: Record<string, number>; changed: boolean } {
+  if (!pendingFlags) return { attempts, changed: false };
+  let nextAttempts = attempts;
+  let remaining: Record<string, number> | undefined;
+  let changed = false;
+  for (const [itemId, flaggedAt] of Object.entries(pendingFlags)) {
+    const attempt = attempts[itemId];
+    if (!attempt) {
+      (remaining ??= {})[itemId] = flaggedAt;
+      continue;
+    }
+    changed = true;
+    const shouldPromote =
+      forcePromoteItemIds?.has(itemId) === true || flaggedAt > attempt.lastAttemptedAt;
+    if (shouldPromote && !attempt.flagged) {
+      if (nextAttempts === attempts) nextAttempts = { ...attempts };
+      nextAttempts[itemId] = { ...attempt, flagged: true };
+    }
+  }
+  return { attempts: nextAttempts, pendingFlags: remaining, changed };
+}
+
+/** JSON 파싱 여부와 무관하게 동일한 관대한 pendingFlags 정화를 적용한다. */
+export function coerceProgressSnapshot(value: unknown): ProgressSnapshot | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Record<string, unknown>;
+  // attempts 손상은 종전대로 스냅샷 전체 실패(리셋 대상)로 취급하되,
+  // pendingFlags 손상은 엔트리 단위로 정화해 attempts를 지킨다.
+  const base: unknown = {
+    schemaVersion: candidate.schemaVersion,
+    attempts: candidate.attempts,
+  };
+  if (!isProgressSnapshot(base)) return null;
+  const { attempts } = base as ProgressSnapshot;
+  // attempt와 겹치는 대기 별표는 로드 시점에 흡수해 정규화한다.
+  const consumed = consumePendingFlags(attempts, sanitizePendingFlags(candidate.pendingFlags));
+  return buildSnapshot(consumed.attempts, consumed.pendingFlags);
+}
+
 export function parseProgressSnapshot(raw: string): ProgressSnapshot | null {
   try {
-    const parsed: unknown = JSON.parse(raw);
-    return isProgressSnapshot(parsed) ? parsed : null;
+    return coerceProgressSnapshot(JSON.parse(raw) as unknown);
   } catch {
     return null;
   }
@@ -107,11 +229,23 @@ export function mergeSnapshots(current: ProgressSnapshot, incoming: ProgressSnap
   const mergedAttempts = { ...current.attempts };
   for (const [itemId, attempt] of Object.entries(incoming.attempts)) {
     const existing = mergedAttempts[itemId];
-    if (!existing || attempt.lastAttemptedAt >= existing.lastAttemptedAt) {
+    if (shouldReplaceAttempt(existing, attempt)) {
       mergedAttempts[itemId] = attempt;
     }
   }
-  return { schemaVersion: PROGRESS_SCHEMA_VERSION, attempts: mergedAttempts };
+  // 대기 별표는 최근 시각 우선으로 합친 뒤, 병합된 attempt가 있는 문항은 흡수한다.
+  const mergedFlags: Record<string, number> = { ...(current.pendingFlags ?? {}) };
+  for (const [itemId, flaggedAt] of Object.entries(incoming.pendingFlags ?? {})) {
+    const existing = mergedFlags[itemId];
+    if (existing === undefined || flaggedAt > existing) {
+      mergedFlags[itemId] = flaggedAt;
+    }
+  }
+  const consumed = consumePendingFlags(
+    mergedAttempts,
+    Object.keys(mergedFlags).length > 0 ? mergedFlags : undefined,
+  );
+  return buildSnapshot(consumed.attempts, consumed.pendingFlags);
 }
 
 export function exportProgress(store: AttemptStore): string {
@@ -122,6 +256,8 @@ export interface ImportStats {
   added: number;
   updated: number;
   skipped: number;
+  /** 병합 전후 effective flag 상태가 달라진 문항 수. */
+  flagsChanged?: number;
 }
 
 export interface ImportProgressResult {
@@ -137,15 +273,31 @@ export function importProgress(store: AttemptStore, jsonStr: string): ImportProg
   const loaded = store.load();
   const current = loaded.snapshot;
 
-  const stats: ImportStats = { added: 0, updated: 0, skipped: 0 };
+  const merged = mergeSnapshots(current, incoming);
+  const stats: ImportStats = { added: 0, updated: 0, skipped: 0, flagsChanged: 0 };
   for (const [itemId, attempt] of Object.entries(incoming.attempts)) {
     const existing = current.attempts[itemId];
     if (!existing) stats.added += 1;
-    else if (attempt.lastAttemptedAt >= existing.lastAttemptedAt) stats.updated += 1;
+    else if (shouldReplaceAttempt(existing, attempt)) stats.updated += 1;
     else stats.skipped += 1;
   }
+  const flagItemIds = new Set([
+    ...Object.keys(current.attempts),
+    ...Object.keys(current.pendingFlags ?? {}),
+    ...Object.keys(merged.attempts),
+    ...Object.keys(merged.pendingFlags ?? {}),
+  ]);
+  for (const itemId of flagItemIds) {
+    const currentFlagged =
+      current.attempts[itemId]?.flagged ?? current.pendingFlags?.[itemId] !== undefined;
+    const mergedFlagged =
+      merged.attempts[itemId]?.flagged ?? merged.pendingFlags?.[itemId] !== undefined;
+    if (currentFlagged !== mergedFlagged) {
+      stats.flagsChanged = (stats.flagsChanged ?? 0) + 1;
+    }
+  }
 
-  const saved = store.save(mergeSnapshots(current, incoming));
+  const saved = store.save(merged);
   return {
     stats,
     persistent: saved.persistent,
@@ -281,17 +433,47 @@ export class AttemptStore {
       throw new TypeError("Invalid DELE B2 attempt");
     }
     const { snapshot } = this.load();
-    return this.save({
-      ...snapshot,
-      attempts: { ...snapshot.attempts, [attempt.itemId]: attempt },
-    });
+    // 제출 전 별표는 첫 attempt 저장 시(쓰기 초안 자동저장 포함) 같은 save로
+    // 흡수한다 — 별표와 attempt가 서로 다른 행으로 남지 않는다.
+    const consumed = consumePendingFlags(
+      { ...snapshot.attempts, [attempt.itemId]: attempt },
+      snapshot.pendingFlags,
+      new Set([attempt.itemId]),
+    );
+    return this.save(buildSnapshot(consumed.attempts, consumed.pendingFlags));
+  }
+
+  /**
+   * 답 제출 전 별표 토글. attempt가 이미 있으면 순수 헬퍼(setAttemptFlag)로
+   * attempt.flagged를 바꾸는 updateAttempt 호출이고, 없으면 pendingFlags
+   * 엔트리만 추가·제거한다.
+   */
+  setPendingFlag(itemId: string, flagged: boolean, now = Date.now()): StorageSaveResult {
+    const { snapshot } = this.load();
+    const attempt = snapshot.attempts[itemId];
+    if (attempt) {
+      return this.updateAttempt(setAttemptFlag(attempt, flagged));
+    }
+    const pendingFlags = { ...(snapshot.pendingFlags ?? {}) };
+    if (flagged) {
+      pendingFlags[itemId] = now;
+    } else {
+      delete pendingFlags[itemId];
+    }
+    return this.save(buildSnapshot(snapshot.attempts, pendingFlags));
   }
 
   removeAttempt(itemId: string): StorageSaveResult {
     const { snapshot } = this.load();
     const attempts = { ...snapshot.attempts };
     delete attempts[itemId];
-    return this.save({ ...snapshot, attempts });
+    // 복습 대기열의 "기록 삭제"가 미풀이 별표 행도 지울 수 있도록 함께 정리한다.
+    let pendingFlags = snapshot.pendingFlags;
+    if (pendingFlags && pendingFlags[itemId] !== undefined) {
+      pendingFlags = { ...pendingFlags };
+      delete pendingFlags[itemId];
+    }
+    return this.save(buildSnapshot(attempts, pendingFlags));
   }
 
   clear(): StorageSaveResult {

@@ -28,6 +28,13 @@ const examReadingReview = {
   reviewedAt: '2026-07-15',
 };
 
+// 쓰기·말하기 커버리지 확장(Tarea당 세트 추가) 신규 문항의 검수 이력.
+const openExpansionReview = {
+  status: 'published' as const,
+  reviewedBy: 'Spanish Lab · 스페인어 연구소',
+  reviewedAt: '2026-07-18',
+};
+
 const listeningT2SpeakerOptions = [
   { key: 'a', text: 'El hombre' },
   { key: 'b', text: 'La mujer' },
@@ -962,6 +969,39 @@ Un saludo cordial`,
     tags: ['의견문', '교육', '대안'],
     ...modelAnswerReview,
   },
+  {
+    id: 'w-flight-claim',
+    skill: 'writing',
+    kind: 'open',
+    task: 'tarea1',
+    prompt:
+      '소비자 권익 라디오 프로그램에서 항공편 지연 보상 규정에 관한 설명을 들었습니다. 항공사 고객센터에 150~180단어의 항의 이메일을 쓰세요. 겪은 문제를 구체적으로 설명하고, 피해와 지출을 요약하며, 보상과 서비스 개선을 격식 있게 요구하세요.',
+    wordCount: [150, 180],
+    timeLimitMin: 40,
+    checklistKo: [
+      '첫 문단에서 연락 목적과 근거를 명확히 밝혔다.',
+      '사건을 날짜·구간 등 구체적 정보와 함께 설명했다.',
+      '피해를 감정적으로 과장하지 않고 사실 중심으로 전달했다.',
+      '보상 요구와 서비스 개선 요청을 구분해 제시했다.',
+      '격식 있는 인사말·요청 표현·맺음말을 사용했다.',
+    ],
+    modelOutlineKo:
+      '제목과 격식 인사 → 라디오에서 들은 규정과 연락 목적 → 지연·수하물 분실 경위 → 지출과 업무상 피해 → 보상·환급 요구와 증빙 언급 → 승객 안내 개선 요청 → 답변 기대와 격식 있는 맺음말.',
+    modelAnswerEs: `Asunto: Reclamación por retraso y pérdida de equipaje
+
+Estimados señores del servicio de atención al cliente:
+
+Me dirijo a ustedes tras escuchar en un programa de radio sobre derechos del consumidor que su compañía ofrece compensaciones en casos como el mío. El pasado 2 de julio, mi vuelo entre Madrid y Bilbao salió con cuatro horas de retraso y, al llegar, mi maleta no apareció. Durante tres días tuve que comprar ropa y productos básicos, lo que me supuso un gasto considerable, además de perder una reunión importante de trabajo.
+
+Por todo ello, solicito la compensación económica prevista por el retraso y el reembolso de los gastos ocasionados, cuyos recibos adjunto a este correo. Asimismo, les pediría que mejoraran la información al pasajero: en el aeropuerto nadie supo explicarnos qué estaba ocurriendo ni dónde reclamar.
+
+Confío en que resolverán mi caso en un plazo razonable. Quedo a la espera de su respuesta y les agradezco de antemano su atención.
+
+Atentamente,
+Marta Serrano`,
+    tags: ['격식 이메일', '항의', '여행'],
+    ...openExpansionReview,
+  },
 
   // Audición · Tarea 1 — Aviso en la estación de tren
   {
@@ -1386,6 +1426,34 @@ No creo que esta experiencia sirva para todo el mundo. Quien dependa del móvil 
     tags: ['블로그', '경험담', '디지털 습관'],
     ...modelAnswerReview,
   },
+  {
+    id: 'w-tourism-opinion',
+    skill: 'writing',
+    kind: 'open',
+    task: 'tarea2',
+    prompt:
+      '온라인 지역 신문의 의견란에 “우리 도시의 관광 붐”이라는 150~180단어의 기사를 쓰세요. 최근 몇 년간의 변화를 묘사하고, 관광이 가져온 긍정적·부정적 영향을 평가하며, 주민과 방문객이 공존할 방안을 제안하세요.',
+    wordCount: [150, 180],
+    timeLimitMin: 40,
+    checklistKo: [
+      '독자의 관심을 끄는 제목과 도입부를 썼다.',
+      '변화 전후를 시간 표현으로 분명히 대비했다.',
+      '긍정적·부정적 영향을 균형 있게 평가했다.',
+      '실행 가능한 공존 방안을 구체적으로 제시했다.',
+      '의견 기사에 어울리는 정돈된 문체와 연결어를 사용했다.',
+    ],
+    modelOutlineKo:
+      '질문형 제목 → 무명 도시에서 인기 여행지가 된 변화 → 상권·일자리·문화재 복원의 이점 → 임대료 상승·전통 상점 감소·소음 문제 → 숙박 규제·방문 분산·소상공인 보호 제안 → 주민이 살 수 있어야 매력도 유지된다는 결론.',
+    modelAnswerEs: `¿Turismo sí, pero a qué precio?
+
+Hace apenas cinco años, nuestra ciudad era un destino casi desconocido. Hoy, gracias a las redes sociales y a los vuelos baratos, las calles del centro se llenan de visitantes durante todo el año. Este cambio ha traído beneficios evidentes: los restaurantes y las tiendas ganan más, se han creado empleos y hasta los edificios históricos se han restaurado.
+
+Sin embargo, no todo son ventajas. Los alquileres han subido tanto que muchos jóvenes ya no pueden vivir en el centro, y algunos comercios tradicionales han sido sustituidos por tiendas de recuerdos. Además, el ruido y las aglomeraciones cansan a los vecinos.
+
+En mi opinión, el turismo es una oportunidad, pero necesita límites. El Ayuntamiento debería regular los pisos turísticos, repartir las visitas por otros barrios y proteger el pequeño comercio. Si lo conseguimos, los visitantes seguirán siendo bienvenidos y la ciudad no perderá su alma. Al final, un destino solo es atractivo si sus habitantes pueden seguir viviendo en él.`,
+    tags: ['기사', '관광', '의견문'],
+    ...openExpansionReview,
+  },
 
   // Expresión e interacción orales
   {
@@ -1487,6 +1555,106 @@ CANDIDATO: Repetiría la encuesta dentro de seis meses para comprobar si la sati
 ENTREVISTADORA: Perfecto. Muchas gracias por sus propuestas.`,
     tags: ['상호작용', '자료 해석', '직장'],
     ...modelAnswerReview,
+  },
+  {
+    id: 's-remote-work-debate',
+    skill: 'speaking',
+    kind: 'oral',
+    task: 'tarea1',
+    prompt:
+      '“직원이 원하면 주 3일 이상 재택근무를 허용하도록 기업에 의무화해야 한다”는 제안에 대해 발표하세요. 제안의 장점과 예상되는 문제를 설명하고, 어떤 직군에 어떤 영향이 있는지 비교한 뒤 본인의 결론과 보완책을 말하세요.',
+    prepTimeMin: 5,
+    speakTimeMin: 4,
+    checklistKo: [
+      '도입에서 주제와 발표 순서를 예고했다.',
+      '일과 삶의 균형·교통·불평등 등 두 가지 이상의 관점을 다뤘다.',
+      '주장을 이유와 구체적인 예로 뒷받침했다.',
+      '혜택을 받기 어려운 직군을 언급하며 한계를 인정했다.',
+      '결론에서 조건부 입장을 간결하게 밝혔다.',
+    ],
+    modelOutlineKo:
+      '주제 재진술 → 통근 감소·워라밸·지방 거주 기회의 장점 → 직군 간 불평등·중소기업 비용·고립감 문제 → 수혜 직군과 소외 직군 비교 → 일괄 의무화 대신 노사 합의·중소기업 지원·주간 대면 모임을 제안하는 조건부 찬성 결론.',
+    modelAnswerEs: `Buenos días. Voy a hablar sobre la propuesta de obligar a las empresas a ofrecer al menos tres días de teletrabajo a la semana a quienes lo soliciten. Primero presentaré las ventajas, luego los inconvenientes y terminaré con mi conclusión.
+
+Entre las ventajas, la más clara es la conciliación: sin desplazamientos diarios, los trabajadores ganarían tiempo para su familia y descansarían mejor. Además, habría menos tráfico y menos contaminación en las horas punta, y las personas que viven lejos de las grandes ciudades tendrían más oportunidades laborales.
+
+Sin embargo, la medida también plantea problemas. No todos los puestos permiten trabajar a distancia, así que podría crear desigualdad entre compañeros. Asimismo, algunas empresas pequeñas no pueden pagar los equipos necesarios, y hay empleados que en casa se sienten aislados o no consiguen separar el trabajo de la vida personal.
+
+En resumen, la propuesta beneficiaría sobre todo a quienes tienen largos desplazamientos y tareas de oficina, mientras que apenas ayudaría al personal de tiendas, hospitales o fábricas.
+
+En mi opinión, estoy a favor, pero con condiciones. En lugar de imponer la misma norma a todas las empresas, empezaría por un acuerdo flexible entre empresa y trabajador, con ayudas para las pequeñas compañías y encuentros presenciales cada semana para cuidar el equipo. Muchas gracias por su atención.`,
+    tags: ['발표', '직장', '찬반'],
+    ...openExpansionReview,
+  },
+  {
+    id: 's-photo-mudanza',
+    skill: 'speaking',
+    kind: 'oral',
+    task: 'tarea2',
+    prompt:
+      '이삿날 아파트 입구에서 이웃들이 새로 온 부부를 돕는 사진을 상상하세요. 보이는 장면과 사람들의 관계를 묘사하고, 사진 전후에 무슨 일이 있었을지 추측하며, 이웃 관계의 가치에 관해 말하세요.',
+    prepTimeMin: 3,
+    speakTimeMin: 3,
+    checklistKo: [
+      '장소·인물·행동을 체계적인 순서로 묘사했다.',
+      '확실히 보이는 정보와 추측을 표현으로 구분했다.',
+      '과거와 이후 상황을 자연스럽게 상상했다.',
+      '사진의 주제를 개인 경험과 연결했다.',
+      '위치·분위기·감정을 나타내는 어휘를 다양하게 사용했다.',
+    ],
+    modelOutlineKo:
+      '전체 장면 → 앞쪽의 부부와 문을 잡아 주는 이웃 → 물을 건네는 여성과 아이들 등 배경 인물 → 관계와 분위기 추측 → 이사 준비 과정과 이후 어울림 예상 → 이웃 공동체의 가치와 본인 경험.',
+    modelAnswerEs: `En esta fotografía se ve la entrada de un edificio en un día de mudanza. En primer plano, una pareja joven baja cajas de una furgoneta blanca, y a su lado un vecino mayor sujeta la puerta para que puedan pasar. Al fondo, una mujer ofrece una bandeja con vasos de agua y dos niños observan la escena con curiosidad, sentados en la escalera.
+
+Por la ropa cómoda y la luz, diría que es una mañana de fin de semana. Todos parecen de buen humor, así que imagino que la relación entre los vecinos es cercana, aunque puede que la pareja acabe de llegar y todavía no conozca a nadie.
+
+Supongo que, antes de la foto, la pareja pasó semanas preparando cajas y buscando piso. Después, probablemente los vecinos les ayudarán a subir los muebles y quizás terminen tomando algo juntos en el portal.
+
+Para mí, esta imagen representa la importancia de la vida vecinal. Hoy en día mucha gente ni siquiera saluda en el ascensor, y gestos tan sencillos como este crean confianza y hacen que un edificio se convierta en una pequeña comunidad. Cuando yo me mudé a mi piso actual, una vecina me ayudó con las plantas, y ese detalle nos hizo amigos. Gracias.`,
+    tags: ['사진 묘사', '추측', '이웃'],
+    ...openExpansionReview,
+  },
+  {
+    id: 's-survey-tiempo-libre',
+    skill: 'speaking',
+    kind: 'oral',
+    task: 'tarea3',
+    prompt:
+      '주민 여가 실태 조사 결과를 두고 면접관과 대화한다고 가정하세요. 응답자의 57%는 여가 대부분을 화면 앞에서 보낸다고 답했고, 41%는 운동할 시간이 없다고 했으며, 29%만이 공연·전시에 정기적으로 참여합니다. 눈에 띄는 결과를 해석하고 원인을 추측한 뒤 개선 우선순위를 협의하세요.',
+    prepTimeMin: 2,
+    speakTimeMin: 4,
+    checklistKo: [
+      '수치를 단순히 나열하지 않고 비교·해석했다.',
+      '원인을 단정하지 않고 가능성 표현으로 제시했다.',
+      '상대의 의견을 묻거나 확인하는 표현을 사용했다.',
+      '우선순위를 제안하고 근거를 밝혔다.',
+      '실행 가능한 개선안과 검증 방법을 제안했다.',
+    ],
+    modelOutlineKo:
+      '화면 시간 57%의 의미 해석 → 운동 부족 41%와의 모순 지적 → 문화 참여 29%의 원인(가격·시간) 추측 → 면접관과 우선순위 협의 → 야간 체육시설 개방·문화 바우처 제안 → 1년 뒤 재조사로 검증.',
+    modelAnswerEs: `ENTREVISTADORA: Estos son los resultados de la encuesta sobre el tiempo libre de los vecinos. ¿Qué destacaría usted?
+
+CANDIDATO: Lo primero que me llama la atención es que un 57 % reconoce pasar la mayor parte de su tiempo libre delante de una pantalla. Supongo que influye el cansancio: después del trabajo, lo más cómodo es quedarse con el móvil o con las series.
+
+ENTREVISTADORA: Puede ser. ¿Y cómo interpreta que un 41 % diga que no tiene tiempo para hacer deporte?
+
+CANDIDATO: Me parece contradictorio, porque si sumamos las horas de pantalla, tiempo hay. Quizás el problema no sea la falta de tiempo, sino la falta de costumbre o de instalaciones cercanas. ¿A usted qué le parece?
+
+ENTREVISTADORA: Comparto esa lectura. El dato de la cultura también es llamativo: solo un 29 % participa con regularidad en conciertos o exposiciones.
+
+CANDIDATO: Sí, y puede que el precio de las entradas tenga mucho que ver, además de los horarios, que no siempre son compatibles con el trabajo.
+
+ENTREVISTADORA: Entonces, ¿qué priorizaría usted para mejorar la situación?
+
+CANDIDATO: Yo empezaría por el deporte, porque afecta directamente a la salud: propondría abrir los polideportivos por la noche y organizar grupos gratuitos en los parques. Como segunda medida, crearía un bono cultural con descuentos para jóvenes y mayores. ¿Le parece bien ese orden?
+
+ENTREVISTADORA: Sí, me convence. ¿Cómo comprobaría si funciona?
+
+CANDIDATO: Repetiría la misma encuesta dentro de un año. Si bajan las horas de pantalla y sube la participación en actividades, sabremos que vamos por buen camino.
+
+ENTREVISTADORA: Estupendo. Muchas gracias por su análisis.`,
+    tags: ['상호작용', '자료 해석', '여가'],
+    ...openExpansionReview,
   },
 
   // Comprensión de lectura · Tarea 2 (모의고사) — 네 사람의 해외 생활 매칭

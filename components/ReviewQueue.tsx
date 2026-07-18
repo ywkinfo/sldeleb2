@@ -21,7 +21,7 @@ const REASON_ORDER: ReviewReason[] = ["incorrect", "low-assessment", "flagged"];
 
 function weakDimensionLabel(entry: AttemptEntry): string {
   const { attempt, meta } = entry;
-  if (attempt.kind !== "open" || !attempt.completed || !attempt.rubricScores || !meta) return "";
+  if (attempt?.kind !== "open" || !attempt.completed || !attempt.rubricScores || !meta) return "";
   const stats = calculateRubricStats(meta.skill === "writing" ? "writing" : "speaking", attempt.rubricScores);
   if (stats.weakestDimensions.length === 0) return "";
   const first = DIMENSION_LABELS[stats.weakestDimensions[0]] ?? stats.weakestDimensions[0];
@@ -30,6 +30,7 @@ function weakDimensionLabel(entry: AttemptEntry): string {
 
 function statusLine(entry: AttemptEntry): string {
   const { attempt } = entry;
+  if (!attempt) return "아직 풀지 않음 · 별표";
   if (attempt.kind === "open") {
     if (!attempt.completed) return `미완료 · ${attempt.attemptCount}회 시도`;
     const weak = weakDimensionLabel(entry);
@@ -61,9 +62,11 @@ export function ReviewQueue({ entries, onRemove }: { entries: AttemptEntry[]; on
     </div>
     <p className="result-count" role="status">문항 {filtered.length}개</p>
     {filtered.length ? <div className="review-list">{filtered.map((entry) => {
-      const itemId = entry.attempt.itemId;
+      const itemId = entry.itemId;
       const setId = getSetIdForItem(itemId);
       const targetUrl = setId ? sitePath(`/practice/set/${setId}#${itemId}`) : sitePath("/practice");
+      // 미풀이 별표 행은 기록이 아니라 별표만 지운다 — 파괴적 확인 문구를 쓰지 않는다.
+      const pendingOnly = entry.attempt === undefined;
       return <div className="review-row" key={itemId}>
         <div>
           <strong>{entry.meta?.label ?? "알 수 없는 문항"}</strong>
@@ -72,7 +75,9 @@ export function ReviewQueue({ entries, onRemove }: { entries: AttemptEntry[]; on
         </div>
         <div className="question-actions">
           <a className="button small" href={targetUrl}>다시 연습</a>
-          <button className="button secondary small" type="button" onClick={() => { if (window.confirm("이 문항의 학습 기록을 삭제할까요? 삭제한 기록은 되돌릴 수 없습니다.")) onRemove(itemId); }}>기록 삭제</button>
+          {pendingOnly
+            ? <button className="button secondary small" type="button" onClick={() => onRemove(itemId)}>별표 해제</button>
+            : <button className="button secondary small" type="button" onClick={() => { if (window.confirm("이 문항의 학습 기록을 삭제할까요? 삭제한 기록은 되돌릴 수 없습니다.")) onRemove(itemId); }}>기록 삭제</button>}
         </div>
       </div>;
     })}</div> : <div><p className="muted">조건에 맞는 문항이 없어요.</p><button className="button secondary small" type="button" onClick={() => setFilter(EMPTY_REVIEW_FILTER)}>필터 초기화</button></div>}

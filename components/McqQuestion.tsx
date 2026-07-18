@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ReadingMCQItem, ListeningMCQItem } from "@/lib/types";
-import { gradeMcqAttempt, setAttemptFlag } from "@/lib/grading";
+import { gradeMcqAttempt } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
 import { McqOptions, handleMcqKeyDown, type McqOptionState } from "./McqOptions";
 
@@ -13,9 +13,11 @@ export function McqQuestion({
   item: ReadingMCQItem | ListeningMCQItem;
   number: number;
 }) {
-  const { attempts, update } = useAttempts();
+  const { attempts, pendingFlags, update, setPendingFlag, hydrated } = useAttempts();
   const stored = attempts[item.id];
   const attempt = stored?.kind === item.skill ? stored : undefined;
+  // 채점 전에는 pendingFlags, 채점 후에는 attempt.flagged가 진실이다.
+  const flagged = attempt ? attempt.flagged : pendingFlags[item.id] !== undefined;
 
   const [localSelection, setLocalSelection] = useState<string | undefined>();
   const [retrying, setRetrying] = useState(false);
@@ -72,16 +74,21 @@ export function McqQuestion({
         {isAnswering ? (
           <button className="button small" type="button" onClick={answer} disabled={!currentSelection}>정답 확인</button>
         ) : (
-          <>
-            <button className="button secondary small" type="button" onClick={() => {
-              setRetrying(true);
-              setLocalSelection(undefined);
-            }}>다시 풀기</button>
-            <button className="button secondary small" type="button" aria-pressed={attempt?.flagged} onClick={() => update(setAttemptFlag(attempt!, !attempt?.flagged))}>
-              {attempt?.flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}
-            </button>
-          </>
+          <button className="button secondary small" type="button" onClick={() => {
+            setRetrying(true);
+            setLocalSelection(undefined);
+          }}>다시 풀기</button>
         )}
+        {/* 제출 전 별표: hydration 전에는 저장된 별표를 반대로 뒤집지 않도록 잠근다. */}
+        <button
+          className="button secondary small"
+          type="button"
+          aria-pressed={flagged}
+          disabled={!hydrated}
+          onClick={() => setPendingFlag(item.id, !flagged)}
+        >
+          {flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}
+        </button>
       </div>
 
       {isAnswering && <div className="muted" style={{ fontSize: "0.82rem", marginTop: "0.6rem" }}>{shortcutHint}</div>}

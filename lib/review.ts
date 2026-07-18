@@ -51,7 +51,11 @@ export function getReviewReasons(attempt: AttemptState): ReviewReason[] {
 }
 
 export interface AttemptEntry {
-  attempt: AttemptState;
+  itemId: string;
+  /** 정렬·추천 기준 시각 — attempt.lastAttemptedAt 또는 (미풀이 별표는) 별표 시각. */
+  lastTouchedAt: number;
+  /** 아직 풀지 않은 제출 전 별표(pendingFlags) 전용 항목이면 undefined. */
+  attempt?: AttemptState;
   /** 콘텐츠가 삭제된 orphan 기록이면 undefined. */
   meta?: ReviewItemMeta;
   reasons: ReviewReason[];
@@ -61,12 +65,27 @@ export interface AttemptEntry {
 export function buildAttemptEntries(
   attempts: Record<string, AttemptState>,
   metaById: Map<string, ReviewItemMeta>,
+  pendingFlags: Record<string, number> = {},
 ): AttemptEntry[] {
-  return Object.values(attempts).map((attempt) => ({
+  const entries: AttemptEntry[] = Object.values(attempts).map((attempt) => ({
+    itemId: attempt.itemId,
+    lastTouchedAt: attempt.lastAttemptedAt,
     attempt,
     meta: metaById.get(attempt.itemId),
     reasons: getReviewReasons(attempt),
   }));
+  // 아직 풀지 않은 별표. attempt가 생기면 스토리지가 흡수하므로 겹치는
+  // itemId는 방어적으로 건너뛴다(중복 행 금지).
+  for (const [itemId, flaggedAt] of Object.entries(pendingFlags)) {
+    if (attempts[itemId]) continue;
+    entries.push({
+      itemId,
+      lastTouchedAt: flaggedAt,
+      meta: metaById.get(itemId),
+      reasons: ["flagged"],
+    });
+  }
+  return entries;
 }
 
 /** 복습 대기열 = 사유가 하나라도 있는 항목. */
@@ -119,7 +138,8 @@ export function summarizeTareaRates(entries: AttemptEntry[]): TareaRates {
   const tally = (skill: "reading" | "listening", order: Task[]): TareaRateRow[] => {
     const buckets = new Map<Task, { correct: number; total: number }>();
     for (const { meta, attempt } of entries) {
-      if (!meta?.task || meta.skill !== skill || attempt.kind === "open") continue;
+      // 미풀이 별표(attempt 없음)는 정답률 분모에 넣지 않는다.
+      if (!attempt || !meta?.task || meta.skill !== skill || attempt.kind === "open") continue;
       const bucket = buckets.get(meta.task) ?? { correct: 0, total: 0 };
       bucket.total += 1;
       if (attempt.correct) bucket.correct += 1;
@@ -144,7 +164,8 @@ export interface VulnerableTag {
 export function analyzeVulnerableTags(entries: AttemptEntry[]): VulnerableTag[] {
   const stats = new Map<string, { total: number; incorrect: number }>();
   for (const { meta, attempt } of entries) {
-    if (!meta || attempt.kind === "open") continue;
+    // 미풀이 별표(attempt 없음)는 태그 오답률 분모에 넣지 않는다.
+    if (!meta || !attempt || attempt.kind === "open") continue;
     for (const tag of meta.tags) {
       const stat = stats.get(tag) ?? { total: 0, incorrect: 0 };
       stat.total += 1;
@@ -169,11 +190,11 @@ export function pickTodaysReview(entries: AttemptEntry[], vulnerableTags: Vulner
   const fillTier = (matches: (entry: AttemptEntry) => boolean) => {
     const candidates = entries
       .filter(matches)
-      .sort((a, b) => a.attempt.lastAttemptedAt - b.attempt.lastAttemptedAt);
+      .sort((a, b) => a.lastTouchedAt - b.lastTouchedAt);
     for (const entry of candidates) {
       if (recommended.length >= 3) return;
-      if (selected.has(entry.attempt.itemId)) continue;
-      selected.add(entry.attempt.itemId);
+      if (selected.has(entry.itemId)) continue;
+      selected.add(entry.itemId);
       recommended.push(entry);
     }
   };

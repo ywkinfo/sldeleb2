@@ -858,6 +858,30 @@ describe("applyProjectionToSnapshot", () => {
     expect(result.changed).toBe(false);
     expect(result.snapshot.attempts.l1.flagged).toBe(true);
   });
+
+  it("preserves practice pendingFlags and absorbs the projected item's star", () => {
+    const withPending: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: {},
+      pendingFlags: { l1: T0 + 1, unrelated: T0 + 2 },
+    };
+    const result = applyProjectionToSnapshot(withPending, [payloadAttempt]);
+    expect(result.changed).toBe(true);
+    expect(result.snapshot.attempts.l1.flagged).toBe(true);
+    expect(result.snapshot.pendingFlags).toEqual({ unrelated: T0 + 2 });
+  });
+
+  it("drops a stale pending flag without re-flagging an unchanged newer attempt", () => {
+    const stale: ProgressSnapshot = {
+      schemaVersion: 1,
+      attempts: { l1: { ...payloadAttempt } },
+      pendingFlags: { l1: T0 + 1 },
+    };
+    const result = applyProjectionToSnapshot(stale, [payloadAttempt]);
+    expect(result.changed).toBe(true);
+    expect(result.snapshot.attempts.l1.flagged).toBe(false);
+    expect(result.snapshot.pendingFlags).toBeUndefined();
+  });
 });
 
 function finalizedSession(id: string, projection: FinalizedExamSession["progressProjection"]): FinalizedExamSession {

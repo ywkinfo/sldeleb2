@@ -73,4 +73,36 @@ test.describe('Multidimensional Rubrics & Review Board', () => {
       range: 2
     });
   });
+
+  test('speaking task: star before any assessment, keep on reload, absorb on save', async ({ page }) => {
+    await page.goto(`${basePath}/practice/set/set-speaking-opinion`);
+    await expect(page.locator('h3:has-text("자가점검")')).toBeVisible();
+
+    // 1. 평가 기록이 없어도 별표 토글이 보이고, 누르면 pendingFlags에 저장된다.
+    const starBtn = page.locator('button:has-text("다시 보기")').first();
+    await expect(starBtn).toHaveText('☆ 다시 보기');
+    await starBtn.click();
+    await expect(starBtn).toHaveText('★ 다시 보기 해제');
+
+    const raw1 = await page.evaluate(() => window.localStorage.getItem('dele-b2:v1'));
+    const snapshot1 = JSON.parse(raw1!);
+    expect(snapshot1.pendingFlags['s-public-space']).toEqual(expect.any(Number));
+    expect(snapshot1.attempts).toEqual({});
+
+    // 2. 새로고침 후에도 별표가 유지된다.
+    await page.reload();
+    await expect(page.locator('button:has-text("다시 보기")').first()).toHaveText('★ 다시 보기 해제');
+
+    // 3. 평가를 저장하면 첫 attempt에 별표가 흡수된다.
+    for (const dim of ['일관성', '유창성', '정확성', '표현의 다양성']) {
+      await page.locator(`fieldset:has(legend:has-text("${dim}"))`).locator('button:has-text("2")').click();
+    }
+    await page.locator('button:has-text("평가 저장")').click();
+    await expect(page.locator('text=평균 2/3')).toBeVisible();
+
+    const raw2 = await page.evaluate(() => window.localStorage.getItem('dele-b2:v1'));
+    const snapshot2 = JSON.parse(raw2!);
+    expect(snapshot2.attempts['s-public-space'].flagged).toBe(true);
+    expect(snapshot2.pendingFlags).toBeUndefined();
+  });
 });

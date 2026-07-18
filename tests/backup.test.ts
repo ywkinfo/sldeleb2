@@ -116,6 +116,39 @@ describe("user-data backup export", () => {
     expect(parseUserDataFile(exportUserData(attemptStore, examStore))).not.toBeNull();
   });
 
+  it("round-trips pendingFlags through export and import", () => {
+    const attemptStore = createAttemptStore(new FakeStorage());
+    const examStore = createExamSessionStore(new FakeStorage());
+    attemptStore.setPendingFlag("starred-only", true, 500);
+
+    const exported = exportUserData(attemptStore, examStore);
+    expect(JSON.parse(exported).progress.pendingFlags).toEqual({ "starred-only": 500 });
+
+    const targetAttempts = createAttemptStore(new FakeStorage());
+    const targetExams = createExamSessionStore(new FakeStorage());
+    const result = importUserData(targetAttempts, targetExams, exported);
+    expect(result?.format).toBe("backup-v1");
+    expect(targetAttempts.load().snapshot.pendingFlags).toEqual({ "starred-only": 500 });
+  });
+
+  it("absorbs an exported pending star into the export-only projection copy", () => {
+    // 별표해 둔 문항을 모의고사에서 푼 상태로 export하면, export 사본에서
+    // projection이 반영되면서 별표도 attempt.flagged로 흡수돼야 한다.
+    const attemptStore = createAttemptStore(new FakeStorage());
+    const examStore = createExamSessionStore(new FakeStorage());
+    attemptStore.setPendingFlag("projected", true, 150);
+    examStore.save({
+      schemaVersion: 1,
+      sessions: [terminal("pending", 20, { status: "pending", attempts: [projectedAttempt] })],
+    });
+
+    const exported = createUserDataExport(attemptStore, examStore, "2026-07-18T00:00:00.000Z");
+    expect(exported.progress.attempts.projected.flagged).toBe(true);
+    expect(exported.progress.pendingFlags).toBeUndefined();
+    // 로컬 저장소는 그대로 — pending 별표가 남아 있어야 한다.
+    expect(attemptStore.load().snapshot.pendingFlags).toEqual({ projected: 150 });
+  });
+
   it("keeps backup validation compatible with new and presentation-absent frozen reading sessions", () => {
     const section = {
       task: "tarea1" as const,
@@ -176,12 +209,48 @@ describe("user-data backup import", () => {
 
     expect(result?.format).toBe("legacy-progress");
     expect(result?.progress).toMatchObject({
-      stats: { added: 1, updated: 0, skipped: 0 },
+      stats: { added: 1, updated: 0, skipped: 0, flagsChanged: 0 },
       persistent: true,
       localRecovered: false,
     });
     expect(result?.exams).toBeNull();
     expect(examStore.load().snapshot.sessions.map((session) => session.id)).toEqual(["existing"]);
+  });
+
+  it("salvages valid attempts when pendingFlags is partially malformed", () => {
+    const attemptStore = createAttemptStore(new FakeStorage());
+    const examStore = createExamSessionStore(new FakeStorage());
+    const envelope = {
+      kind: "dele-b2-backup",
+      exportVersion: 1,
+      exportedAt: "2026-07-18T00:00:00.000Z",
+      progress: {
+        schemaVersion: 1,
+        attempts: { projected: projectedAttempt },
+        pendingFlags: { valid: 500, broken: "yesterday" },
+      },
+      exams: { schemaVersion: 1, sessions: [] },
+    };
+
+    const result = importUserData(attemptStore, examStore, JSON.stringify(envelope));
+    expect(result?.format).toBe("backup-v1");
+    expect(attemptStore.load().snapshot).toEqual({
+      schemaVersion: 1,
+      attempts: { projected: projectedAttempt },
+      pendingFlags: { valid: 500 },
+    });
+  });
+
+  it("salvages a legacy progress file whose pendingFlags alone is malformed", () => {
+    const parsed = parseUserDataFile(JSON.stringify({
+      schemaVersion: 1,
+      attempts: { projected: projectedAttempt },
+      pendingFlags: ["broken"],
+    }));
+    expect(parsed).toEqual({
+      format: "legacy-progress",
+      data: { schemaVersion: 1, attempts: { projected: projectedAttempt } },
+    });
   });
 
   it("rejects the whole envelope before writing when either domain is malformed", () => {

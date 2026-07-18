@@ -34,7 +34,7 @@ describe("practice set discovery metadata", () => {
     expect(sitemap).toContain(
       "<loc>https://ywkinfo.github.io/sldeleb2/</loc>",
     );
-    expect(getPublishedSets()).toHaveLength(23);
+    expect(getPublishedSets()).toHaveLength(28);
     for (const set of getPublishedSets()) {
       expect(sitemap).toContain(
         `<loc>https://ywkinfo.github.io/sldeleb2/practice/set/${set.id}</loc>`,

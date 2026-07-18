@@ -17,14 +17,30 @@ TODOS.md 2번 과제의 산출물이다.
   일반화한다. 쓰기·말하기는 `answers: Record<string, string>` 자동 채점 계약과
   맞지 않으므로 범위 밖이다.
 
-## 저장 아키텍처 — 별도 키, `dele-b2:v1` 불변
+## 저장 아키텍처 — 별도 키, `dele-b2:v1` 보수적 확장만 허용
 
 - 세션은 새 localStorage 키 **`dele-b2:exam:v1`** 에 저장한다:
   `{ schemaVersion: 1, sessions: ExamSession[] }`.
-- **`dele-b2:v1`(ProgressSnapshot)의 스키마·검증은 절대 변경하지 않는다.**
+- **`dele-b2:v1`(ProgressSnapshot)은 `schemaVersion: 1`과 `AttemptState`
+  union을 유지한다.** 허용되는 변경은 구버전 클라이언트가 무시할 수 있는
+  **선택적 최상위 필드 추가뿐**이다(예: 제출 전 별표 `pendingFlags`).
   근거: 기존 클라이언트는 같은 키의 파싱 실패 시 빈 스냅샷으로 리셋한다
-  (lib/storage.ts). 같은 키에서 스키마를 올리면 배포 후 열려 있는 구버전
-  탭이 진도를 초기화할 수 있다. 별도 키는 구버전이 무시하므로 안전하다.
+  (lib/storage.ts). attempts 형태를 바꾸거나 schemaVersion을 올리면 배포 후
+  열려 있는 구버전 탭이 진도를 초기화할 수 있다. 미지의 최상위 필드는
+  구버전 검증(`isProgressSnapshot`)을 통과하고 `updateAttempt`의 스프레드
+  저장에서도 보존된다.
+- **알려진 다운그레이드 제한:** 구버전의 백업 import(`mergeSnapshots`)와
+  exam projection 적용, 백업 export용 projection 반영은 스냅샷을
+  `{schemaVersion, attempts}`로 재구성하므로 선택 필드(대기 별표)가 유실될
+  수 있다. attempts는 어떤 경로에서도 손상되지 않는다.
+- **대기 별표 백업 병합 제한:** `pendingFlags` 추가는 시각의 최댓값으로
+  병합하지만 해제 이력(tombstone)은 저장하지 않는다. 따라서 답하지 않은
+  문항의 별표를 해제한 뒤 그보다 오래된 백업을 직접 가져오면 별표가 다시
+  나타날 수 있다. 이미 생긴 attempt의 해제 상태는 더 오래된 pending 별표나
+  같은 시각의 백업이 되살리지 않도록 보호한다.
+- 시험 세션의 `flaggedItemIds`(제출 전 검토용)는 여전히 연습의
+  `attempt.flagged`로 복사하지 않는다. 연습의 제출 전 별표(`pendingFlags`)만
+  attempt 저장 시점에 `attempt.flagged`로 흡수된다.
 - 전체 백업 envelope(`dele-b2-backup`, exportVersion 1)는 진도와 terminal
   시험 세션을 함께 다루며, 기존 ProgressSnapshot 단독 파일도 가져올 수 있다.
 
