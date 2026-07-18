@@ -6,10 +6,11 @@ import { getDefaultExamSessionStore } from "@/lib/examSession";
 import { getDefaultAttemptStore } from "@/lib/storage";
 
 function domainMessage(label: string, result: ImportDomainResult): string {
-  const { added, updated, skipped } = result.stats;
+  const { added, updated, skipped, flagsChanged } = result.stats;
+  const flags = (flagsChanged ?? 0) > 0 ? ` · 별표 변경 ${flagsChanged}건` : "";
   const recovery = result.localRecovered ? " · 기존 저장소 복구 후 병합" : "";
   const persistence = result.persistent ? "브라우저에 저장됨" : "현재 세션에만 임시 반영";
-  return `${label}: 새 기록 ${added}건 · 갱신 ${updated}건 · 유지/건너뜀 ${skipped}건 · ${persistence}${recovery}`;
+  return `${label}: 새 기록 ${added}건 · 갱신 ${updated}건 · 유지/건너뜀 ${skipped}건${flags} · ${persistence}${recovery}`;
 }
 
 export function SyncProgress() {
@@ -74,7 +75,7 @@ export function SyncProgress() {
   return (
     <section className="content-group sync-progress" style={{ marginTop: "2rem" }}>
       <h2>데이터 백업 및 복원</h2>
-      <p className="muted" style={{ marginBottom: "1rem" }}>다른 기기나 브라우저로 학습 진도·쓰기 초안·완료된 모의고사 기록을 옮길 수 있습니다. 진행 중 시험, 테마와 녹음은 백업하지 않습니다. 가져온 데이터는 기존 기록과 안전하게 병합됩니다.</p>
+      <p className="muted" style={{ marginBottom: "1rem" }}>다른 기기나 브라우저로 학습 진도·쓰기 초안·완료된 모의고사 기록을 옮길 수 있습니다. 진행 중 시험, 테마와 녹음은 백업하지 않습니다. 가져온 데이터는 기존의 더 최신 시도 기록을 보존하며 병합됩니다.</p>
 
       <div style={{ marginBottom: "1.5rem" }}>
         <button className="button" type="button" onClick={handleExport}>전체 백업 파일 다운로드 (Export)</button>

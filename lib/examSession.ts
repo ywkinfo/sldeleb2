@@ -28,7 +28,13 @@ import {
   cloneReadingPresentationContract,
   validateReadingPresentationContent,
 } from "./readingPresentation";
-import { isAttemptState, type AttemptStore, type StorageLike } from "./storage";
+import {
+  consumePendingFlags,
+  isAttemptState,
+  sameAttemptIgnoringFlag,
+  type AttemptStore,
+  type StorageLike,
+} from "./storage";
 
 export const EXAM_STORAGE_KEY = "dele-b2:exam:v1";
 export const EXAM_SCHEMA_VERSION = 1 as const;
@@ -384,26 +390,21 @@ export function finalizeExamSession(
 
 // ---- projection 적용 (dele-b2:v1 병합, 멱등) ----
 
-function sameAttemptIgnoringFlag(a: AttemptState, b: AttemptState): boolean {
-  if (a.kind !== b.kind || a.itemId !== b.itemId) return false;
-  if (a.attemptCount !== b.attemptCount || a.lastAttemptedAt !== b.lastAttemptedAt) return false;
-  if ((a.kind === "reading" || a.kind === "listening") && (b.kind === "reading" || b.kind === "listening")) {
-    return a.selectedAnswer === b.selectedAnswer && a.correct === b.correct;
-  }
-  return true;
-}
-
 /**
  * pending payload를 ProgressSnapshot에 병합한다.
  * - 기존 attempt가 payload보다 최신이면 보존.
  * - timestamp·값이 같으면 이미 반영된 것(재시도 시 attemptCount 불변).
  *   flag는 비교에서 제외해, 반영 후 사용자가 바꾼 별표를 되돌리지 않는다.
+ * - 연습의 제출 전 별표(pendingFlags)는 보존하고, 투영으로 attempt가 생긴
+ *   문항의 별표는 attempt.flagged로 흡수한다 — 흡수만 일어나도 changed다.
+ *   (시험 자체의 flaggedItemIds는 여전히 attempt.flagged로 복사하지 않는다.)
  */
 export function applyProjectionToSnapshot(
   snapshot: ProgressSnapshot,
   payload: readonly AttemptState[],
 ): { snapshot: ProgressSnapshot; changed: boolean } {
   const attempts = { ...snapshot.attempts };
+  const appliedItemIds = new Set<string>();
   let changed = false;
   for (const attempt of payload) {
     const existing = attempts[attempt.itemId];
@@ -414,10 +415,22 @@ export function applyProjectionToSnapshot(
       }
     }
     attempts[attempt.itemId] = attempt;
+    appliedItemIds.add(attempt.itemId);
     changed = true;
   }
-  if (!changed) return { snapshot, changed: false };
-  return { snapshot: { schemaVersion: 1, attempts }, changed: true };
+  const consumed = consumePendingFlags(attempts, snapshot.pendingFlags, appliedItemIds);
+  if (!changed && !consumed.changed) return { snapshot, changed: false };
+  const merged: ProgressSnapshot = {
+    ...snapshot,
+    schemaVersion: 1,
+    attempts: consumed.attempts,
+  };
+  if (consumed.pendingFlags) {
+    merged.pendingFlags = consumed.pendingFlags;
+  } else {
+    delete merged.pendingFlags;
+  }
+  return { snapshot: merged, changed: true };
 }
 
 // ---- 저장 스냅샷 검증 ----

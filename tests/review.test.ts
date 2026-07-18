@@ -95,6 +95,62 @@ describe("buildAttemptEntries / toReviewEntries", () => {
   });
 });
 
+describe("pending flags (아직 풀지 않은 별표)", () => {
+  it("builds a flagged-only entry for an unanswered starred item", () => {
+    const entries = buildAttemptEntries({}, new Map([["s1", meta("s1", { skill: "speaking", kind: "oral" })]]), { s1: 500 });
+    expect(entries).toEqual([
+      { itemId: "s1", lastTouchedAt: 500, meta: meta("s1", { skill: "speaking", kind: "oral" }), reasons: ["flagged"] },
+    ]);
+    expect(toReviewEntries(entries)).toHaveLength(1);
+  });
+
+  it("skips a pending flag that overlaps an attempt (storage already absorbs it)", () => {
+    const entries = buildAttemptEntries({ a: mcq("a", false) }, new Map(), { a: 500 });
+    expect(entries).toHaveLength(1);
+    expect(entries[0].attempt).toBeDefined();
+  });
+
+  it("supports skill/reason filters on pending-only entries", () => {
+    const metaById = new Map([["w1", meta("w1", { skill: "writing", kind: "open", tags: ["편지"] })]]);
+    const entries = toReviewEntries(buildAttemptEntries({}, metaById, { w1: 500 }));
+    expect(filterReviewEntries(entries, { skill: "writing", reason: "flagged", tag: "all" })).toHaveLength(1);
+    expect(filterReviewEntries(entries, { skill: "reading", reason: "all", tag: "all" })).toHaveLength(0);
+    expect(filterReviewEntries(entries, { skill: "all", reason: "incorrect", tag: "all" })).toHaveLength(0);
+  });
+
+  it("keeps pending-only entries out of Tarea rates and vulnerable-tag denominators", () => {
+    const attempts: Record<string, AttemptState> = { a: mcq("a", false), b: mcq("b", false) };
+    const metaById = new Map([
+      ["a", meta("a", { task: "tarea2", tags: ["subjuntivo"] })],
+      ["b", meta("b", { task: "tarea2", tags: ["subjuntivo"] })],
+      ["p", meta("p", { task: "tarea2", tags: ["subjuntivo"] })],
+    ]);
+    const entries = buildAttemptEntries(attempts, metaById, { p: 500 });
+    const rates = summarizeTareaRates(entries);
+    expect(rates.listening.find((r) => r.task === "tarea2")!.rate.text).toBe("0/2 정답");
+    expect(analyzeVulnerableTags(entries)).toEqual([{ tag: "subjuntivo", rate: 100 }]);
+  });
+
+  it("fills the flagged tier of today's review with pending-only entries, oldest star first", () => {
+    const metaById = new Map([
+      ["p-old", meta("p-old")],
+      ["p-new", meta("p-new")],
+    ]);
+    const result = pickTodaysReview(buildAttemptEntries({}, metaById, { "p-new": 900, "p-old": 100 }), []);
+    expect(result.map((entry) => entry.itemId)).toEqual(["p-old", "p-new"]);
+  });
+
+  it("keeps an orphan pending star removable while excluding it from metadata filters", () => {
+    const entries = toReviewEntries(buildAttemptEntries({}, new Map(), { removed: 500 }));
+    expect(entries).toEqual([
+      { itemId: "removed", lastTouchedAt: 500, meta: undefined, reasons: ["flagged"] },
+    ]);
+    expect(filterReviewEntries(entries, { skill: "all", reason: "all", tag: "all" })).toHaveLength(1);
+    expect(filterReviewEntries(entries, { skill: "reading", reason: "all", tag: "all" })).toHaveLength(0);
+    expect(filterReviewEntries(entries, { skill: "all", reason: "all", tag: "문법" })).toHaveLength(0);
+  });
+});
+
 describe("filterReviewEntries", () => {
   const attempts: Record<string, AttemptState> = {
     l1: mcq("l1", false),
@@ -111,19 +167,19 @@ describe("filterReviewEntries", () => {
 
   it("filters by skill and excludes orphans when a skill is chosen", () => {
     const listening = filterReviewEntries(entries, { skill: "listening", reason: "all", tag: "all" });
-    expect(listening.map((e) => e.attempt.itemId)).toEqual(["l1"]);
+    expect(listening.map((e) => e.itemId)).toEqual(["l1"]);
   });
   it("filters by reason", () => {
     const low = filterReviewEntries(entries, { skill: "all", reason: "low-assessment", tag: "all" });
-    expect(low.map((e) => e.attempt.itemId)).toEqual(["w1"]);
+    expect(low.map((e) => e.itemId)).toEqual(["w1"]);
   });
   it("filters by tag", () => {
     const tagged = filterReviewEntries(entries, { skill: "all", reason: "all", tag: "conectores" });
-    expect(tagged.map((e) => e.attempt.itemId)).toEqual(["w1"]);
+    expect(tagged.map((e) => e.itemId)).toEqual(["w1"]);
   });
   it("combines filters", () => {
     const combined = filterReviewEntries(entries, { skill: "reading", reason: "incorrect", tag: "inferencia" });
-    expect(combined.map((e) => e.attempt.itemId)).toEqual(["r1"]);
+    expect(combined.map((e) => e.itemId)).toEqual(["r1"]);
   });
   it("returns every entry, orphans included, when all filters are 'all'", () => {
     expect(filterReviewEntries(entries, { skill: "all", reason: "all", tag: "all" })).toHaveLength(4);
@@ -183,7 +239,7 @@ describe("analyzeVulnerableTags / pickTodaysReview", () => {
     expect(vulnerable).toEqual([{ tag: "subjuntivo", rate: 67 }]);
 
     const todays = pickTodaysReview(entries, vulnerable);
-    expect(todays.map((e) => e.attempt.itemId)).toEqual(["a", "c"]);
+    expect(todays.map((e) => e.itemId)).toEqual(["a", "c"]);
   });
 
   it("fills recommendation tiers in priority order and sorts within a tier by oldest attempt", () => {
@@ -209,7 +265,7 @@ describe("analyzeVulnerableTags / pickTodaysReview", () => {
       [{ tag: "subjuntivo", rate: 50 }],
     );
 
-    expect(result.map((entry) => entry.attempt.itemId)).toEqual([
+    expect(result.map((entry) => entry.itemId)).toEqual([
       "vulnerable-older",
       "vulnerable-newer",
       "other-incorrect",
@@ -234,6 +290,6 @@ describe("analyzeVulnerableTags / pickTodaysReview", () => {
 
     const result = pickTodaysReview(buildAttemptEntries(attempts, metaById), []);
 
-    expect(result.map((entry) => entry.attempt.itemId)).toEqual(["both", "low", "flagged"]);
+    expect(result.map((entry) => entry.itemId)).toEqual(["both", "low", "flagged"]);
   });
 });

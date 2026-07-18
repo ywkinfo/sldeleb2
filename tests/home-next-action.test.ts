@@ -98,6 +98,30 @@ describe("selectHomeNextAction", () => {
     expect(result).toMatchObject({ kind: "review", href: "/review" });
   });
 
+  it("counts a pending-only star for review but never as an in-progress set", () => {
+    const result = selectHomeNextAction({
+      sessions: [],
+      sets,
+      attempts: {},
+      pendingFlags: { "starter-item": 500 },
+      now: 1000,
+    });
+
+    expect(result).toMatchObject({ kind: "review", href: "/review", title: "맞춤 복습 1개" });
+  });
+
+  it("does not double-count a star that overlaps an existing attempt", () => {
+    const result = selectHomeNextAction({
+      sessions: [],
+      sets,
+      attempts: { "starter-item": attempt("starter-item", 100, { flagged: true }) },
+      pendingFlags: { "starter-item": 500 },
+      now: 1000,
+    });
+
+    expect(result).toMatchObject({ kind: "review", title: "맞춤 복습 1개" });
+  });
+
   it("falls back to the first sorted guided reading set", () => {
     const result = selectHomeNextAction({
       sessions: [],

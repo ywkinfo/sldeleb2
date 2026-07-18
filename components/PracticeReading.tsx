@@ -6,7 +6,7 @@ import type {
   ReadingPresentationContract,
   ReadingText,
 } from "@/lib/types";
-import { gradeMcqAttempt, setAttemptFlag } from "@/lib/grading";
+import { gradeMcqAttempt } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { McqQuestion } from "./McqQuestion";
@@ -28,7 +28,7 @@ export function PracticeReading({
   numberByItemId: Record<string, number>;
   presentation?: ReadingPresentationContract;
 }) {
-  const { attempts, persistent, recovered, update } = useAttempts();
+  const { attempts, pendingFlags, persistent, recovered, update, setPendingFlag, hydrated } = useAttempts();
   const [localSelections, setLocalSelections] = useState<Record<string, string | undefined>>({});
   const [retryingItemIds, setRetryingItemIds] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -101,23 +101,15 @@ export function PracticeReading({
           const attempt = stored?.kind === "reading" ? stored : undefined;
           const locked = attempt !== undefined && !retryingItemIds.has(item.id);
           const selection = stateByItemId[item.id]?.value;
+          // 채점 전에는 pendingFlags, 채점 후에는 attempt.flagged가 진실이다.
+          const flagged = attempt ? attempt.flagged : pendingFlags[item.id] !== undefined;
           return (
             <>
               <div className="question-actions">
                 {locked ? (
-                  <>
-                    <button className="button secondary small" type="button" onClick={() => retry(item.id)}>
-                      다시 풀기
-                    </button>
-                    <button
-                      className="button secondary small"
-                      type="button"
-                      aria-pressed={attempt.flagged}
-                      onClick={() => update(setAttemptFlag(attempt, !attempt.flagged))}
-                    >
-                      {attempt.flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}
-                    </button>
-                  </>
+                  <button className="button secondary small" type="button" onClick={() => retry(item.id)}>
+                    다시 풀기
+                  </button>
                 ) : (
                   <button
                     className="button small"
@@ -128,6 +120,15 @@ export function PracticeReading({
                     정답 확인
                   </button>
                 )}
+                <button
+                  className="button secondary small"
+                  type="button"
+                  aria-pressed={flagged}
+                  disabled={!hydrated}
+                  onClick={() => setPendingFlag(item.id, !flagged)}
+                >
+                  {flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}
+                </button>
               </div>
               {!locked && (
                 <div className="muted presentation-shortcut-hint">

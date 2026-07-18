@@ -73,6 +73,60 @@ test.describe('MCQ Component & Materials Smoke', () => {
     expect(attempt2.attemptCount).toBe(2);
   });
 
+  test('pre-submit star persists in pendingFlags and is absorbed on grading', async ({ page }) => {
+    await page.goto(`${basePath}/practice/set/set-listening-t1`);
+    const firstQuestion = page.locator('.question').first();
+    const itemId = await firstQuestion.getAttribute('id');
+
+    // 1. 채점 전 별표 — hydration이 끝나면 활성화된다.
+    const starBtn = firstQuestion.locator('button:has-text("다시 보기")');
+    await expect(starBtn).toHaveText('☆ 다시 보기');
+    await starBtn.click();
+    await expect(starBtn).toHaveText('★ 다시 보기 해제');
+
+    const raw1 = await page.evaluate(() => window.localStorage.getItem('dele-b2:v1'));
+    const snapshot1 = JSON.parse(raw1!);
+    expect(snapshot1.pendingFlags[itemId!]).toEqual(expect.any(Number));
+    expect(snapshot1.attempts).toEqual({});
+
+    // 2. 새로고침해도 답 없이 별표가 유지된다.
+    await page.reload();
+    await page.waitForSelector('.question');
+    const reloadedQuestion = page.locator('.question').first();
+    await expect(reloadedQuestion.locator('button:has-text("다시 보기")')).toHaveText('★ 다시 보기 해제');
+    await expect(reloadedQuestion.locator('button:has-text("정답 확인")')).toBeVisible();
+
+    // 3. 채점하면 별표가 attempt.flagged로 흡수되고 pending 엔트리는 사라진다.
+    await reloadedQuestion.locator('button[data-key="a"]').click();
+    await reloadedQuestion.locator('button:has-text("정답 확인")').click();
+    await expect(reloadedQuestion.locator('button:has-text("정답 확인")')).toBeHidden();
+
+    const raw2 = await page.evaluate(() => window.localStorage.getItem('dele-b2:v1'));
+    const snapshot2 = JSON.parse(raw2!);
+    expect(snapshot2.attempts[itemId!].flagged).toBe(true);
+    expect(snapshot2.pendingFlags).toBeUndefined();
+    await expect(reloadedQuestion.locator('button:has-text("다시 보기")')).toHaveText('★ 다시 보기 해제');
+  });
+
+  test('pre-submit star syncs live across tabs', async ({ page, context }) => {
+    const url = `${basePath}/practice/set/set-listening-t1`;
+    await page.goto(url);
+    const secondPage = await context.newPage();
+    await secondPage.goto(url);
+
+    const firstStar = page.locator('.question').first().locator('button:has-text("다시 보기")');
+    const secondStar = secondPage.locator('.question').first().locator('button:has-text("다시 보기")');
+    await expect(firstStar).toHaveText('☆ 다시 보기');
+    await expect(secondStar).toHaveText('☆ 다시 보기');
+
+    await firstStar.click();
+    await expect(secondStar).toHaveText('★ 다시 보기 해제');
+
+    await secondStar.click();
+    await expect(firstStar).toHaveText('☆ 다시 보기');
+    await secondPage.close();
+  });
+
   test('Materials Filter smoke test', async ({ page }) => {
     await page.goto(`${basePath}/materials`);
     await expect(page.locator('label:has-text("과제")')).toBeHidden();

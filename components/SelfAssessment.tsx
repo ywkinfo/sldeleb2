@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { OpenAttempt } from "@/lib/types";
-import { completeOpenAttemptWithRubric, setAttemptFlag } from "@/lib/grading";
+import { completeOpenAttemptWithRubric } from "@/lib/grading";
 import { useAttempts } from "./useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { DIMENSIONS_WRITING, DIMENSIONS_SPEAKING, DIMENSION_LABELS, type RubricScore, type RubricScores } from "@/lib/rubric";
@@ -14,8 +14,10 @@ const SCORE_MEANINGS: Record<RubricScore, string> = {
 };
 
 export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writing" | "speaking" }) {
-  const { attempts, persistent, recovered, update, hydrated } = useAttempts();
+  const { attempts, pendingFlags, persistent, recovered, update, setPendingFlag, hydrated } = useAttempts();
   const current = attempts[itemId]?.kind === "open" ? attempts[itemId] as OpenAttempt : undefined;
+  // 평가·초안 저장 전에는 pendingFlags, attempt가 생긴 뒤에는 attempt.flagged가 진실이다.
+  const flagged = current ? current.flagged : pendingFlags[itemId] !== undefined;
   
   const dimensions = skill === "writing" ? DIMENSIONS_WRITING : DIMENSIONS_SPEAKING;
   
@@ -86,7 +88,8 @@ export function SelfAssessment({ itemId, skill }: { itemId: string, skill: "writ
       )}
     </div>
 
-    {current && <p style={{ marginTop: "1.2rem" }}><button className="button secondary small" type="button" aria-pressed={current.flagged} onClick={() => update(setAttemptFlag(current, !current.flagged))}>{current.flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}</button></p>}
+    {/* 제출 전 별표: 평가 기록이 없어도 표시한다. hydration 전에는 저장된 별표를 반대로 뒤집지 않도록 잠근다. */}
+    <p style={{ marginTop: "1.2rem" }}><button className="button secondary small" type="button" aria-pressed={flagged} disabled={!hydrated} onClick={() => setPendingFlag(itemId, !flagged)}>{flagged ? "★ 다시 보기 해제" : "☆ 다시 보기"}</button></p>
     <StorageNotice persistent={persistent} recovered={recovered} />
   </div>;
 }

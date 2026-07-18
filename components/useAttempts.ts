@@ -7,6 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 import { getDefaultAttemptStore } from "@/lib/storage";
 import type { AttemptState, ProgressSnapshot } from "@/lib/types";
 
+// pendingFlags가 없는 스냅샷에서 렌더마다 새 객체를 만들지 않기 위한 고정 참조.
+const EMPTY_PENDING_FLAGS: Record<string, number> = {};
+
 export function useAttempts() {
   const store = getDefaultAttemptStore();
   const initial: ProgressSnapshot = { schemaVersion: 1, attempts: {} };
@@ -44,6 +47,22 @@ export function useAttempts() {
     },
     [store],
   );
+  const setPendingFlag = useCallback(
+    (itemId: string, flagged: boolean) => {
+      const result = store.setPendingFlag(itemId, flagged);
+      setPersistent(result.persistent);
+    },
+    [store],
+  );
 
-  return { attempts: snapshot.attempts, persistent, recovered, hydrated, update, remove };
+  return {
+    attempts: snapshot.attempts,
+    pendingFlags: snapshot.pendingFlags ?? EMPTY_PENDING_FLAGS,
+    persistent,
+    recovered,
+    hydrated,
+    update,
+    remove,
+    setPendingFlag,
+  };
 }

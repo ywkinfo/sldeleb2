@@ -34,6 +34,8 @@ interface HomeActionInput {
   sessions: readonly HomeExamSessionMeta[];
   sets: readonly PracticeSet[];
   attempts: Record<string, AttemptState>;
+  /** 답 제출 전 별표(itemId → 별표 시각). 복습 수에는 포함하되 "이어하기" 판단에는 쓰지 않는다. */
+  pendingFlags?: Record<string, number>;
   now: number;
 }
 
@@ -61,6 +63,7 @@ export function selectHomeNextAction({
   sessions,
   sets,
   attempts,
+  pendingFlags,
   now,
 }: HomeActionInput): HomeAction | null {
   const inProgress = sessions.filter((session) => session.status === "in-progress");
@@ -111,9 +114,14 @@ export function selectHomeNextAction({
     };
   }
 
-  const reviewCount = Object.values(attempts).filter(
-    (attempt) => getReviewReasons(attempt).length > 0,
+  // 미풀이 별표(attempt 없음)도 복습 대상으로 센다. attempt가 있는 문항의
+  // 별표는 저장 시점에 attempt.flagged로 흡수되므로 중복 집계는 없다.
+  const pendingOnlyCount = Object.keys(pendingFlags ?? {}).filter(
+    (itemId) => attempts[itemId] === undefined,
   ).length;
+  const reviewCount =
+    Object.values(attempts).filter((attempt) => getReviewReasons(attempt).length > 0).length +
+    pendingOnlyCount;
   if (reviewCount > 0) {
     return {
       kind: "review",
@@ -149,7 +157,7 @@ function HomeActionLink({ action, busy = false }: { action: HomeAction; busy?: b
 }
 
 export function HomeNextAction({ sets }: { sets: readonly PracticeSet[] }) {
-  const { attempts, hydrated: progressHydrated } = useAttempts();
+  const { attempts, pendingFlags, hydrated: progressHydrated } = useAttempts();
   const examStore = getDefaultExamSessionStore();
   const [sessions, setSessions] = useState<HomeExamSessionMeta[]>([]);
   const [examHydrated, setExamHydrated] = useState(false);
@@ -186,7 +194,7 @@ export function HomeNextAction({ sets }: { sets: readonly PracticeSet[] }) {
     );
   }
 
-  const action = selectHomeNextAction({ sessions, sets, attempts, now });
+  const action = selectHomeNextAction({ sessions, sets, attempts, pendingFlags, now });
   if (!action) {
     return <div className="hero-note">
       <strong>오늘의 짧은 읽기</strong>

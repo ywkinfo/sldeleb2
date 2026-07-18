@@ -32,6 +32,32 @@ test("Tarea 2 matching supports keyboard and click selection with reload restora
   ).toHaveAttribute("aria-checked", "true");
 });
 
+test("Tarea 2 matching exposes the pre-submit star and stores it in pendingFlags", async ({ page }) => {
+  await page.goto(practiceUrl("set-reading-anio-fuera"));
+  const first = page
+    .locator('[data-presentation-kind="matching"] [data-presentation-summary="true"]')
+    .first();
+
+  const starBtn = first.locator('button:has-text("다시 보기")');
+  await expect(starBtn).toHaveText("☆ 다시 보기");
+  await starBtn.click();
+  await expect(starBtn).toHaveText("★ 다시 보기 해제");
+
+  const raw = await page.evaluate((key) => window.localStorage.getItem(key), PROGRESS_KEY);
+  const snapshot = JSON.parse(raw!);
+  expect(snapshot.pendingFlags["r-anio-01"]).toEqual(expect.any(Number));
+  expect(snapshot.attempts).toEqual({});
+
+  // 채점하면 별표가 attempt로 흡수된다.
+  await first.locator('[role="radio"][data-key="b"]').click();
+  await first.getByRole("button", { name: "정답 확인" }).click();
+  await expect(first.getByRole("status")).toContainText("맞았어요");
+  const raw2 = await page.evaluate((key) => window.localStorage.getItem(key), PROGRESS_KEY);
+  const snapshot2 = JSON.parse(raw2!);
+  expect(snapshot2.attempts["r-anio-01"].flagged).toBe(true);
+  expect(snapshot2.pendingFlags).toBeUndefined();
+});
+
 test("Tarea 3 renders exact marker slots and warns without blocking duplicate selections", async ({ page }) => {
   await page.goto(practiceUrl("set-reading-semana-cuatro"));
   const presentation = page.locator('[data-presentation-kind="sentence-insertion"]');

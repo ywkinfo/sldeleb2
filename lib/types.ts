@@ -208,6 +208,13 @@ export type AttemptState = ReadingAttempt | ListeningAttempt | OpenAttempt;
 export interface ProgressSnapshot {
   schemaVersion: 1;
   attempts: Record<string, AttemptState>;
+  /**
+   * 답 제출 전 별표: itemId → 별표 시각(epoch ms). 해당 문항의 attempt가
+   * 저장되는 순간 attempt.flagged로 흡수되고 엔트리는 제거된다. 빈 맵은
+   * 필드 자체를 생략한다. 구버전 클라이언트는 이 필드를 무시하며, 구버전의
+   * 백업 병합·projection 적용에서는 유실될 수 있다(attempts는 무손상).
+   */
+  pendingFlags?: Record<string, number>;
 }
 
 // ---- 모의고사 세션 (설계: docs/mock-exam-session-design.md) ----
