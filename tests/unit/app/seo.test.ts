@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { generateMetadata } from "../app/practice/set/[setId]/page";
-import { GET as getSitemap } from "../app/sitemap.xml/route";
-import { getPublishedSets } from "../lib/sets";
-import { absoluteUrl } from "../lib/url";
+import { generateMetadata } from "@/app/practice/set/[setId]/page";
+import { GET as getSitemap } from "@/app/sitemap.xml/route";
+import { getPublishedSets } from "@/lib/sets";
+import { absoluteUrl } from "@/lib/url";
 
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "/sldeleb2");

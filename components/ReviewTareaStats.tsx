@@ -1,5 +1,5 @@
 import type { TareaRateRow } from "@/lib/review";
-import { RATE_MIN_ATTEMPTS } from "@/lib/progress";
+import { RATE_MIN_ATTEMPTS } from "@/lib/progress/summary";
 
 function TareaColumn({ title, rows }: { title: string; rows: TareaRateRow[] }) {
   return <div>

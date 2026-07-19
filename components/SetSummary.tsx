@@ -1,7 +1,7 @@
 "use client";
 
-import { useAttempts } from "./useAttempts";
-import { summarizeSetProgress, pickNextSet } from "@/lib/progress";
+import { useAttempts } from "@/hooks/useAttempts";
+import { pickNextSet, summarizeSetProgress } from "@/lib/progress/summary";
 import type { PracticeSet, PracticeItem } from "@/lib/types";
 import { sitePath } from "@/lib/url";
 

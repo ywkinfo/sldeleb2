@@ -4,11 +4,9 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  applyPendingProjection,
-  getDefaultExamSessionStore,
-} from "@/lib/examSession";
-import { getDefaultAttemptStore } from "@/lib/storage";
+import { applyPendingProjection } from "@/lib/exam/projection";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
+import { getDefaultAttemptStore } from "@/lib/progress/store";
 import type { ExamSession, FinalizedExamSession } from "@/lib/types";
 import { sitePath } from "@/lib/url";
 import { ExamResultView } from "./ExamResultView";

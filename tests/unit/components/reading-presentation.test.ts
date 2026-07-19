@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { ReadingPresentationContract } from "../lib/types";
+import type { ReadingPresentationContract } from "@/lib/types";
 import {
   findPresentationSlot,
   getDuplicateOptionKeys,
   getReadingPresentationKind,
   parseReadingPresentationPassage,
-} from "../components/ReadingPresentation";
+} from "@/components/ReadingPresentation";
 
 describe("reading presentation helpers", () => {
   it("falls back to mcq when no presentation contract is stored", () => {

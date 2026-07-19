@@ -25,7 +25,7 @@ TODOS.md 2번 과제의 산출물이다.
   union을 유지한다.** 허용되는 변경은 구버전 클라이언트가 무시할 수 있는
   **선택적 최상위 필드 추가뿐**이다(예: 제출 전 별표 `pendingFlags`).
   근거: 기존 클라이언트는 같은 키의 파싱 실패 시 빈 스냅샷으로 리셋한다
-  (lib/storage.ts). attempts 형태를 바꾸거나 schemaVersion을 올리면 배포 후
+  (lib/progress/store.ts). attempts 형태를 바꾸거나 schemaVersion을 올리면 배포 후
   열려 있는 구버전 탭이 진도를 초기화할 수 있다. 미지의 최상위 필드는
   구버전 검증(`isProgressSnapshot`)을 통과하고 `updateAttempt`의 스프레드
   저장에서도 보존된다.

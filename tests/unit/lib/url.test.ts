@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { absoluteUrl, sitePath } from "../lib/url";
+import { absoluteUrl, sitePath } from "@/lib/url";
 
 afterEach(() => {
   vi.unstubAllEnvs();

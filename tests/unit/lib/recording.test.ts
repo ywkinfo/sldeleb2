@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { recordingExtension, recordingFileName } from "../lib/recording";
+import { recordingExtension, recordingFileName } from "@/lib/recording";
 
 describe("recordingExtension", () => {
   it("strips the codec parameter and maps mp4 to m4a", () => {

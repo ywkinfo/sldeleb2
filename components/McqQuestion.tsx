@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReadingMCQItem, ListeningMCQItem } from "@/lib/types";
 import { gradeMcqAttempt } from "@/lib/grading";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { McqOptions, handleMcqKeyDown, type McqOptionState } from "./McqOptions";
 
 export function McqQuestion({

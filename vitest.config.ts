@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.ts"],
     exclude: [...configDefaults.exclude, "tests/e2e/**/*.test.ts"],
     coverage: { enabled: false },
   },

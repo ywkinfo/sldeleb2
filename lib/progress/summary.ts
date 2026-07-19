@@ -1,5 +1,5 @@
-import type { PracticeSet, AttemptState } from "./types";
-import { sortPracticeSets } from "./sets";
+import { sortPracticeSets } from "../sets";
+import type { AttemptState, PracticeSet } from "../types";
 
 export interface SetProgress {
   total: number;
@@ -56,7 +56,7 @@ export function summarizeSetProgress(set: PracticeSet, attempts: Record<string, 
     answered,
     correct,
     isMcqSet,
-    status
+    status,
   };
 }
 
@@ -78,13 +78,17 @@ export function summarizeRate(correct: number, total: number): RateSummary {
   return { kind: "percent", text: `${pct}%`, pct };
 }
 
-export function pickNextSet(currentSetId: string, sets: PracticeSet[], attempts: Record<string, AttemptState>): PracticeSet | undefined {
+export function pickNextSet(
+  currentSetId: string,
+  sets: PracticeSet[],
+  attempts: Record<string, AttemptState>,
+): PracticeSet | undefined {
   const orderedSets = sortPracticeSets(sets);
-  const currentSetIndex = orderedSets.findIndex(s => s.id === currentSetId);
+  const currentSetIndex = orderedSets.findIndex((set) => set.id === currentSetId);
   if (currentSetIndex === -1) return undefined;
 
   const currentSet = orderedSets[currentSetIndex];
-  
+
   // 1. Same skill, next to end
   for (let i = currentSetIndex + 1; i < orderedSets.length; i++) {
     if (orderedSets[i].skill === currentSet.skill) {
@@ -102,10 +106,10 @@ export function pickNextSet(currentSetId: string, sets: PracticeSet[], attempts:
   }
 
   // 3. Different skill, start to end
-  for (let i = 0; i < orderedSets.length; i++) {
-    if (orderedSets[i].skill !== currentSet.skill) {
-      const prog = summarizeSetProgress(orderedSets[i], attempts);
-      if (prog.status !== "done") return orderedSets[i];
+  for (const set of orderedSets) {
+    if (set.skill !== currentSet.skill) {
+      const prog = summarizeSetProgress(set, attempts);
+      if (prog.status !== "done") return set;
     }
   }
 

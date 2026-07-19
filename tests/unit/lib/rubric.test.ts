@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidRubric, calculateRubricStats } from "../lib/rubric";
+import { isValidRubric, calculateRubricStats } from "@/lib/rubric";
 
 describe("isValidRubric", () => {
   it("validates exact shape for writing", () => {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getPaletteItemState } from "../components/ExamQuestionPalette";
+import { getPaletteItemState } from "@/components/ExamQuestionPalette";
 import {
   isHistorySessionDeletable,
   sortExamHistorySessions,
-} from "../components/ExamHistory";
-import { buildExamResultRows } from "../components/ExamResultView";
-import type { FinalizedExamSession } from "../lib/types";
+} from "@/components/ExamHistory";
+import { buildExamResultRows } from "@/components/ExamResultView";
+import type { FinalizedExamSession } from "@/lib/types";
 
 function terminal(
   id: string,

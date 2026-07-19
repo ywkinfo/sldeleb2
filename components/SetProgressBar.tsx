@@ -1,8 +1,8 @@
 "use client";
 
 import type { PracticeSet } from "@/lib/types";
-import { summarizeSetProgress } from "@/lib/progress";
-import { useAttempts } from "./useAttempts";
+import { summarizeSetProgress } from "@/lib/progress/summary";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StickyStatusBar } from "./StickyStatusBar";
 
 export function SetProgressBar({ set }: { set: PracticeSet }) {

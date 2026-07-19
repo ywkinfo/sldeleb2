@@ -4,15 +4,15 @@ import {
   exportUserData,
   importUserData,
   parseUserDataFile,
-} from "../lib/backup";
-import { createExamSessionStore, EXAM_STORAGE_KEY } from "../lib/examSession";
-import { createAttemptStore, PROGRESS_STORAGE_KEY } from "../lib/storage";
+} from "@/lib/backup";
+import { createExamSessionStore, EXAM_STORAGE_KEY } from "@/lib/exam/store";
+import { PROGRESS_STORAGE_KEY, createAttemptStore } from "@/lib/progress/store";
 import type {
   AttemptState,
   ExamSession,
   FinalizedExamSession,
   ProgressSnapshot,
-} from "../lib/types";
+} from "@/lib/types";
 
 class FakeStorage {
   values = new Map<string, string>();

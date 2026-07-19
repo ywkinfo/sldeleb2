@@ -21,22 +21,19 @@ import type {
   ReadingPresentationContract,
   ReadingText,
   Task,
-} from "./types";
-import { orderItemsBySet } from "./sets";
-import { gradeMcqAttempt } from "./grading";
+} from "../types";
+import { orderItemsBySet } from "../sets";
+import { gradeMcqAttempt } from "../grading";
 import {
   cloneReadingPresentationContract,
   validateReadingPresentationContent,
-} from "./readingPresentation";
+} from "../readingPresentation";
 import {
   consumePendingFlags,
   isAttemptState,
   sameAttemptIgnoringFlag,
-  type AttemptStore,
-  type StorageLike,
-} from "./storage";
+} from "../progress/snapshot";
 
-export const EXAM_STORAGE_KEY = "dele-b2:exam:v1";
 export const EXAM_SCHEMA_VERSION = 1 as const;
 export const MAX_PLAYBACKS_PER_SCRIPT = 2;
 /** terminal 세션 보존 상한. in-progress·projection pending은 절대 삭제하지 않는다. */
@@ -902,214 +899,4 @@ export function deleteCompletedTerminalSessionsFromList(
 ): { sessions: ExamSession[]; deleted: number } {
   const retained = sessions.filter((session) => !isDeletableSession(session));
   return { sessions: retained, deleted: sessions.length - retained.length };
-}
-
-// ---- 저장소 (AttemptStore 패턴, 별도 키) ----
-
-export interface ExamStorageLoadResult {
-  snapshot: ExamSessionSnapshot;
-  persistent: boolean;
-  recovered: boolean;
-}
-
-export type ExamStoreListener = (result: ExamStorageLoadResult) => void;
-
-function emptyExamSnapshot(): ExamSessionSnapshot {
-  return { schemaVersion: EXAM_SCHEMA_VERSION, sessions: [] };
-}
-
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
-
-function browserStorage(): StorageLike | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
-
-export class ExamSessionStore {
-  private readonly fallback = new MemoryStorage();
-  private readonly listeners = new Set<ExamStoreListener>();
-  private readonly storageOverride: StorageLike | null | undefined;
-  private activeStorage: StorageLike | null | undefined;
-  private recovered = false;
-  private listeningForBrowserStorage = false;
-
-  constructor(storage?: StorageLike | null) {
-    this.storageOverride = storage;
-  }
-
-  private resolveStorage(): StorageLike | null {
-    if (this.activeStorage !== undefined) return this.activeStorage;
-    this.activeStorage =
-      this.storageOverride === undefined ? browserStorage() : this.storageOverride;
-    this.installBrowserStorageListener();
-    return this.activeStorage;
-  }
-
-  private installBrowserStorageListener(): void {
-    if (
-      this.listeningForBrowserStorage ||
-      this.storageOverride !== undefined ||
-      typeof window === "undefined"
-    ) {
-      return;
-    }
-    this.listeningForBrowserStorage = true;
-    window.addEventListener("storage", (event) => {
-      if (event.key !== EXAM_STORAGE_KEY) return;
-      const snapshot =
-        event.newValue === null ? emptyExamSnapshot() : parseExamSessionSnapshot(event.newValue);
-      if (!snapshot) return;
-      this.emit({ snapshot, persistent: true, recovered: false });
-    });
-  }
-
-  private useFallback(snapshot = emptyExamSnapshot()): void {
-    this.activeStorage = null;
-    this.recovered = true;
-    this.fallback.setItem(EXAM_STORAGE_KEY, JSON.stringify(snapshot));
-  }
-
-  load(): ExamStorageLoadResult {
-    const storage = this.resolveStorage();
-    if (!storage) {
-      const snapshot =
-        parseExamSessionSnapshot(this.fallback.getItem(EXAM_STORAGE_KEY) ?? "") ?? emptyExamSnapshot();
-      return { snapshot, persistent: false, recovered: this.recovered };
-    }
-
-    try {
-      const raw = storage.getItem(EXAM_STORAGE_KEY);
-      if (raw === null) {
-        return { snapshot: emptyExamSnapshot(), persistent: true, recovered: false };
-      }
-      const snapshot = parseExamSessionSnapshot(raw);
-      if (snapshot) {
-        return { snapshot, persistent: true, recovered: this.recovered };
-      }
-      const reset = emptyExamSnapshot();
-      storage.setItem(EXAM_STORAGE_KEY, JSON.stringify(reset));
-      this.recovered = true;
-      return { snapshot: reset, persistent: true, recovered: true };
-    } catch {
-      this.useFallback();
-      return { snapshot: emptyExamSnapshot(), persistent: false, recovered: true };
-    }
-  }
-
-  save(snapshot: ExamSessionSnapshot): { persistent: boolean } {
-    if (!isExamSessionSnapshot(snapshot)) {
-      throw new TypeError("Invalid DELE B2 exam session snapshot");
-    }
-    const serialized = JSON.stringify(snapshot);
-    const storage = this.resolveStorage();
-    if (storage) {
-      try {
-        storage.setItem(EXAM_STORAGE_KEY, serialized);
-        this.emit({ snapshot, persistent: true, recovered: this.recovered });
-        return { persistent: true };
-      } catch {
-        this.useFallback(snapshot);
-      }
-    } else {
-      this.fallback.setItem(EXAM_STORAGE_KEY, serialized);
-    }
-    this.emit({ snapshot, persistent: false, recovered: true });
-    return { persistent: false };
-  }
-
-  /** terminal 우선 병합으로 upsert한 뒤 공통 보존 규칙을 적용한다. */
-  upsertSession(session: ExamSession): { persistent: boolean } {
-    const { snapshot } = this.load();
-    const sessions = pruneSessions(upsertSessionInList(snapshot.sessions, session));
-    return this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions });
-  }
-
-  deleteSession(sessionId: string): { deleted: boolean; persistent: boolean } {
-    const loaded = this.load();
-    const result = deleteSessionFromList(loaded.snapshot.sessions, sessionId);
-    if (!result.deleted) {
-      return { deleted: false, persistent: loaded.persistent };
-    }
-    const saved = this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions: result.sessions });
-    return { deleted: true, persistent: saved.persistent };
-  }
-
-  deleteCompletedTerminalSessions(): { deleted: number; persistent: boolean } {
-    const loaded = this.load();
-    const result = deleteCompletedTerminalSessionsFromList(loaded.snapshot.sessions);
-    if (result.deleted === 0) {
-      return { deleted: 0, persistent: loaded.persistent };
-    }
-    const saved = this.save({ schemaVersion: EXAM_SCHEMA_VERSION, sessions: result.sessions });
-    return { deleted: result.deleted, persistent: saved.persistent };
-  }
-
-  subscribe(listener: ExamStoreListener): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private emit(result: ExamStorageLoadResult): void {
-    for (const listener of this.listeners) listener(result);
-  }
-}
-
-export function createExamSessionStore(storage?: StorageLike | null): ExamSessionStore {
-  return new ExamSessionStore(storage);
-}
-
-let defaultExamSessionStore: ExamSessionStore | undefined;
-
-export function getDefaultExamSessionStore(): ExamSessionStore {
-  defaultExamSessionStore ??= createExamSessionStore();
-  return defaultExamSessionStore;
-}
-
-// ---- pending projection 적용 오케스트레이션 ----
-
-/**
- * outbox 적용: ProgressSnapshot 1회 load → 병합 → 1회 save → 성공 시에만
- * projection complete로 전환. 비영속 폴백이면 pending을 유지한다(재시도 대상).
- */
-export function applyPendingProjection(
-  session: FinalizedExamSession,
-  attemptStore: AttemptStore,
-  examStore: ExamSessionStore,
-): { applied: boolean; session: FinalizedExamSession } {
-  if (session.progressProjection.status !== "pending") {
-    return { applied: true, session };
-  }
-  const loaded = attemptStore.load();
-  const { snapshot: merged, changed } = applyProjectionToSnapshot(
-    loaded.snapshot,
-    session.progressProjection.attempts,
-  );
-  if (changed) {
-    const saved = attemptStore.save(merged);
-    if (!saved.persistent) {
-      return { applied: false, session };
-    }
-  } else if (!loaded.persistent) {
-    // 직전 저장 실패가 메모리 fallback에는 payload를 남길 수 있다. 그 상태를
-    // "이미 반영됨"으로 오인해 complete로 바꾸면 브라우저 종료 시 진도가 사라진다.
-    return { applied: false, session };
-  }
-  const completed: FinalizedExamSession = { ...session, progressProjection: { status: "complete" } };
-  examStore.upsertSession(completed);
-  return { applied: true, session: completed };
 }

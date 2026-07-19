@@ -3,16 +3,14 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from "react";
-import {
-  findNextInProgressDeadline,
-  getDefaultExamSessionStore,
-} from "@/lib/examSession";
-import { summarizeSetProgress } from "@/lib/progress";
+import { findNextInProgressDeadline } from "@/lib/exam/session";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
+import { summarizeSetProgress } from "@/lib/progress/summary";
 import { getReviewReasons } from "@/lib/review";
 import { sortPracticeSets } from "@/lib/sets";
 import type { AttemptState, ExamSession, PracticeSet } from "@/lib/types";
 import { sitePath } from "@/lib/url";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 
 export interface HomeExamSessionMeta {
   blueprintId: string;

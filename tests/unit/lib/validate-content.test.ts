@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type {
   ContentCollections,
-} from "../lib/validate";
-import type { SpeakingTaskItem, WritingTaskItem } from "../lib/types";
-import { validateContent } from "../lib/validate";
-import { examBlueprints } from "../data/examBlueprints";
-import { listeningScripts } from "../data/listeningScripts";
-import { officialResources } from "../data/officialResources";
-import { practiceItems } from "../data/practiceItems";
-import { practiceSets } from "../data/practiceSets";
-import { readingTexts } from "../data/readingTexts";
+} from "@/lib/validate";
+import type { SpeakingTaskItem, WritingTaskItem } from "@/lib/types";
+import { validateContent } from "@/lib/validate";
+import { examBlueprints } from "@/data/examBlueprints";
+import { listeningScripts } from "@/data/listeningScripts";
+import { officialResources } from "@/data/officialResources";
+import { practiceItems } from "@/data/practiceItems";
+import { practiceSets } from "@/data/practiceSets";
+import { readingTexts } from "@/data/readingTexts";
 
 function validCollections(): ContentCollections {
   const review = {

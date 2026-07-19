@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { summarizeSetProgress } from "@/lib/progress";
+import { summarizeSetProgress } from "@/lib/progress/summary";
 import { sortPracticeSets } from "@/lib/sets";
 import type {
   AttemptState,
@@ -11,7 +11,7 @@ import type {
 } from "@/lib/types";
 import { sitePath } from "@/lib/url";
 import { PracticeTabs } from "./PracticeTabs";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 
 type PracticeMode = PracticeSet["mode"];
 

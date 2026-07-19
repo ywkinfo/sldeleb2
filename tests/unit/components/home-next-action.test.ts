@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { selectHomeNextAction, type HomeExamSessionMeta } from "../components/HomeNextAction";
-import type { AttemptState, PracticeSet } from "../lib/types";
+import {
+  selectHomeNextAction,
+  type HomeExamSessionMeta,
+} from "@/components/HomeNextAction";
+import type { AttemptState, PracticeSet } from "@/lib/types";
 
 function set(
   id: string,

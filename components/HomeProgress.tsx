@@ -1,8 +1,8 @@
 "use client";
 
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
-import { summarizeRate } from "@/lib/progress";
+import { summarizeRate } from "@/lib/progress/summary";
 
 export function HomeProgress() {
   const { attempts, persistent, recovered, hydrated } = useAttempts();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createAttemptStore, PROGRESS_STORAGE_KEY } from "../lib/storage";
-import type { ProgressSnapshot } from "../lib/types";
+import { PROGRESS_STORAGE_KEY, createAttemptStore } from "@/lib/progress/store";
+import type { ProgressSnapshot } from "@/lib/types";
 
 class FakeStorage {
   values = new Map<string, string>();
@@ -239,7 +239,8 @@ describe("pendingFlags (제출 전 별표)", () => {
   });
 });
 
-import { mergeSnapshots, importProgress } from "../lib/storage";
+import { mergeSnapshots } from "@/lib/progress/snapshot";
+import { importProgress } from "@/lib/progress/transfer";
 
 describe("importProgress & mergeSnapshots", () => {
   it("merges incoming snapshots, preferring newer timestamps", () => {

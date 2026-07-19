@@ -6,7 +6,7 @@ import {
   resetTimer,
   startTimer,
   tickTimer,
-} from "../lib/timer";
+} from "@/lib/timer";
 
 describe("deadline timer", () => {
   it("derives remaining time from the deadline instead of interval counts", () => {

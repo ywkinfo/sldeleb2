@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { exportUserData, importUserData, type ImportDomainResult } from "@/lib/backup";
-import { getDefaultExamSessionStore } from "@/lib/examSession";
-import { getDefaultAttemptStore } from "@/lib/storage";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
+import { getDefaultAttemptStore } from "@/lib/progress/store";
 
 function domainMessage(label: string, result: ImportDomainResult): string {
   const { added, updated, skipped, flagsChanged } = result.stats;

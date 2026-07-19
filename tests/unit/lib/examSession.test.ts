@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   answerExamItem,
-  applyPendingProjection,
   applyProjectionToSnapshot,
   canPlayScript,
   closeActivePlaybacks,
   completePlayback,
   createExamSession,
-  createExamSessionStore,
   deleteCompletedTerminalSessionsFromList,
   deleteSessionFromList,
-  EXAM_STORAGE_KEY,
   finalizeExamSession,
   findActiveSession,
   findNextInProgressDeadline,
@@ -23,8 +20,10 @@ import {
   snapshotBlueprint,
   toggleExamFlag,
   upsertSessionInList,
-} from "../lib/examSession";
-import { createAttemptStore, PROGRESS_STORAGE_KEY } from "../lib/storage";
+} from "@/lib/exam/session";
+import { applyPendingProjection } from "@/lib/exam/projection";
+import { createExamSessionStore, EXAM_STORAGE_KEY } from "@/lib/exam/store";
+import { PROGRESS_STORAGE_KEY, createAttemptStore } from "@/lib/progress/store";
 import type {
   AttemptState,
   ExamBlueprint,
@@ -36,7 +35,7 @@ import type {
   ProgressSnapshot,
   ReadingMCQItem,
   ReadingText,
-} from "../lib/types";
+} from "@/lib/types";
 
 class FakeStorage {
   values = new Map<string, string>();

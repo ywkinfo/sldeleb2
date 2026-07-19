@@ -1,18 +1,20 @@
 import {
   applyProjectionToSnapshot,
   EXAM_SCHEMA_VERSION,
-  type ExamSessionStore,
   isExamSessionSnapshot,
   mergeTerminalSessions,
-} from "./examSession";
+} from "./exam/session";
+import { type ExamSessionStore } from "./exam/store";
 import {
-  coerceProgressSnapshot,
-  type AttemptStore,
   type ImportProgressResult,
   type ImportStats,
   importProgress,
+} from "./progress/transfer";
+import {
+  coerceProgressSnapshot,
   isProgressSnapshot,
-} from "./storage";
+} from "./progress/snapshot";
+import { type AttemptStore } from "./progress/store";
 import type {
   ExamSessionSnapshot,
   FinalizedExamSession,
