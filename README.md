@@ -62,7 +62,8 @@ Node.js `>=22.13.0`이 필요합니다.
 - `lib/platform/storage.ts`: 브라우저 저장소 접근과 메모리 fallback
 - `lib/progress/`: 진도 요약(`summary.ts`), 스냅샷 규칙(`snapshot.ts`), 저장소(`store.ts`), 가져오기/내보내기(`transfer.ts`)
 - `lib/exam/`: 세션 상태 전이(`session.ts`), 저장소(`store.ts`), projection 적용(`projection.ts`)
-- `tests/`: Vitest 단위 계약과 회귀 테스트
+- `tests/unit/`: Vitest 단위 계약과 회귀 테스트
+- `tests/e2e/`: Playwright 브라우저 회귀 테스트
 
 ## 관련 문서
 

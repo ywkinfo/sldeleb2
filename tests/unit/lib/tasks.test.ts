@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { getTaskForItem } from "../lib/tasks";
-import { practiceItems } from "../data/practiceItems";
-import type { PracticeItem } from "../lib/types";
+import { getTaskForItem } from "@/lib/tasks";
+import { practiceItems } from "@/data/practiceItems";
+import type { PracticeItem } from "@/lib/types";
 
 function itemById(id: string): PracticeItem {
   const item = practiceItems.find((candidate) => candidate.id === id);

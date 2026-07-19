@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { examBlueprints } from "../data/examBlueprints";
-import { listeningScripts } from "../data/listeningScripts";
-import { officialResources } from "../data/officialResources";
-import { practiceItems } from "../data/practiceItems";
+import { examBlueprints } from "@/data/examBlueprints";
+import { listeningScripts } from "@/data/listeningScripts";
+import { officialResources } from "@/data/officialResources";
+import { practiceItems } from "@/data/practiceItems";
 import {
   anioFueraOptions,
   semanaCuatroFragments,
-} from "../data/readingPresentationOptions";
-import { practiceSets } from "../data/practiceSets";
-import { readingTexts } from "../data/readingTexts";
-import { isReadingPresentationContract } from "../lib/readingPresentation";
+} from "@/data/readingPresentationOptions";
+import { practiceSets } from "@/data/practiceSets";
+import { readingTexts } from "@/data/readingTexts";
+import { isReadingPresentationContract } from "@/lib/readingPresentation";
 import type {
   PracticeItem,
   PracticeSet,
   ReadingPresentationContract,
   ReadingText,
-} from "../lib/types";
-import { validateContent, type ContentCollections } from "../lib/validate";
+} from "@/lib/types";
+import { validateContent, type ContentCollections } from "@/lib/validate";
 
 const real: ContentCollections = {
   officialResources,

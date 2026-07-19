@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { getPublishedSets, orderItemsBySet, sortPracticeSets } from "../lib/sets";
-import type { PracticeSet } from "../lib/types";
+import { getPublishedSets, orderItemsBySet, sortPracticeSets } from "@/lib/sets";
+import type { PracticeSet } from "@/lib/types";
 
 describe("orderItemsBySet", () => {
   it("orders items according to the set's itemIds", () => {

@@ -20,10 +20,10 @@ import {
   snapshotBlueprint,
   toggleExamFlag,
   upsertSessionInList,
-} from "../lib/exam/session";
-import { applyPendingProjection } from "../lib/exam/projection";
-import { createExamSessionStore, EXAM_STORAGE_KEY } from "../lib/exam/store";
-import { PROGRESS_STORAGE_KEY, createAttemptStore } from "../lib/progress/store";
+} from "@/lib/exam/session";
+import { applyPendingProjection } from "@/lib/exam/projection";
+import { createExamSessionStore, EXAM_STORAGE_KEY } from "@/lib/exam/store";
+import { PROGRESS_STORAGE_KEY, createAttemptStore } from "@/lib/progress/store";
 import type {
   AttemptState,
   ExamBlueprint,
@@ -35,7 +35,7 @@ import type {
   ProgressSnapshot,
   ReadingMCQItem,
   ReadingText,
-} from "../lib/types";
+} from "@/lib/types";
 
 class FakeStorage {
   values = new Map<string, string>();

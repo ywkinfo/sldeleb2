@@ -9,8 +9,8 @@ import {
   analyzeVulnerableTags,
   pickTodaysReview,
   type ReviewItemMeta,
-} from "../lib/review";
-import type { AttemptState } from "../lib/types";
+} from "@/lib/review";
+import type { AttemptState } from "@/lib/types";
 
 function mcq(
   itemId: string,

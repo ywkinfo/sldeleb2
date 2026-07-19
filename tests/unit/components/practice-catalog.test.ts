@@ -3,8 +3,8 @@ import {
   filterPracticeSets,
   pickCatalogHighlight,
   type PracticeCatalogFilters,
-} from "../components/PracticeSetList";
-import type { AttemptState, PracticeSet } from "../lib/types";
+} from "@/components/PracticeSetList";
+import type { AttemptState, PracticeSet } from "@/lib/types";
 
 const review = {
   status: "published" as const,

@@ -6,8 +6,8 @@ import {
   gradeReadingAttempt,
   gradeMcqAttempt,
   setAttemptFlag,
-} from "../lib/grading";
-import type { ListeningMCQItem, ReadingMCQItem } from "../lib/types";
+} from "@/lib/grading";
+import type { ListeningMCQItem, ReadingMCQItem } from "@/lib/types";
 
 const item: ReadingMCQItem = {
   id: "read-1",

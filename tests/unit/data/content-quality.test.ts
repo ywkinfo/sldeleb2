@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { practiceItems } from "../data/practiceItems";
+import { practiceItems } from "@/data/practiceItems";
 
 // 쓰기·말하기 저작 관행 중 자동 검증 가능한 규칙. validate:content가 다루지
 // 않는 편집 규칙(체크리스트 정확히 5개, " → "로 연결한 모범 개요)을 회귀로
