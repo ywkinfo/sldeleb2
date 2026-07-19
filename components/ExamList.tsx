@@ -5,11 +5,8 @@
 
 import { useEffect, useState } from "react";
 import type { ExamSession, FinalizedExamSession } from "@/lib/types";
-import {
-  findActiveSession,
-  findNextInProgressDeadline,
-  getDefaultExamSessionStore,
-} from "@/lib/examSession";
+import { findActiveSession, findNextInProgressDeadline } from "@/lib/exam/session";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
 import { examBlueprints } from "@/data/examBlueprints";
 import { practiceSets } from "@/data/practiceSets";
 import { sitePath } from "@/lib/url";

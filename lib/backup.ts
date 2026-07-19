@@ -1,10 +1,10 @@
 import {
   applyProjectionToSnapshot,
   EXAM_SCHEMA_VERSION,
-  type ExamSessionStore,
   isExamSessionSnapshot,
   mergeTerminalSessions,
-} from "./examSession";
+} from "./exam/session";
+import { type ExamSessionStore } from "./exam/store";
 import {
   type ImportProgressResult,
   type ImportStats,

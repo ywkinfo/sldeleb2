@@ -5,7 +5,7 @@ import {
   importUserData,
   parseUserDataFile,
 } from "../lib/backup";
-import { createExamSessionStore, EXAM_STORAGE_KEY } from "../lib/examSession";
+import { createExamSessionStore, EXAM_STORAGE_KEY } from "../lib/exam/store";
 import { PROGRESS_STORAGE_KEY, createAttemptStore } from "../lib/progress/store";
 import type {
   AttemptState,

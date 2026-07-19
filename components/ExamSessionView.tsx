@@ -7,14 +7,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ExamBlueprint, ExamSession, FinalizedExamSession } from "@/lib/types";
 import {
   answerExamItem,
-  applyPendingProjection,
   closeActivePlaybacks,
   completePlayback,
   createExamSession,
   finalizeExamSession,
   findActiveSession,
   findPendingProjectionSessions,
-  getDefaultExamSessionStore,
   MAX_TERMINAL_SESSIONS,
   refundPlayback,
   reservePlayback,
@@ -22,7 +20,9 @@ import {
   snapshotBlueprint,
   toggleExamFlag,
   type ResolvedExamItem,
-} from "@/lib/examSession";
+} from "@/lib/exam/session";
+import { applyPendingProjection } from "@/lib/exam/projection";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
 import { getDefaultAttemptStore } from "@/lib/progress/store";
 import { getTimerAnnouncement } from "@/lib/timer";
 import { sitePath } from "@/lib/url";

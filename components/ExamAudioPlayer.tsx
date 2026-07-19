@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { ExamPlayback } from "@/lib/types";
-import { MAX_PLAYBACKS_PER_SCRIPT } from "@/lib/examSession";
+import { MAX_PLAYBACKS_PER_SCRIPT } from "@/lib/exam/session";
 import { sitePath } from "@/lib/url";
 
 function formatClock(seconds: number): string {

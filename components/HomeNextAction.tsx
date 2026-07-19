@@ -3,10 +3,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from "react";
-import {
-  findNextInProgressDeadline,
-  getDefaultExamSessionStore,
-} from "@/lib/examSession";
+import { findNextInProgressDeadline } from "@/lib/exam/session";
+import { getDefaultExamSessionStore } from "@/lib/exam/store";
 import { summarizeSetProgress } from "@/lib/progress/summary";
 import { getReviewReasons } from "@/lib/review";
 import { sortPracticeSets } from "@/lib/sets";
