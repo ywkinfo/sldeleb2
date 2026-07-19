@@ -7,7 +7,7 @@ import type {
   ReadingText,
 } from "@/lib/types";
 import { gradeMcqAttempt } from "@/lib/grading";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { McqQuestion } from "./McqQuestion";
 import {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { WritingTaskItem } from "@/lib/types";
 import { Timer } from "./Timer";
 import { SelfAssessment } from "./SelfAssessment";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 
 const AUTOSAVE_DELAY_MS = 1500;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { summarizeRate } from "@/lib/progress";
 

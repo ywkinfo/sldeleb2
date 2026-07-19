@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { OpenAttempt } from "@/lib/types";
 import { completeOpenAttemptWithRubric } from "@/lib/grading";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { DIMENSIONS_WRITING, DIMENSIONS_SPEAKING, DIMENSION_LABELS, type RubricScore, type RubricScores } from "@/lib/rubric";
 

@@ -12,7 +12,7 @@ import { getReviewReasons } from "@/lib/review";
 import { sortPracticeSets } from "@/lib/sets";
 import type { AttemptState, ExamSession, PracticeSet } from "@/lib/types";
 import { sitePath } from "@/lib/url";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 
 export interface HomeExamSessionMeta {
   blueprintId: string;

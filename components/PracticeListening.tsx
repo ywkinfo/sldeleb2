@@ -1,7 +1,7 @@
 "use client";
 
 import type { ListeningMCQItem, ListeningScript } from "@/lib/types";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { sitePath } from "@/lib/url";
 import { StorageNotice } from "./StorageNotice";
 import { McqQuestion } from "./McqQuestion";

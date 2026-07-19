@@ -9,7 +9,7 @@ import {
   pickTodaysReview,
   type ReviewItemMeta,
 } from "@/lib/review";
-import { useAttempts } from "./useAttempts";
+import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { sitePath } from "@/lib/url";
 import { getSetIdForItem } from "@/lib/sets";
