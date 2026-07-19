@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summarizeSetProgress, pickNextSet } from '../lib/progress';
+import { pickNextSet, summarizeSetProgress } from "../lib/progress/summary";
 import type { PracticeSet, AttemptState } from '../lib/types';
 
 describe('Progress Helpers', () => {
@@ -130,7 +130,7 @@ describe('Progress Helpers', () => {
   });
 });
 
-import { summarizeRate, RATE_MIN_ATTEMPTS } from '../lib/progress';
+import { RATE_MIN_ATTEMPTS, summarizeRate } from "../lib/progress/summary";
 
 describe('summarizeRate', () => {
   it('returns an empty marker when nothing was attempted', () => {

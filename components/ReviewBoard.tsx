@@ -13,7 +13,7 @@ import { useAttempts } from "@/hooks/useAttempts";
 import { StorageNotice } from "./StorageNotice";
 import { sitePath } from "@/lib/url";
 import { getSetIdForItem } from "@/lib/sets";
-import { summarizeRate, RATE_MIN_ATTEMPTS } from "@/lib/progress";
+import { summarizeRate, RATE_MIN_ATTEMPTS } from "@/lib/progress/summary";
 import { ReviewTareaStats } from "./ReviewTareaStats";
 import { ReviewQueue } from "./ReviewQueue";
 import { SyncProgress } from "./SyncProgress";

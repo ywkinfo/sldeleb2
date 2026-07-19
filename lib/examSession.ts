@@ -28,13 +28,13 @@ import {
   cloneReadingPresentationContract,
   validateReadingPresentationContent,
 } from "./readingPresentation";
+import { MemoryStorage, browserStorage, type StorageLike } from "./platform/storage";
 import {
   consumePendingFlags,
   isAttemptState,
   sameAttemptIgnoringFlag,
-  type AttemptStore,
-  type StorageLike,
-} from "./storage";
+} from "./progress/snapshot";
+import { type AttemptStore } from "./progress/store";
 
 export const EXAM_STORAGE_KEY = "dele-b2:exam:v1";
 export const EXAM_SCHEMA_VERSION = 1 as const;
@@ -916,28 +916,6 @@ export type ExamStoreListener = (result: ExamStorageLoadResult) => void;
 
 function emptyExamSnapshot(): ExamSessionSnapshot {
   return { schemaVersion: EXAM_SCHEMA_VERSION, sessions: [] };
-}
-
-class MemoryStorage implements StorageLike {
-  private readonly values = new Map<string, string>();
-  getItem(key: string): string | null {
-    return this.values.get(key) ?? null;
-  }
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-  }
-  removeItem(key: string): void {
-    this.values.delete(key);
-  }
-}
-
-function browserStorage(): StorageLike | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
 }
 
 export class ExamSessionStore {

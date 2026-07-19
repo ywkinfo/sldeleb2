@@ -24,7 +24,7 @@ import {
   toggleExamFlag,
   upsertSessionInList,
 } from "../lib/examSession";
-import { createAttemptStore, PROGRESS_STORAGE_KEY } from "../lib/storage";
+import { PROGRESS_STORAGE_KEY, createAttemptStore } from "../lib/progress/store";
 import type {
   AttemptState,
   ExamBlueprint,

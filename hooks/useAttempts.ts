@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
-import { getDefaultAttemptStore } from "@/lib/storage";
+import { getDefaultAttemptStore } from "@/lib/progress/store";
 import type { AttemptState, ProgressSnapshot } from "@/lib/types";
 
 // pendingFlags가 없는 스냅샷에서 렌더마다 새 객체를 만들지 않기 위한 고정 참조.

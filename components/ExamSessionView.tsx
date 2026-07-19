@@ -23,7 +23,7 @@ import {
   toggleExamFlag,
   type ResolvedExamItem,
 } from "@/lib/examSession";
-import { getDefaultAttemptStore } from "@/lib/storage";
+import { getDefaultAttemptStore } from "@/lib/progress/store";
 import { getTimerAnnouncement } from "@/lib/timer";
 import { sitePath } from "@/lib/url";
 import { EXAM_SKILL_COPY } from "@/lib/examCopy";

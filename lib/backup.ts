@@ -6,13 +6,15 @@ import {
   mergeTerminalSessions,
 } from "./examSession";
 import {
-  coerceProgressSnapshot,
-  type AttemptStore,
   type ImportProgressResult,
   type ImportStats,
   importProgress,
+} from "./progress/transfer";
+import {
+  coerceProgressSnapshot,
   isProgressSnapshot,
-} from "./storage";
+} from "./progress/snapshot";
+import { type AttemptStore } from "./progress/store";
 import type {
   ExamSessionSnapshot,
   FinalizedExamSession,

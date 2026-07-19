@@ -1,9 +1,9 @@
 import type { AttemptState, PracticeSkill, Task } from "./types";
-import { summarizeRate, type RateSummary } from "./progress";
+import { summarizeRate, type RateSummary } from "./progress/summary";
 
 /*
- * 복습 보드의 순수 로직. 클라이언트에서도 쓰이므로 data 모듈(대본 전문 등)을
- * 절대 import하지 않는다. Tarea/영역/태그는 attempt에 저장하지 않고(스키마 불변),
+ * 복습 보드의 순수 로직. 클라이언트에서도 쓰이므로 data 모듈의 전문·중량 데이터는
+ * 직접 import하지 않는다. Tarea/영역/태그는 attempt에 저장하지 않고(스키마 불변),
  * 서버에서 만든 compact ReviewItemMeta로 렌더 시 파생한다.
  */
 

@@ -8,7 +8,7 @@ import {
   applyPendingProjection,
   getDefaultExamSessionStore,
 } from "@/lib/examSession";
-import { getDefaultAttemptStore } from "@/lib/storage";
+import { getDefaultAttemptStore } from "@/lib/progress/store";
 import type { ExamSession, FinalizedExamSession } from "@/lib/types";
 import { sitePath } from "@/lib/url";
 import { ExamResultView } from "./ExamResultView";

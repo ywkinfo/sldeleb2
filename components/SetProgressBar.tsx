@@ -1,7 +1,7 @@
 "use client";
 
 import type { PracticeSet } from "@/lib/types";
-import { summarizeSetProgress } from "@/lib/progress";
+import { summarizeSetProgress } from "@/lib/progress/summary";
 import { useAttempts } from "@/hooks/useAttempts";
 import { StickyStatusBar } from "./StickyStatusBar";
 

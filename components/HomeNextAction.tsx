@@ -7,7 +7,7 @@ import {
   findNextInProgressDeadline,
   getDefaultExamSessionStore,
 } from "@/lib/examSession";
-import { summarizeSetProgress } from "@/lib/progress";
+import { summarizeSetProgress } from "@/lib/progress/summary";
 import { getReviewReasons } from "@/lib/review";
 import { sortPracticeSets } from "@/lib/sets";
 import type { AttemptState, ExamSession, PracticeSet } from "@/lib/types";

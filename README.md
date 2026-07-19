@@ -55,6 +55,15 @@ Node.js `>=22.13.0`이 필요합니다.
 - 듣기 음원은 창작 스크립트를 TTS로 합성한 것으로, 공식 기출 음원을 복제하지 않습니다.
 - 학습 진도·완료 시험 기록·테마는 브라우저에만 저장되고, 녹음은 업로드하지 않습니다.
 
+## 소스 구조
+
+- `components/`: 화면 조합과 상호작용 UI
+- `hooks/`: 브라우저 상태를 읽는 React hooks
+- `lib/platform/storage.ts`: 브라우저 저장소 접근과 메모리 fallback
+- `lib/progress/`: 진도 요약(`summary.ts`), 스냅샷 규칙(`snapshot.ts`), 저장소(`store.ts`), 가져오기/내보내기(`transfer.ts`)
+- `lib/examSession.ts`: 모의고사 세션 상태 전이와 별도 저장소
+- `tests/`: Vitest 단위 계약과 회귀 테스트
+
 ## 관련 문서
 
 - [`DESIGN.md`](DESIGN.md): UI 토큰, 상태, 접근성, 반응형 규칙

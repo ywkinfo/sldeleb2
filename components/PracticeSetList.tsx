@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { summarizeSetProgress } from "@/lib/progress";
+import { summarizeSetProgress } from "@/lib/progress/summary";
 import { sortPracticeSets } from "@/lib/sets";
 import type {
   AttemptState,
