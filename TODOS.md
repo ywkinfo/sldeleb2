@@ -25,7 +25,7 @@
   연번 표시, 채점 후 선택지 잠금과 "다시 풀기", 새로고침 후 잠금 상태 복원,
   표준 라디오 키보드 조작(방향키·roving tabindex)과 단축키 안내를 적용했다.
 - 공식 자료 Tarea 필터는 `task` 값이 있는 자료가 생길 때까지 숨긴다.
-- 회귀 테스트: `tests/sets.test.ts`, `tests/grading.test.ts`(디스패처),
+- 회귀 테스트: `tests/unit/lib/sets.test.ts`, `tests/unit/lib/grading.test.ts`(디스패처),
   `tests/e2e/mcq.spec.ts`(연번·잠금·재제출 방지·복원·키보드).
 - 제출 전 별표는 스키마 영향 때문에 모의고사 설계와 함께 결정하기로 연기.
 
@@ -38,7 +38,7 @@
   멀티탭 last-write-wins, terminal 세션 50개 보존.
 - 구현: `/exam` 목록 + `/exam/exam-listening-b2` 세션(30문항/40분, 이어하기,
   새로고침 복원, 만료 자동 제출, 결과 정오표, 복습 큐 반영). 단위 테스트
-  `tests/examSession.test.ts`, E2E `tests/e2e/exam-*.spec.ts` 7종.
+  `tests/unit/lib/examSession.test.ts`, E2E `tests/e2e/exam-*.spec.ts` 7종.
 - 전체 백업은 완료·만료된 세션을 포함한다. Web Locks 단일 writer는 장기 과제로
   남긴다.
 
